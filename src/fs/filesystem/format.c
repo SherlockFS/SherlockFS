@@ -1,9 +1,11 @@
 #include "format.h"
 
+#include <errno.h>
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "block.h"
@@ -39,7 +41,9 @@ bool is_already_formatted(const char *file_path)
 }
 
 void format_fill_filesystem_struct(struct CryptFS *cfs, char *rsa_passphrase,
-                                   EVP_PKEY *existing_rsa_keypair)
+                                   EVP_PKEY *existing_rsa_keypair,
+                                   const char *public_key_path,
+                                   const char *private_key_path)
 {
     /// ------------------------------------------------------------
     /// BLOCK 0 : HEADER
@@ -69,15 +73,41 @@ void format_fill_filesystem_struct(struct CryptFS *cfs, char *rsa_passphrase,
     // Store the RSA modulus and the RSA public exponent in the header
     store_keys_in_keys_storage(cfs->keys_storage, rsa_key, aes_key);
 
-    // Get user directory path
-    char *user_dir_path = getenv("HOME");
-    if (!user_dir_path)
-        internal_error_exit("Impossible to get the user directory path\n",
-                            EXIT_FAILURE);
+    // If the user provided a custom path for the keys
+    if (public_key_path && private_key_path)
+        write_rsa_keys_on_disk(rsa_key, public_key_path, private_key_path,
+                               rsa_passphrase);
+    else
+    {
+        char *user_dir_path = getenv("HOME");
+        if (!user_dir_path)
+            internal_error_exit("Impossible to get the user directory path\n",
+                                EXIT_FAILURE);
 
-    // Write the RSA public and private keys in the user directory
-    write_rsa_keys_on_disk(rsa_key, user_dir_path, rsa_passphrase);
+        // Add .cryptfs to the user directory path
+        char *public_key_path = xcalloc(PATH_MAX, sizeof(char));
+        char *private_key_path = xcalloc(PATH_MAX, sizeof(char));
 
+        strcat(public_key_path, user_dir_path);
+        strcat(public_key_path, "/.cryptfs");
+
+        // Create the directories
+        if (mkdir(public_key_path, 0755) != 0 && errno != EEXIST)
+            internal_error_exit("Failed to create the directories\n",
+                                EXIT_FAILURE);
+
+        strcat(public_key_path, "/public.pem");
+
+        strcat(private_key_path, user_dir_path);
+        strcat(private_key_path, "/.cryptfs/private.pem");
+
+        // Write the RSA public and private keys in ~/.cryptfs/
+        write_rsa_keys_on_disk(rsa_key, public_key_path, private_key_path,
+                               rsa_passphrase);
+
+        free(public_key_path);
+        free(private_key_path);
+    }
     /// ------------------------------------------------------------
     /// BLOCK 2 : FAT (File Allocation Table)
     /// ------------------------------------------------------------
@@ -103,7 +133,8 @@ void format_fs(const char *path, char *rsa_passphrase,
     set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
     set_device_path(path);
 
-    format_fill_filesystem_struct(cfs, rsa_passphrase, existing_rsa_keypair);
+    format_fill_filesystem_struct(cfs, rsa_passphrase, existing_rsa_keypair,
+                                  NULL, NULL);
 
     FILE *file = fopen(path, "w+");
     if (file == NULL)
@@ -122,21 +153,16 @@ void format_fs(const char *path, char *rsa_passphrase,
 
 bool keypair_in_home_exist(void)
 {
-    char *home = getenv("HOME");
-    if (!home)
-        internal_error_exit("Impossible to get the user directory path\n",
-                            EXIT_FAILURE);
+    char *public_path = NULL;
+    char *private_path = NULL;
 
-    char *private_path = xcalloc(PATH_MAX + 1, sizeof(char));
-    char *public_path = xcalloc(PATH_MAX + 1, sizeof(char));
-    snprintf(private_path, PATH_MAX, "%s/%s", home, ".cryptfs/private.pem");
-    snprintf(public_path, PATH_MAX, "%s/%s", home, ".cryptfs/public.pem");
+    get_rsa_keys_home_paths(&public_path, &private_path);
 
     bool exist =
         access(private_path, F_OK) == 0 && access(public_path, F_OK) == 0;
 
-    free(private_path);
     free(public_path);
+    free(private_path);
 
     return exist;
 }

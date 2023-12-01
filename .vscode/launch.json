@@ -74,6 +74,29 @@
             ],
             "preLaunchTask": "make mount"
         },
+        {
+            "name": "cfs_adduser",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/cfs_adduser",
+            "args": [
+                "${input:mountDevice}",
+                "${input:publicKey}",
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Activer l'impression en mode Pretty pour gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+            ],
+            "preLaunchTask": "make cfs_adduser"
+        },
     ],
     "inputs": [
         {
@@ -93,6 +116,12 @@
             "description": "Point de montage",
             "type": "promptString",
             "default": "mnt"
-        }
+        },
+        {
+            "id": "publicKey",
+            "description": "Clé publique à ajouter",
+            "type": "promptString",
+            "default": "public.pem"
+        },
     ]
 }

@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
         break;
 
     default:
-        printf("Usage: %s <file> [RSA key passphrase]\n", argv[0]);
+        printf("Usage: %s <device> [RSA key passphrase]\n", argv[0]);
         return EXIT_FAILURE;
     }
 
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     if (is_already_formatted(path))
     {
         print_warning(
-            "The file is already formatted. Do you want to overwrite it? "
+            "The device is already formatted. Do you want to overwrite it? "
             "[y/n]: ");
         char answer = get_char_from_stdin();
         if (answer != 'y' && answer != 'Y')
@@ -78,8 +78,7 @@ int main(int argc, char *argv[])
         ask_new_password(&passphrase);
 
     format_fs(path, passphrase, existing_rsa_keypair);
-    print_success("The file/device `%s` has been formatted successfully!\n",
-                  path);
+    print_success("The device `%s` has been formatted successfully!\n", path);
 
     if (passphrase)
         free(passphrase);

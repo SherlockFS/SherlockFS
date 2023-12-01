@@ -25,7 +25,7 @@ Test(block, read_write, .init = cr_redirect_stdout, .timeout = 10)
     set_device_path("build/block_read_write.test.cfs");
     set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
-    format_fs("build/block_read_write.test.cfs", NULL);
+    format_fs("build/block_read_write.test.cfs", NULL, NULL);
 
     uint8_t *buffer_before = xmalloc(1, get_block_size());
     uint8_t *buffer_after = xcalloc(1, get_block_size());
@@ -52,7 +52,7 @@ Test(block, read_write_with_encryption_decryption, .init = cr_redirect_stdout,
     set_device_path("build/block_read_write_with_encryption.test.cfs");
     set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
-    format_fs("build/block_read_write_with_encryption.test.cfs", NULL);
+    format_fs("build/block_read_write_with_encryption.test.cfs", NULL, NULL);
 
     unsigned char *aes_key = generate_aes_key();
 

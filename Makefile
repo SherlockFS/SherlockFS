@@ -20,17 +20,25 @@ TESTS_OBJ = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(TESTS_SRC:.c=.o))
 FORMAT_SRC = $(SRC_DIR)/formater.c
 FORMAT_OBJ = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(FORMAT_SRC:.c=.o))
 
+ADDUSER_SRC = $(SRC_DIR)/cfs_adduser.c
+ADDUSER_OBJ = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(ADDUSER_SRC:.c=.o))
+
 MOUNT_SRC = $(SRC_DIR)/mount_fuse.c
 MOUNT_OBJ = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(MOUNT_SRC:.c=.o))
 
-all : formater mount
+all : formater mount cfs_adduser
 	
-formater: $(BUILD_DIR)/formater $(OBJ)
+formater: $(BUILD_DIR)/formater
+
+cfs_adduser: $(BUILD_DIR)/cfs_adduser
 	
-mount: $(BUILD_DIR)/mount $(OBJ)
+mount: $(BUILD_DIR)/mount
 
 $(BUILD_DIR)/formater: $(FORMAT_OBJ) $(OBJ)
 	$(CC) $(CFLAGS) $^ -o $(BUILD_DIR)/formater $(LDFLAGS)
+
+$(BUILD_DIR)/cfs_adduser: $(ADDUSER_OBJ) $(OBJ)
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/cfs_adduser $^ $(LDFLAGS)
 
 $(BUILD_DIR)/mount: $(MOUNT_OBJ) $(OBJ)
 	$(CC) $(CFLAGS) $^ -o $(BUILD_DIR)/mount $(LDFLAGS)

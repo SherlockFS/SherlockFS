@@ -45,6 +45,9 @@
         "bitset": "c",
         "string_view": "c",
         "initializer_list": "c",
-        "utility": "c"
+        "utility": "c",
+        "readfs.h": "c",
+        "adduser.h": "c",
+        "filesystem": "c"
     }
 }

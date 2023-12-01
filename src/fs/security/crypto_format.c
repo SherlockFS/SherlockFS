@@ -113,69 +113,47 @@ void store_keys_in_keys_storage(struct CryptFS_Key *keys_storage,
             EXIT_FAILURE, NB_ENCRYPTION_KEYS);
 }
 
-void write_rsa_keys_on_disk(EVP_PKEY *rsa_keypair, const char *path_to_write,
-                            char *passphrase)
+void write_rsa_keys_on_disk(EVP_PKEY *rsa_keypair, const char *public_key_path,
+                            const char *private_key_path, char *passphrase)
 {
-    // Create the paths:
-    // "<path_to_write>/.cryptfs"
-    // "<path_to_write>/.cryptfs/public.pem"
-    // "<path_to_write>/.cryptfs/private.pem"
-
-    char *cryptfs_path =
-        xmalloc(strlen(path_to_write) + strlen("/.cryptfs") + 1, 1);
-    strcpy(cryptfs_path, path_to_write);
-    strcat(cryptfs_path, "/.cryptfs");
-
-    char *public_pem_path =
-        xmalloc(strlen(path_to_write) + strlen("/.cryptfs/public.pem") + 1, 1);
-    strcpy(public_pem_path, path_to_write);
-    strcat(public_pem_path, "/.cryptfs/public.pem");
-
-    char *private_pem_path =
-        xmalloc(strlen(path_to_write) + strlen("/.cryptfs/private.pem") + 1, 1);
-    strcpy(private_pem_path, path_to_write);
-    strcat(private_pem_path, "/.cryptfs/private.pem");
-
-    // Create the directories
-    if (mkdir(cryptfs_path, 0755) != 0 && errno != EEXIST)
-        internal_error_exit("Failed to create the directories\n", EXIT_FAILURE);
-
-    // Store the RSA private in ~/.cryptfs/private.pem
-    print_info("Storing the RSA private key in ~/.cryptfs/private.pem...\n");
-    FILE *private_key = fopen(private_pem_path, "w+");
-    if (private_key == NULL)
-        internal_error_exit("Failed to open the private key fil\n",
-                            EXIT_FAILURE);
-    if (PEM_write_PrivateKey(private_key, rsa_keypair,
-                             passphrase != NULL ? EVP_aes_256_cbc() : NULL,
-                             NULL, 0, NULL, passphrase)
-            != 1
-        || fclose(private_key) != 0)
-        internal_error_exit("Failed to write the private key\n", EXIT_FAILURE);
-
-    if (passphrase)
+    if (public_key_path)
     {
-        if (rsa_private_is_encrypted(private_pem_path) == true)
-            print_info(
-                "The private key has been encrypted with a passphrase\n");
-        else
-            internal_error_exit("Failed to encrypt the private key\n",
-                                EXIT_FAILURE);
+        print_info("Storing the RSA public key in '%s'...\n", public_key_path);
+        FILE *public_key = fopen(public_key_path, "w+");
+        if (public_key == NULL)
+            internal_error_exit("Failed to open the public key '%s'\n",
+                                EXIT_FAILURE, public_key_path);
+
+        if (PEM_write_PUBKEY(public_key, rsa_keypair) != 1
+            || fclose(public_key) != 0)
+            internal_error_exit("Failed to write the public key '%s'\n",
+                                EXIT_FAILURE, public_key_path);
     }
 
-    // Store the RSA public in ~/.cryptfs/public.pem
-    print_info("Storing the RSA public key in ~/.cryptfs/public.pem...\n");
-    FILE *public_key = fopen(public_pem_path, "w+");
-    if (public_key == NULL)
-        internal_error_exit("Failed to open the public key fill\n",
-                            EXIT_FAILURE);
+    if (private_key_path)
+    {
+        print_info("Writing the RSA private key into '%s'...\n",
+                   private_key_path);
+        FILE *private_key = fopen(private_key_path, "w+");
+        if (private_key == NULL)
+            internal_error_exit("Failed to open the private key fil\n",
+                                EXIT_FAILURE);
+        if (PEM_write_PrivateKey(private_key, rsa_keypair,
+                                 passphrase != NULL ? EVP_aes_256_cbc() : NULL,
+                                 NULL, 0, NULL, passphrase)
+                != 1
+            || fclose(private_key) != 0)
+            internal_error_exit("Failed to write the private key '%s'\n",
+                                EXIT_FAILURE, private_key_path);
 
-    if (PEM_write_PUBKEY(public_key, rsa_keypair) != 1
-        || fclose(public_key) != 0)
-        internal_error_exit("Failed to write the public key fill\n",
-                            EXIT_FAILURE);
-
-    free(cryptfs_path);
-    free(public_pem_path);
-    free(private_pem_path);
+        if (passphrase)
+        {
+            if (rsa_private_is_encrypted(private_key_path) == true)
+                print_info(
+                    "The private key has been encrypted with a passphrase\n");
+            else
+                internal_error_exit("Failed to encrypt the private key '%s'\n",
+                                    EXIT_FAILURE, private_key_path);
+        }
+    }
 }

@@ -19,28 +19,24 @@
 
 int main(void)
 {
-    set_device_path("block_read_write_with_encryption.test.cfs");
+    // Set the device (global variable) to the file (used by read/write_blocks)
+    set_device_path("cfs_adduser.formated.test.cfs");
     set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
-    format_fs("block_read_write_with_encryption.test.cfs", NULL);
+    EVP_PKEY *my_rsa = generate_rsa_keypair();
 
-    unsigned char *aes_key = generate_aes_key();
+    format_fs("cfs_adduser.formated.test.cfs", NULL, my_rsa);
 
-    unsigned char *buffer_before_encryption = xcalloc(1, get_block_size() + 1);
-    unsigned char *buffer_after_decryption = xcalloc(1, get_block_size() + 1);
+    // Read CryptFS structure
 
-    assert(RAND_bytes(buffer_before_encryption, get_block_size()));
+    // Check if second key storage buf is empty
 
-    int ret =
-        write_blocks_with_encryption(aes_key, 0, 1, buffer_before_encryption);
-    assert(ret == 0);
-    ret = read_blocks_with_decryption(aes_key, 0, 1, buffer_after_decryption);
-    assert(ret == 0);
-    // cr_assert_arr_eq(buffer_before_encryption, buffer_after_decryption,
-    //                  get_block_size());
-    free(aes_key);
-    free(buffer_before_encryption);
-    free(buffer_after_decryption);
+    // OpenSSL generate keypair and write it to a file
+    EVP_PKEY *other_rsa = generate_rsa_keypair();
+    write_rsa_keys_on_disk(my_rsa, "cfs_adduser.formated.my_public.pem",
+                           "cfs_adduser.formated.my_private.pem", NULL);
+    write_rsa_keys_on_disk(other_rsa, "cfs_adduser.formated.other_public.pem",
+                           NULL, NULL);
 
     return 0;
 }

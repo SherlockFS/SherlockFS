@@ -13,7 +13,7 @@ Test(find_first_free_block, not_found, .timeout = 10,
     set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
     set_device_path("build/find_first_free_block.not_found.test.cfs");
 
-    format_fs("build/find_first_free_block.not_found.test.cfs", NULL);
+    format_fs("build/find_first_free_block.not_found.test.cfs", NULL, NULL);
 
     struct CryptFS_FAT *first_fat = xaligned_alloc(
         sizeof(struct CryptFS_FAT), 1, sizeof(struct CryptFS_FAT));
@@ -38,7 +38,7 @@ Test(find_first_free_block, on_first_fat, .timeout = 10,
     set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
     set_device_path("build/find_first_free_block.on_first_fat.test.cfs");
 
-    format_fs("build/find_first_free_block.on_first_fat.test.cfs", NULL);
+    format_fs("build/find_first_free_block.on_first_fat.test.cfs", NULL, NULL);
 
     struct CryptFS *cfs = xcalloc(1, sizeof(struct CryptFS));
     memset(cfs->first_fat.entries, 0xDEAD,
@@ -67,7 +67,7 @@ Test(find_first_free_block, on_second_fat, .timeout = 10,
     set_device_path("build/find_first_free_block.on_second_fat.test.cfs");
     set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
-    format_fs("build/find_first_free_block.on_second_fat.test.cfs", NULL);
+    format_fs("build/find_first_free_block.on_second_fat.test.cfs", NULL, NULL);
 
     struct CryptFS *cfs =
         xcalloc(1, sizeof(struct CryptFS) + sizeof(struct CryptFS_FAT));
@@ -106,7 +106,7 @@ Test(find_first_free_block, on_second_fat_not_contigious, .timeout = 10,
 
     format_fs(
         "build/find_first_free_block.on_second_fat_not_contigious.test.cfs",
-        NULL);
+        NULL, NULL);
 
     struct CryptFS_FAT *first_fat = xaligned_calloc(
         sizeof(struct CryptFS_FAT), 1, sizeof(struct CryptFS_FAT));
@@ -152,7 +152,7 @@ Test(create_fat, second_fat, .init = cr_redirect_stdout, .timeout = 10)
     set_device_path("build/create_fat.second_fat.test.cfs");
     set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
-    format_fs("build/create_fat.second_fat.test.cfs", NULL);
+    format_fs("build/create_fat.second_fat.test.cfs", NULL, NULL);
 
     FILE *fp = fopen("build/create_fat.second_fat.test.cfs", "r");
     if (fread(cfs, sizeof(struct CryptFS), 1, fp) != 1)
@@ -178,7 +178,7 @@ Test(create_fat, third_fat, .init = cr_redirect_stdout, .timeout = 10)
     set_device_path("build/create_fat.third_fat.test.cfs");
     set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
-    format_fs("build/create_fat.third_fat.test.cfs", NULL);
+    format_fs("build/create_fat.third_fat.test.cfs", NULL, NULL);
 
     FILE *fp = fopen("build/create_fat.third_fat.test.cfs", "r");
     if (fread(cfs, sizeof(struct CryptFS), 1, fp) != 1)

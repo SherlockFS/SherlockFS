@@ -23,9 +23,13 @@ bool is_already_formatted(const char *file_path);
  * @param rsa_passphrase The passphrase used to encrypt the RSA private key.
  * Set to NULL if no passphrase is needed.
  * @param existing_rsa_keypair The RSA keypair to use.
+ * @param public_key_path The path where the public key will be stored.
+ * @param private_key_path The path where the private key will be stored.
  */
 void format_fill_filesystem_struct(struct CryptFS *cfs, char *rsa_passphrase,
-                                   EVP_PKEY *existing_rsa_keypair);
+                                   EVP_PKEY *existing_rsa_keypair,
+                                   const char *public_key_path,
+                                   const char *private_key_path);
 
 /**
  * @brief Format the given file to a cryptfs file system.
