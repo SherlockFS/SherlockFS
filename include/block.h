@@ -21,26 +21,12 @@ void set_device_path(const char *path);
 const char *get_device_path();
 
 /**
- * @brief Set the block size global variable.
- *
- * @param size The block size.
- */
-void set_block_size(const uint32_t size);
-
-/**
- * @brief Get the block size global variable.
- *
- * @return The block size global variable.
- */
-uint32_t get_block_size();
-
-/**
  * @brief Read blocks from the device.
  *
  * @param start_block The first block to read.
  * @param nb_blocks The number of blocks to read.
  * @param buffer The buffer to fill with the blocks.
- * (Must be allocated with at least get_block_size() * nb_blocks bytes)
+ * (Must be allocated with at least CRYPTFS_BLOCK_SIZE_BYTES * nb_blocks bytes)
  *
  * @return 0 on success, -1 on error.
  */

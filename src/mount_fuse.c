@@ -32,11 +32,10 @@ int main(int argc, char *argv[])
 
     // Set the file system global variables
     set_device_path(device_path);
-    set_block_size(header.blocksize);
 
     // Read the keys storage from the device
     struct CryptFS_Key *keys_storage =
-        xcalloc(NB_ENCRYPTION_KEYS, get_block_size());
+        xcalloc(NB_ENCRYPTION_KEYS, CRYPTFS_BLOCK_SIZE_BYTES);
 
     read_blocks(KEYS_STORAGE_BLOCK, NB_ENCRYPTION_KEYS, keys_storage);
 

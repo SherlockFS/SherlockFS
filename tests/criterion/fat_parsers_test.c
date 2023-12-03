@@ -10,7 +10,6 @@
 Test(find_first_free_block, not_found, .timeout = 10,
      .init = cr_redirect_stdout)
 {
-    set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
     set_device_path("build/tests/find_first_free_block.not_found.test.cfs");
 
     format_fs("build/tests/find_first_free_block.not_found.test.cfs",
@@ -38,7 +37,6 @@ Test(find_first_free_block, not_found, .timeout = 10,
 Test(find_first_free_block, on_first_fat, .timeout = 10,
      .init = cr_redirect_stdout)
 {
-    set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
     set_device_path("build/tests/find_first_free_block.on_first_fat.test.cfs");
 
     format_fs("build/tests/find_first_free_block.on_first_fat.test.cfs",
@@ -71,7 +69,6 @@ Test(find_first_free_block, on_second_fat, .timeout = 10,
 {
     // Setting the device and block size for read/write operations
     set_device_path("build/tests/find_first_free_block.on_second_fat.test.cfs");
-    set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
     format_fs("build/tests/find_first_free_block.on_second_fat.test.cfs",
               "build/tests/find_first_free_block.on_second_fat.public.pem",
@@ -113,7 +110,6 @@ Test(find_first_free_block, on_second_fat_not_contigious, .timeout = 10,
     set_device_path(
         "build/tests/"
         "find_first_free_block.on_second_fat_not_contigious.test.cfs");
-    set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
     format_fs("build/tests/"
               "find_first_free_block.on_second_fat_not_contigious.test.cfs",
@@ -165,7 +161,6 @@ Test(create_fat, second_fat, .init = cr_redirect_stdout, .timeout = 10)
 
     // Setting the device and block size for read/write operations
     set_device_path("build/tests/create_fat.second_fat.test.cfs");
-    set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
     format_fs("build/tests/create_fat.second_fat.test.cfs",
               "build/tests/create_fat.second_fat.public.pem",
@@ -193,7 +188,6 @@ Test(create_fat, third_fat, .init = cr_redirect_stdout, .timeout = 10)
 
     // Setting the device and block size for read/write operations
     set_device_path("build/tests/create_fat.third_fat.test.cfs");
-    set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
     format_fs("build/tests/create_fat.third_fat.test.cfs",
               "build/tests/create_fat.third_fat.public.pem",

@@ -131,7 +131,6 @@ void format_fs(const char *path, char *public_key_path, char *private_key_path,
 {
     struct CryptFS *cfs = xcalloc(1, sizeof(struct CryptFS));
 
-    set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
     set_device_path(path);
 
     format_fill_filesystem_struct(cfs, rsa_passphrase, existing_rsa_keypair,

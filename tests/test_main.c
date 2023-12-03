@@ -24,7 +24,6 @@ int main(void)
 {
     // Set the device (global variable) to the file (used by read/write_blocks)
     set_device_path("tests/blocksize.test.cfs");
-    set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
     struct CryptFS *cfs = xcalloc(1, sizeof(struct CryptFS));
 

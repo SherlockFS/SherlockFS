@@ -95,7 +95,8 @@ struct CryptFS_FAT
 } __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
 #define NB_FAT_ENTRIES_PER_BLOCK                                               \
-    ((get_block_size() - sizeof(uint64_t)) / sizeof(struct CryptFS_FAT_Entry))
+    ((CRYPTFS_BLOCK_SIZE_BYTES - sizeof(uint64_t))                             \
+     / sizeof(struct CryptFS_FAT_Entry))
 
 enum FAT_BLOCK_TYPE
 {
@@ -152,7 +153,7 @@ struct CryptFS_Directory
     struct CryptFS_Entry entries[];
 } __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
-#define CRYPTFS_MAX_ENTRIES_PER_DIR (get_block_size() - sizeof(uint8_t) - sizeof(uint32_t)) / sizeof(struct CryptFS_Entry))
+#define CRYPTFS_MAX_ENTRIES_PER_DIR (CRYPTFS_BLOCK_SIZE_BYTES - sizeof(uint8_t) - sizeof(uint32_t)) / sizeof(struct CryptFS_Entry))
 
 // -----------------------------------------------------------------------------
 // FILE CONTENT DATA

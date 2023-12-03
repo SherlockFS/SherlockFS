@@ -33,15 +33,15 @@ int64_t create_fat(struct CryptFS_FAT *any_fat)
         return FAT_BLOCK_ERROR;
 
     // Craft the new FAT block.
-    struct CryptFS_FAT *created_fat =
-        xaligned_calloc(sizeof(struct CryptFS_FAT), 1, get_block_size());
+    struct CryptFS_FAT *created_fat = xaligned_calloc(
+        sizeof(struct CryptFS_FAT), 1, CRYPTFS_BLOCK_SIZE_BYTES);
 
     created_fat->next_fat_table = FAT_BLOCK_END;
 
     // Save the first FAT (for `write_fat_offset()`)
-    struct CryptFS_FAT *first_fat_cpy =
-        memcpy(xaligned_alloc(sizeof(struct CryptFS_FAT), 1, get_block_size()),
-               any_fat, get_block_size());
+    struct CryptFS_FAT *first_fat_cpy = memcpy(
+        xaligned_alloc(sizeof(struct CryptFS_FAT), 1, CRYPTFS_BLOCK_SIZE_BYTES),
+        any_fat, CRYPTFS_BLOCK_SIZE_BYTES);
     if (first_fat_cpy == NULL)
         return FAT_BLOCK_ERROR;
 
@@ -109,9 +109,9 @@ int64_t read_fat_offset(struct CryptFS_FAT *first_fat, uint64_t offset)
 
     uint64_t concerned_fat = offset / NB_FAT_ENTRIES_PER_BLOCK;
 
-    struct CryptFS_FAT *tmp_fat =
-        xaligned_calloc(sizeof(struct CryptFS_FAT), 1, get_block_size());
-    memcpy(tmp_fat, first_fat, get_block_size());
+    struct CryptFS_FAT *tmp_fat = xaligned_calloc(sizeof(struct CryptFS_FAT), 1,
+                                                  CRYPTFS_BLOCK_SIZE_BYTES);
+    memcpy(tmp_fat, first_fat, CRYPTFS_BLOCK_SIZE_BYTES);
 
     // Parsing the FAT linked-list
     for (uint64_t i = 0; i < concerned_fat; i++)

@@ -18,7 +18,6 @@ Test(is_already_formatted, formated, .init = cr_redirect_stdout, .timeout = 10)
 {
     // Set the device (global variable) to the file (used by read/write_blocks)
     set_device_path("build/tests/format.test.cfs");
-    set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
     format_fs("build/tests/format.test.cfs", "build/tests/format.test.pub.pem",
               "build/tests/format.test.private.pem", NULL, NULL);
@@ -37,7 +36,6 @@ Test(is_already_formatted, not_CRYPTFS_BLOCK_SIZE_BYTES_blocksize,
 {
     // Set the device (global variable) to the file (used by read/write_blocks)
     set_device_path("build/tests/blocksize.test.cfs");
-    set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
     struct CryptFS *cfs = xcalloc(1, sizeof(struct CryptFS));
 
@@ -60,7 +58,6 @@ Test(format_fs, integrity, .init = cr_redirect_stdout, .timeout = 10)
 {
     // Set the device (global variable) to the file (used by read/write_blocks)
     set_device_path("build/tests/integrity.test.cfs");
-    set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
     struct CryptFS *cfs_before = xcalloc(1, sizeof(struct CryptFS));
     struct CryptFS *cfs_after = xcalloc(1, sizeof(struct CryptFS));
