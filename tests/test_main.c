@@ -23,44 +23,23 @@
 int main(void)
 {
     // Set the device (global variable) to the file (used by read/write_blocks)
-    set_device_path("build/tests/cfs_adduser.already_exists.test.cfs");
+    set_device_path("tests/blocksize.test.cfs");
     set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
-    EVP_PKEY *my_rsa = generate_rsa_keypair();
-    EVP_PKEY *other_rsa = generate_rsa_keypair();
+    struct CryptFS *cfs = xcalloc(1, sizeof(struct CryptFS));
 
-    format_fs("build/tests/cfs_adduser.already_exists.test.cfs", NULL, NULL,
-              NULL, my_rsa);
+    format_fs("tests/blocksize.test.cfs", "tests/blocksize.test.pub.pem",
+              "tests/blocksize.test.private.pem", NULL, NULL);
 
-    // Read CryptFS structure
-    struct CryptFS *cfs =
-        read_cryptfs_headers("build/tests/cfs_adduser.already_exists.test.cfs");
+    // Change the blocksize
+    cfs->header.blocksize = 1024;
 
-    write_rsa_keys_on_disk(
-        my_rsa, "build/tests/cfs_adduser.already_exists.my_public.pem",
-        "build/tests/cfs_adduser.already_exists.my_private.pem", NULL);
-    write_rsa_keys_on_disk(
-        other_rsa, "build/tests/cfs_adduser.already_exists.other_public.pem",
-        NULL, NULL);
+    // Write the CryptFS to the file
+    write_cryptfs_headers("tests/blocksize.test.cfs", cfs);
 
-    int cfs_ret = 0;
-    for (u_int8_t i = 0; i < 2; i++) // Add the same user twice
-        cfs_ret =
-            cryptfs_adduser("tests/cfs_adduser.already_exists.test.cfs",
-                            "tests/cfs_adduser.already_exists.other_public.pem",
-                            "tests/cfs_adduser.already_exists.my_private.pem");
-
-    // Read CryptFS structure
+    bool a = is_already_formatted("tests/blocksize.test.cfs");
+    printf("%d\n", a);
     free(cfs);
-    cfs =
-        read_cryptfs_headers("build/tests/cfs_adduser.already_exists.test.cfs");
-
-    // Free memory
-    EVP_PKEY_free(my_rsa);
-    EVP_PKEY_free(other_rsa);
-    free(cfs);
-
-    (void)cfs_ret; // Avoid unused variable warning (cfs_ret is used in assert)
 
     return 0;
 }

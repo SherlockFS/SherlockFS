@@ -6,6 +6,7 @@
 #include "cryptfs.h"
 #include "format.h"
 #include "print.h"
+#include "writefs.h"
 #include "xalloc.h"
 
 Test(is_already_formatted, not_formated, .timeout = 10)
@@ -29,6 +30,30 @@ Test(is_already_formatted, formated, .init = cr_redirect_stdout, .timeout = 10)
         perror("Impossible to delete the file");
         exit(EXIT_FAILURE);
     }
+}
+
+Test(is_already_formatted, not_CRYPTFS_BLOCK_SIZE_BYTES_blocksize,
+     .init = cr_redirect_stdout, .timeout = 10)
+{
+    // Set the device (global variable) to the file (used by read/write_blocks)
+    set_device_path("build/tests/blocksize.test.cfs");
+    set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
+
+    struct CryptFS *cfs = xcalloc(1, sizeof(struct CryptFS));
+
+    format_fs("build/tests/blocksize.test.cfs",
+              "build/tests/blocksize.test.pub.pem",
+              "build/tests/blocksize.test.private.pem", NULL, NULL);
+
+    // Change the blocksize
+    cfs->header.blocksize = 1024;
+
+    // Write the CryptFS to the file
+    write_cryptfs_headers("build/tests/blocksize.test.cfs", cfs);
+
+    cr_assert(!is_already_formatted("build/tests/blocksize.test.cfs"));
+
+    free(cfs);
 }
 
 Test(format_fs, integrity, .init = cr_redirect_stdout, .timeout = 10)

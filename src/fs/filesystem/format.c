@@ -15,9 +15,9 @@
 #include "print.h"
 #include "xalloc.h"
 
-bool is_already_formatted(const char *file_path)
+bool is_already_formatted(const char *device_path)
 {
-    FILE *file = fopen(file_path, "r");
+    FILE *file = fopen(device_path, "r");
     if (file == NULL)
         return false;
 
@@ -33,8 +33,9 @@ bool is_already_formatted(const char *file_path)
     // Check if the version is correct
     else if (header.version != CRYPTFS_VERSION)
         return false;
-    // Check if the blocksize is correct (must be a multiple of 2)
-    else if (header.blocksize == 0 || header.blocksize % 2 != 0)
+    // Check if the blocksize is exactly CRYPTFS_BLOCK_SIZE_BYTES
+    // (the only supported block size in this implementation)
+    else if (header.blocksize != CRYPTFS_BLOCK_SIZE_BYTES)
         return false;
 
     return true;
