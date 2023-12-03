@@ -1,5 +1,7 @@
 # SherlockFS v1 - Système de fichiers chiffré
 
+![SherlockFS logo](images/SherlockFS_logo.png)
+
 ## Introduction
 
 SherlockFS est un système de fichiers chiffré, s'inspirant des principes de FAT et LUKS. Conçu pour plusieurs utilisateurs, il offre une solution sécurisée pour le stockage de fichiers sur un périphérique. La version actuelle (v1) de SherlockFS est une implémentation logicielle basée sur FUSE, bien qu'elle soit encore en cours de développement.
