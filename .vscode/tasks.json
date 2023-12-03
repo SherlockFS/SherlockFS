@@ -25,6 +25,18 @@
             }
         },
         {
+            "label": "make cfs_adduser",
+            "type": "shell",
+            "command": "/usr/bin/make",
+            "args": [
+                "cfs_adduser",
+                "-j",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
             "label": "make test_main",
             "type": "shell",
             "command": "/usr/bin/make",

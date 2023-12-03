@@ -3,6 +3,8 @@
 
 #include <openssl/aes.h>
 #include <openssl/evp.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "cryptfs.h"
 
@@ -92,11 +94,13 @@ void store_keys_in_keys_storage(struct CryptFS_Key *keys_storage,
  * @brief Writes the RSA private and public keys to a file.
  *
  * @param rsa_keypair The RSA keypair which is written.
- * @param path_to_write The path to the file which is written.
+ * @param public_key_path The path where the public key will be written.
+ * @param private_key_path The path where the private key will be written.
  * @param passphrase The passphrase used to encrypt the keys.
+ * NULL if the keys are not encrypted.
  */
-void write_rsa_keys_on_disk(EVP_PKEY *rsa_keypair, const char *path_to_write,
-                            char *passphrase);
+void write_rsa_keys_on_disk(EVP_PKEY *rsa_keypair, const char *public_key_path,
+                            const char *private_key_path, char *passphrase);
 
 /**
  * @brief Find the key in the keys storage which matches the given RSA
@@ -104,23 +108,31 @@ void write_rsa_keys_on_disk(EVP_PKEY *rsa_keypair, const char *path_to_write,
  *
  * @param rsa_private The RSA of the user.
  * @param keys_storage The keys storage to search in.
- * @return int8_t The index of the key in the header, -1 if not found.
+ * @return ssize_t The index of the key in the header, -1 if not found.
  */
-int8_t find_rsa_matching_key(EVP_PKEY *rsa_private,
-                             struct CryptFS_Key *keys_storage);
+ssize_t find_rsa_matching_key(EVP_PKEY *rsa_private,
+                              struct CryptFS_Key *keys_storage);
 
 /**
  * @brief Loads the RSA private and public keys from the given file.
  *
- * @param public_key_path The path to the public key file.
- * @param private_key_path The path to the private key file.
- * @param passphrase The passphrase used to encrypt the keys,
- * NULL if no passphrase is used.
+ * @param public_key_path The path of the public key file.
+ * @param private_key_path The path of the private key file.
+ * @param passphrase The passphrase used to decrypt the keys,
+ * NULL if the keys are not encrypted.
  * @return EVP_PKEY* The loaded RSA keypair.
  */
 EVP_PKEY *load_rsa_keypair_from_disk(const char *public_key_path,
                                      const char *private_key_path,
                                      char *passphrase);
+
+/**
+ * @brief Get the RSA keys home paths (public and private).
+ *
+ * @param public_key_path Returned public key path.
+ * @param private_key_path Returned private key path.
+ */
+void get_rsa_keys_home_paths(char **public_key_path, char **private_key_path);
 
 /**
  * @brief Loads the RSA private and public keys from the current user's home

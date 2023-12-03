@@ -33,18 +33,27 @@ EVP_PKEY *load_rsa_keypair_from_disk(const char *public_key_path,
 
     return rsa_keypair;
 }
-EVP_PKEY *load_rsa_keypair_from_home(char **passphrase)
+
+void get_rsa_keys_home_paths(char **public_key_path, char **private_key_path)
 {
-    // STEP 2 : Verify if the private key is encrypted
     char *home = getenv("HOME");
     if (!home)
-        internal_error_exit("Impossible to get the user directory path\n",
+        internal_error_exit("'HOME' envariable is not defined but required. \n",
                             EXIT_FAILURE);
 
-    char *private_path = xcalloc(PATH_MAX + 1, sizeof(char));
-    char *public_path = xcalloc(PATH_MAX + 1, sizeof(char));
-    snprintf(private_path, PATH_MAX, "%s/%s", home, ".cryptfs/private.pem");
-    snprintf(public_path, PATH_MAX, "%s/%s", home, ".cryptfs/public.pem");
+    *public_key_path = xcalloc(PATH_MAX + 1, sizeof(char));
+    *private_key_path = xcalloc(PATH_MAX + 1, sizeof(char));
+    snprintf(*public_key_path, PATH_MAX, "%s/%s", home, ".cryptfs/public.pem");
+    snprintf(*private_key_path, PATH_MAX, "%s/%s", home,
+             ".cryptfs/private.pem");
+}
+
+EVP_PKEY *load_rsa_keypair_from_home(char **passphrase)
+{
+    char *public_path = NULL;
+    char *private_path = NULL;
+
+    get_rsa_keys_home_paths(&public_path, &private_path);
 
     EVP_PKEY *rsa_keypair =
         load_rsa_keypair_from_disk(public_path, private_path, *passphrase);
