@@ -36,15 +36,11 @@ int main(int argc, char *argv[])
     {
     case 2:
         path = argv[1];
-
-        break;
-    case 3:
-        path = argv[1];
-        passphrase = argv[2];
         break;
 
     default:
-        printf("Usage: %s <device> [RSA key passphrase]\n", argv[0]);
+        printf("SherlockFS v%d - Format a device\n", CRYPTFS_VERSION);
+        printf("\tUsage: %s <device>\n", argv[0]);
         return EXIT_FAILURE;
     }
 
@@ -80,8 +76,9 @@ int main(int argc, char *argv[])
     format_fs(path, NULL, NULL, passphrase, existing_rsa_keypair);
     print_success("The device `%s` has been formatted successfully!\n", path);
 
-    if (passphrase)
-        free(passphrase);
+    free(passphrase);
+    if (existing_rsa_keypair != NULL)
+        EVP_PKEY_free(existing_rsa_keypair);
 
     return 0;
 }
