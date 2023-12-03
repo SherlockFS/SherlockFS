@@ -4,7 +4,7 @@
 
 //TODO read multiple blocks at once
 struct dirblock* get_dirblock(size_t block) {
-    void* block = malloc(get_block_size());
+    void *block = malloc(CRYPTFS_BLOCK_SIZE_BYTES);
     read_blocks(block, 1, )
 }
 

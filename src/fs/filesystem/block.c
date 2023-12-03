@@ -9,7 +9,6 @@
 #include "xalloc.h"
 
 const char *DEVICE_PATH = NULL;
-uint32_t BLOCK_SIZE = 0;
 
 void set_device_path(const char *path)
 {
@@ -23,22 +22,9 @@ const char *get_device_path()
     return DEVICE_PATH;
 }
 
-void set_block_size(const uint32_t size)
-{
-    assert(size >= CRYPTFS_BLOCK_SIZE_BYTES);
-    BLOCK_SIZE = size;
-}
-
-uint32_t get_block_size()
-{
-    assert(BLOCK_SIZE >= CRYPTFS_BLOCK_SIZE_BYTES);
-    return BLOCK_SIZE;
-}
-
 int read_blocks(block_t start_block, size_t nb_blocks, void *buffer)
 {
     assert(DEVICE_PATH != NULL);
-    assert(BLOCK_SIZE != 0);
 
     if (nb_blocks == 0)
         return 0;
@@ -49,14 +35,14 @@ int read_blocks(block_t start_block, size_t nb_blocks, void *buffer)
     if (!file)
         return -1;
 
-    if (fseek(file, start_block * BLOCK_SIZE, SEEK_SET) != 0)
+    if (fseek(file, start_block * CRYPTFS_BLOCK_SIZE_BYTES, SEEK_SET) != 0)
         return -1;
 
     size_t read = 0;
     while (read < nb_blocks)
     {
-        size_t n = fread(buffer + read * get_block_size(), get_block_size(),
-                         nb_blocks - read, file);
+        size_t n = fread(buffer + read * CRYPTFS_BLOCK_SIZE_BYTES,
+                         CRYPTFS_BLOCK_SIZE_BYTES, nb_blocks - read, file);
         if (n == 0)
             return -1;
         read += n;
@@ -71,7 +57,6 @@ int read_blocks(block_t start_block, size_t nb_blocks, void *buffer)
 int write_blocks(block_t start_block, size_t nb_blocks, void *buffer)
 {
     assert(DEVICE_PATH != NULL);
-    assert(BLOCK_SIZE != 0);
 
     if (nb_blocks == 0)
         return 0;
@@ -82,14 +67,14 @@ int write_blocks(block_t start_block, size_t nb_blocks, void *buffer)
     if (file == NULL)
         return -1;
 
-    if (fseek(file, start_block * get_block_size(), SEEK_SET) == -1)
+    if (fseek(file, start_block * CRYPTFS_BLOCK_SIZE_BYTES, SEEK_SET) == -1)
         return -1;
 
     size_t written = 0;
     while (written < nb_blocks)
     {
-        size_t n = fwrite(buffer + written * get_block_size(), get_block_size(),
-                          nb_blocks - written, file);
+        size_t n = fwrite(buffer + written * CRYPTFS_BLOCK_SIZE_BYTES,
+                          CRYPTFS_BLOCK_SIZE_BYTES, nb_blocks - written, file);
         if (n == 0)
             return -1;
         written += n;
@@ -104,7 +89,8 @@ int write_blocks(block_t start_block, size_t nb_blocks, void *buffer)
 int read_blocks_with_decryption(unsigned char *aes_key, block_t start_block,
                                 size_t nb_blocks, void *buffer)
 {
-    unsigned char *encrypted_buffer = xmalloc(nb_blocks, get_block_size());
+    unsigned char *encrypted_buffer =
+        xmalloc(nb_blocks, CRYPTFS_BLOCK_SIZE_BYTES);
     int read_blocks_res = read_blocks(start_block, nb_blocks, encrypted_buffer);
 
     if (read_blocks_res == -1)
@@ -114,8 +100,9 @@ int read_blocks_with_decryption(unsigned char *aes_key, block_t start_block,
     }
 
     size_t useless_size = 0;
-    unsigned char *decrypted_buffer = aes_decrypt_data(
-        aes_key, encrypted_buffer, nb_blocks * get_block_size(), &useless_size);
+    unsigned char *decrypted_buffer =
+        aes_decrypt_data(aes_key, encrypted_buffer,
+                         nb_blocks * CRYPTFS_BLOCK_SIZE_BYTES, &useless_size);
 
     if (decrypted_buffer == NULL)
     {
@@ -124,7 +111,7 @@ int read_blocks_with_decryption(unsigned char *aes_key, block_t start_block,
         return -1;
     }
 
-    memcpy(buffer, decrypted_buffer, nb_blocks * get_block_size());
+    memcpy(buffer, decrypted_buffer, nb_blocks * CRYPTFS_BLOCK_SIZE_BYTES);
     free(encrypted_buffer);
     free(decrypted_buffer);
     return 0;
@@ -135,7 +122,7 @@ int write_blocks_with_encryption(unsigned char *aes_key, size_t start_block,
 {
     size_t useless_size = 0;
     unsigned char *encrypted_buffer = aes_encrypt_data(
-        aes_key, buffer, nb_blocks * get_block_size(), &useless_size);
+        aes_key, buffer, nb_blocks * CRYPTFS_BLOCK_SIZE_BYTES, &useless_size);
     if (encrypted_buffer == NULL)
         return -1;
     int write_blocks_res =

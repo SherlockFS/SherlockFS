@@ -7,13 +7,13 @@
 #include "cryptfs.h"
 
 /**
- * @brief Check if the given file is a cryptfs file system.
+ * @brief Check if the given file is a valid CryptFS file system.
  *
- * @param file_path Path to the file to check.
- * @return true if the file is a cryptfs file system.
- * @return false if the file is not a cryptfs file system.
+ * @param device_path Path of the file to check.
+ * @return true if the device is a valid CryptFS file system.
+ * @return false if the device is not a valid CryptFS file system.
  */
-bool is_already_formatted(const char *file_path);
+bool is_already_formatted(const char *device_path);
 
 /**
  * @brief File the `struct CryptFS` structure when first formatting the

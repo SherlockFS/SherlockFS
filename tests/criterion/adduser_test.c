@@ -56,7 +56,6 @@ Test(cfs_adduser, formated, .timeout = 10, .init = cr_redirect_stdout)
 {
     // Set the device (global variable) to the file (used by read/write_blocks)
     set_device_path("build/tests/cfs_adduser.formated.test.cfs");
-    set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
     EVP_PKEY *my_rsa = generate_rsa_keypair();
 
@@ -108,7 +107,6 @@ Test(cfs_adduser, already_exists, .timeout = 10, .init = cr_redirect_stdall)
 {
     // Set the device (global variable) to the file (used by read/write_blocks)
     set_device_path("build/tests/cfs_adduser.already_exists.test.cfs");
-    set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
     EVP_PKEY *my_rsa = generate_rsa_keypair();
     EVP_PKEY *other_rsa = generate_rsa_keypair();
