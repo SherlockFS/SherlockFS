@@ -62,7 +62,13 @@ $(BUILD_DIR)/test_main: $(OBJ) $(BUILD_DIR)/tests/test_main.o
 check: tests_suite
 	$(BUILD_DIR)/tests_suite
 
-clean:
+clean_all:
 	rm -rf $(BUILD_DIR)
+
+clean:
+	find $(BUILD_DIR)/* -type d -print0 | xargs -0 -I {} echo {} | tac | xargs rm -rf
+	rm -f $(BUILD_DIR)/formater
+	rm -f $(BUILD_DIR)/mount
+	rm -f $(BUILD_DIR)/cfs_adduser
 
 .PHONY: clean

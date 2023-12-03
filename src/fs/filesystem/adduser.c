@@ -9,8 +9,8 @@
 #include "readfs.h"
 #include "writefs.h"
 
-void cryptfs_adduser(char *device_path, char *other_public_key_path,
-                     char *my_private_key_path)
+int cryptfs_adduser(char *device_path, char *other_public_key_path,
+                    char *my_private_key_path)
 {
     char *passphrase = NULL;
 
@@ -48,16 +48,16 @@ void cryptfs_adduser(char *device_path, char *other_public_key_path,
             "The user with the public key '%s' is already in the keys "
             "storage of the device '%s'\n",
             other_public_key_path, device_path);
-        return;
+        return -1;
     }
 
-    print_info("Finding registred user public key in the keys storage...\n");
+    print_info("Finding registred user private key in the keys storage...\n");
     index = find_rsa_matching_key(my_rsa, cryptfs->keys_storage);
 
     if (index == -1)
-        error_exit(
-            "Registred user public key is not registered in the keys storage\n",
-            EXIT_FAILURE);
+        error_exit("User private key is not registered in the keys "
+                   "storage\n",
+                   EXIT_FAILURE);
 
     // Decrypt the master key
     print_info("Decrypting the master key...\n");
@@ -88,4 +88,5 @@ void cryptfs_adduser(char *device_path, char *other_public_key_path,
     print_success("The user with the public key '%s' has been added to the "
                   "keys storage of the device '%s' successfully!\n",
                   other_public_key_path, device_path);
+    return 0;
 }

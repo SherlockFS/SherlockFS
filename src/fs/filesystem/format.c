@@ -41,7 +41,7 @@ bool is_already_formatted(const char *file_path)
 }
 
 void format_fill_filesystem_struct(struct CryptFS *cfs, char *rsa_passphrase,
-                                   EVP_PKEY *existing_rsa_keypair,
+                                   const EVP_PKEY *existing_rsa_keypair,
                                    const char *public_key_path,
                                    const char *private_key_path)
 {
@@ -66,7 +66,7 @@ void format_fill_filesystem_struct(struct CryptFS *cfs, char *rsa_passphrase,
 
     EVP_PKEY *rsa_key = NULL;
     if (existing_rsa_keypair != NULL)
-        rsa_key = existing_rsa_keypair;
+        rsa_key = EVP_PKEY_dup((EVP_PKEY *)existing_rsa_keypair);
     else
         rsa_key = generate_rsa_keypair();
 
@@ -125,8 +125,8 @@ void format_fill_filesystem_struct(struct CryptFS *cfs, char *rsa_passphrase,
     EVP_PKEY_free(rsa_key);
 }
 
-void format_fs(const char *path, char *rsa_passphrase,
-               EVP_PKEY *existing_rsa_keypair)
+void format_fs(const char *path, char *public_key_path, char *private_key_path,
+               char *rsa_passphrase, EVP_PKEY *existing_rsa_keypair)
 {
     struct CryptFS *cfs = xcalloc(1, sizeof(struct CryptFS));
 
@@ -134,7 +134,7 @@ void format_fs(const char *path, char *rsa_passphrase,
     set_device_path(path);
 
     format_fill_filesystem_struct(cfs, rsa_passphrase, existing_rsa_keypair,
-                                  NULL, NULL);
+                                  public_key_path, private_key_path);
 
     FILE *file = fopen(path, "w+");
     if (file == NULL)

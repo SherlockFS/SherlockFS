@@ -22,10 +22,12 @@ Test(set_block_size, good_size, .timeout = 10)
 
 Test(block, read_write, .init = cr_redirect_stdout, .timeout = 10)
 {
-    set_device_path("build/block_read_write.test.cfs");
+    set_device_path("build/tests/block_read_write.test.cfs");
     set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
-    format_fs("build/block_read_write.test.cfs", NULL, NULL);
+    format_fs("build/tests/block_read_write.test.cfs",
+              "build/tests/block_read_write.test.public.pem",
+              "build/tests/block_read_write.test.private.pem", NULL, NULL);
 
     uint8_t *buffer_before = xmalloc(1, get_block_size());
     uint8_t *buffer_after = xcalloc(1, get_block_size());
@@ -39,7 +41,7 @@ Test(block, read_write, .init = cr_redirect_stdout, .timeout = 10)
     cr_assert_arr_eq(buffer_before, buffer_after, get_block_size());
 
     // Remove the file
-    if (remove("build/block_read_write.test.cfs") != 0)
+    if (remove("build/tests/block_read_write.test.cfs") != 0)
         cr_assert(false, "Impossible to delete the file");
 
     free(buffer_before);
@@ -49,10 +51,13 @@ Test(block, read_write, .init = cr_redirect_stdout, .timeout = 10)
 Test(block, read_write_with_encryption_decryption, .init = cr_redirect_stdout,
      .timeout = 10)
 {
-    set_device_path("build/block_read_write_with_encryption.test.cfs");
+    set_device_path("build/tests/block_read_write_with_encryption.test.cfs");
     set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
-    format_fs("build/block_read_write_with_encryption.test.cfs", NULL, NULL);
+    format_fs("build/tests/block_read_write_with_encryption.test.cfs",
+              "build/tests/block_read_write_with_encryption.test.public.pem",
+              "build/tests/block_read_write_with_encryption.test.private.pem",
+              NULL, NULL);
 
     unsigned char *aes_key = generate_aes_key();
 

@@ -87,18 +87,20 @@ Test(write_rsa_keys_on_disk, write_rsa_keys_on_disk, .init = cr_redirect_stdout,
     EVP_PKEY *rsa_keypair = generate_rsa_keypair();
     unsigned char *aes_key = generate_aes_key();
 
-    write_rsa_keys_on_disk(rsa_keypair,
-                           "build/write_rsa_keys_on_disk.public.pem",
-                           "build/write_rsa_keys_on_disk.private.pem", NULL);
+    write_rsa_keys_on_disk(
+        rsa_keypair, "build/tests/write_rsa_keys_on_disk.public.pem",
+        "build/tests/write_rsa_keys_on_disk.private.pem", NULL);
 
     // Check if the files exists
-    cr_assert(access("build/write_rsa_keys_on_disk.public.pem", F_OK) == 0,
+    cr_assert(access("build/tests/write_rsa_keys_on_disk.public.pem", F_OK)
+                  == 0,
               "File 'build/write_rsa_keys_on_disk.public.pem' does not exist");
-    cr_assert(access("build/write_rsa_keys_on_disk.private.pem", F_OK) == 0,
+    cr_assert(access("build/tests/write_rsa_keys_on_disk.private.pem", F_OK)
+                  == 0,
               "File 'build/write_rsa_keys_on_disk.private.pem' does not exist");
 
     // Check if these file are correct PEM keys
-    FILE *fp = fopen("build/write_rsa_keys_on_disk.public.pem", "r");
+    FILE *fp = fopen("build/tests/write_rsa_keys_on_disk.public.pem", "r");
     char *rsa_pem = xcalloc(EVP_PKEY_size(rsa_keypair) + 1, 1);
     fread(rsa_pem, 1, EVP_PKEY_size(rsa_keypair), fp);
     fclose(fp);
@@ -106,7 +108,7 @@ Test(write_rsa_keys_on_disk, write_rsa_keys_on_disk, .init = cr_redirect_stdout,
                      strlen("-----BEGIN PUBLIC KEY-----"));
     free(rsa_pem);
 
-    fp = fopen("build/write_rsa_keys_on_disk.private.pem", "r");
+    fp = fopen("build/tests/write_rsa_keys_on_disk.private.pem", "r");
     rsa_pem = xcalloc(EVP_PKEY_size(rsa_keypair) + 1, 1);
     fread(rsa_pem, 1, EVP_PKEY_size(rsa_keypair), fp);
     fclose(fp);
@@ -118,8 +120,8 @@ Test(write_rsa_keys_on_disk, write_rsa_keys_on_disk, .init = cr_redirect_stdout,
     EVP_PKEY_free(rsa_keypair);
 
     // Remove the files
-    remove("build/write_rsa_keys_on_disk.public.pem");
-    remove("build/write_rsa_keys_on_disk.private.pem");
+    remove("build/tests/write_rsa_keys_on_disk.public.pem");
+    remove("build/tests/write_rsa_keys_on_disk.private.pem");
 }
 
 Test(find_rsa_matching_key, no_key, .init = cr_redirect_stdout, .timeout = 10)

@@ -4,11 +4,12 @@
 /**
  * @brief Add a user public key to the cryptfs keys storage
  *
- * @param device_path The path to the device
+ * @param device_path The path of the device to add user to
  * @param other_public_key_path A path to a public key to add
  * @param my_private_key_path A path to a private key already registered
+ * @return int 0 if success, -1 user already exists (not added)
  */
-void cryptfs_adduser(char *device_path, char *other_public_key_path,
-                     char *my_private_key_path);
+int cryptfs_adduser(char *device_path, char *other_public_key_path,
+                    char *my_private_key_path);
 
 #endif /* ADDUSER_H */

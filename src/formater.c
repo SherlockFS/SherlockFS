@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
     else
         ask_new_password(&passphrase);
 
-    format_fs(path, passphrase, existing_rsa_keypair);
+    format_fs(path, NULL, NULL, passphrase, existing_rsa_keypair);
     print_success("The device `%s` has been formatted successfully!\n", path);
 
     if (passphrase)

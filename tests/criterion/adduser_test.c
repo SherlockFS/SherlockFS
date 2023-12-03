@@ -7,27 +7,25 @@
 #include "print.h"
 #include "readfs.h"
 
+void cr_redirect_stdall(void)
+{
+    cr_redirect_stdout();
+    cr_redirect_stderr();
+}
+
 Test(cfs_adduser, not_existing, .exit_code = EXIT_FAILURE, .timeout = 10,
      .init = cr_redirect_stderr)
 {
-    cryptfs_adduser("build/cfs_adduser.not_existing.test.cfs",
-                    "build/cfs_adduser.not_existing.public.pem",
-                    "build/cfs_adduser.not_existing.private.pem");
+    cryptfs_adduser("build/tests/cfs_adduser.not_existing.test.cfs",
+                    "build/tests/cfs_adduser.not_existing.public.pem",
+                    "build/tests/cfs_adduser.not_existing.private.pem");
 }
 
-void post_not_formated(void)
-{
-    // Delete created files
-    remove("build/cfs_adduser.not_formated.test.cfs");
-    remove("build/cfs_adduser.not_formated.public.pem");
-    remove("build/cfs_adduser.not_formated.private.pem");
-    remove("build/cfs_adduser.not_formated.other_public.pem");
-}
-Test(cfs_adduser, not_formated, .fini = post_not_formated,
-     .exit_code = EXIT_FAILURE, .timeout = 10, .init = cr_redirect_stdout)
+Test(cfs_adduser, not_formated, .exit_code = EXIT_FAILURE, .timeout = 10,
+     .init = cr_redirect_stdall)
 {
     // Create random file
-    FILE *file = fopen("build/cfs_adduser.not_formated.test.cfs", "w");
+    FILE *file = fopen("build/tests/cfs_adduser.not_formated.test.cfs", "w");
     if (file == NULL)
     {
         perror("Impossible to create the file");
@@ -38,40 +36,40 @@ Test(cfs_adduser, not_formated, .fini = post_not_formated,
     // OpenSSL generate keypair and write it to a file
     EVP_PKEY *my_rsa = generate_rsa_keypair();
     EVP_PKEY *other_rsa = generate_rsa_keypair();
-    write_rsa_keys_on_disk(my_rsa, "build/cfs_adduser.not_formated.public.pem",
-                           "build/cfs_adduser.not_formated.private.pem", NULL);
-    write_rsa_keys_on_disk(other_rsa,
-                           "build/cfs_adduser.not_formated.other_public.pem",
-                           NULL, NULL);
+    write_rsa_keys_on_disk(
+        my_rsa, "build/tests/cfs_adduser.not_formated.public.pem",
+        "build/tests/cfs_adduser.not_formated.private.pem", NULL);
+    write_rsa_keys_on_disk(
+        other_rsa, "build/tests/cfs_adduser.not_formated.other_public.pem",
+        NULL, NULL);
 
-    cryptfs_adduser("build/cfs_adduser.not_formated.test.cfs",
-                    "build/cfs_adduser.not_formated.public.pem",
-                    "build/cfs_adduser.not_formated.private.pem");
+    cryptfs_adduser("build/tests/cfs_adduser.not_formated.test.cfs",
+                    "build/tests/cfs_adduser.not_formated.public.pem",
+                    "build/tests/cfs_adduser.not_formated.private.pem");
+
+    // Free memory
+    EVP_PKEY_free(my_rsa);
+    EVP_PKEY_free(other_rsa);
 }
 
-void post_formated(void)
-{
-    // Delete created files
-    remove("build/cfs_adduser.formated.test.cfs");
-    remove("build/cfs_adduser.formated.my_public.pem");
-    remove("build/cfs_adduser.formated.my_private.pem");
-    remove("build/cfs_adduser.formated.other_public.pem");
-}
-Test(cfs_adduser, formated, .fini = post_formated, .timeout = 10,
-     .init = cr_redirect_stdout)
+Test(cfs_adduser, formated, .timeout = 10, .init = cr_redirect_stdout)
 {
     // Set the device (global variable) to the file (used by read/write_blocks)
-    set_device_path("build/cfs_adduser.formated.test.cfs");
+    set_device_path("build/tests/cfs_adduser.formated.test.cfs");
     set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
     EVP_PKEY *my_rsa = generate_rsa_keypair();
 
-    format_fs("build/cfs_adduser.formated.test.cfs", NULL, my_rsa);
-    cr_assert(is_already_formatted("build/cfs_adduser.formated.test.cfs"));
+    format_fs("build/tests/cfs_adduser.formated.test.cfs",
+              "build/tests/cfs_adduser.formated.test.public.pem",
+              "build/tests/cfs_adduser.formated.test.private.pem", NULL,
+              my_rsa);
+    cr_assert(
+        is_already_formatted("build/tests/cfs_adduser.formated.test.cfs"));
 
     // Read CryptFS structure
     struct CryptFS *cfs =
-        read_cryptfs_headers("build/cfs_adduser.formated.test.cfs");
+        read_cryptfs_headers("build/tests/cfs_adduser.formated.test.cfs");
 
     // Check if second key storage buf is empty
     cr_assert_arr_eq(cfs->keys_storage[1].aes_key_ciphered,
@@ -80,80 +78,91 @@ Test(cfs_adduser, formated, .fini = post_formated, .timeout = 10,
 
     // OpenSSL generate keypair and write it to a file
     EVP_PKEY *other_rsa = generate_rsa_keypair();
-    write_rsa_keys_on_disk(my_rsa, "build/cfs_adduser.formated.my_public.pem",
-                           "build/cfs_adduser.formated.my_private.pem", NULL);
     write_rsa_keys_on_disk(
-        other_rsa, "build/cfs_adduser.formated.other_public.pem", NULL, NULL);
+        my_rsa, "build/tests/cfs_adduser.formated.my_public.pem",
+        "build/tests/cfs_adduser.formated.my_private.pem", NULL);
+    write_rsa_keys_on_disk(other_rsa,
+                           "build/tests/cfs_adduser.formated.other_public.pem",
+                           NULL, NULL);
 
-    cryptfs_adduser("build/cfs_adduser.formated.test.cfs",
-                    "build/cfs_adduser.formated.other_public.pem",
-                    "build/cfs_adduser.formated.my_private.pem");
+    cryptfs_adduser("build/tests/cfs_adduser.formated.test.cfs",
+                    "build/tests/cfs_adduser.formated.other_public.pem",
+                    "build/tests/cfs_adduser.formated.my_private.pem");
 
     // Read CryptFS structure
-    cfs = read_cryptfs_headers("build/cfs_adduser.formated.test.cfs");
+    free(cfs);
+    cfs = read_cryptfs_headers("build/tests/cfs_adduser.formated.test.cfs");
 
     // Check if second key storage buf is not empty
     cr_assert_arr_neq(cfs->keys_storage[1].aes_key_ciphered,
                       (unsigned char[AES_KEY_SIZE_BYTES]){ 0 },
                       AES_KEY_SIZE_BYTES);
+
+    // Free memory
+    EVP_PKEY_free(my_rsa);
+    EVP_PKEY_free(other_rsa);
+    free(cfs);
 }
 
-// void post_already_exists(void)
-// {
-//     // Delete created files
-//     remove("build/cfs_adduser.formated.test.cfs");
-//     remove("build/cfs_adduser.formated.my_public.pem");
-//     remove("build/cfs_adduser.formated.my_private.pem");
-//     remove("build/cfs_adduser.formated.other_public.pem");
-// }
-// Test(cfs_adduser, already_exists, .fini = post_already_exists, .timeout = 10,
-//      .init = cr_redirect_stdout)
-// {
-//     // Set the device (global variable) to the file (used by
-//     read/write_blocks)
-//     set_device_path("build/cfs_adduser.already_exists.test.cfs");
-//     set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
+Test(cfs_adduser, already_exists, .timeout = 10, .init = cr_redirect_stdall)
+{
+    // Set the device (global variable) to the file (used by read/write_blocks)
+    set_device_path("build/tests/cfs_adduser.already_exists.test.cfs");
+    set_block_size(CRYPTFS_BLOCK_SIZE_BYTES);
 
-//     format_fs("build/cfs_adduser.already_exists.test.cfs", NULL, NULL);
-//     cr_assert(
-//         is_already_formatted("build/cfs_adduser.already_exists.test.cfs"));
+    EVP_PKEY *my_rsa = generate_rsa_keypair();
+    EVP_PKEY *other_rsa = generate_rsa_keypair();
 
-//     // Read CryptFS structure
-//     struct CryptFS *cfs =
-//         read_cryptfs_headers("build/cfs_adduser.already_exists.test.cfs");
+    format_fs("build/tests/cfs_adduser.already_exists.test.cfs",
+              "build/tests/cfs_adduser.already_exists.test.public.pem",
+              "build/tests/cfs_adduser.already_exists.test.private.pem", NULL,
+              my_rsa);
 
-//     // Check if second and third keys storages are empty
-//     cr_assert_arr_eq(cfs->keys_storage[1].aes_key_ciphered,
-//                      (unsigned char[AES_KEY_SIZE_BYTES * 2]){ 0 },
-//                      AES_KEY_SIZE_BYTES * 2);
+    cr_assert(is_already_formatted(
+        "build/tests/cfs_adduser.already_exists.test.cfs"));
 
-//     // OpenSSL generate keypair and write it to a file
-//     EVP_PKEY *my_rsa = generate_rsa_keypair();
-//     EVP_PKEY *other_rsa = generate_rsa_keypair();
-//     write_rsa_keys_on_disk(
-//         my_rsa, "build/cfs_adduser.already_exists.my_public.pem",
-//         "build/cfs_adduser.already_exists.my_private.pem", NULL);
-//     write_rsa_keys_on_disk(other_rsa,
-//                            "build/cfs_adduser.already_exists.other_public.pem",
-//                            NULL, NULL);
+    // Read CryptFS structure
+    struct CryptFS *cfs =
+        read_cryptfs_headers("build/tests/cfs_adduser.already_exists.test.cfs");
 
-//     for (u_int8_t i = 0; i < 2; i++)
-//     {
-//         cryptfs_adduser("build/cfs_adduser.already_exists.test.cfs",
-//                         "build/cfs_adduser.already_exists.other_public.pem",
-//                         "build/cfs_adduser.already_exists.my_private.pem");
-//     }
+    // Check if second and third keys storages are empty
+    cr_assert_arr_eq(cfs->keys_storage[1].aes_key_ciphered,
+                     (unsigned char[AES_KEY_SIZE_BYTES * 2]){ 0 },
+                     AES_KEY_SIZE_BYTES * 2);
 
-//     // Read CryptFS structure
-//     cfs = read_cryptfs_headers("build/cfs_adduser.already_exists.test.cfs");
+    write_rsa_keys_on_disk(
+        my_rsa, "build/tests/cfs_adduser.already_exists.my_public.pem",
+        "build/tests/cfs_adduser.already_exists.my_private.pem", NULL);
+    write_rsa_keys_on_disk(
+        other_rsa, "build/tests/cfs_adduser.already_exists.other_public.pem",
+        NULL, NULL);
 
-//     // Check if second key storage buf is not empty
-//     cr_assert_arr_neq(cfs->keys_storage[1].aes_key_ciphered,
-//                       (unsigned char[AES_KEY_SIZE_BYTES]){ 0 },
-//                       AES_KEY_SIZE_BYTES);
+    int cfs_ret = 0;
+    for (u_int8_t i = 0; i < 2; i++) // Add the same user twice
+        cfs_ret = cryptfs_adduser(
+            "build/tests/cfs_adduser.already_exists.test.cfs",
+            "build/tests/cfs_adduser.already_exists.other_public.pem",
+            "build/tests/cfs_adduser.already_exists.my_private.pem");
 
-//     // Check if third key storage buf is empty
-//     cr_assert_arr_eq(cfs->keys_storage[2].aes_key_ciphered,
-//                      (unsigned char[AES_KEY_SIZE_BYTES]){ 0 },
-//                      AES_KEY_SIZE_BYTES);
-// }
+    cr_assert_eq(cfs_ret, -1);
+
+    // Read CryptFS structure
+    free(cfs);
+    cfs =
+        read_cryptfs_headers("build/tests/cfs_adduser.already_exists.test.cfs");
+
+    // Check if second key storage buf is not empty
+    cr_assert_arr_neq(cfs->keys_storage[1].aes_key_ciphered,
+                      (unsigned char[AES_KEY_SIZE_BYTES]){ 0 },
+                      AES_KEY_SIZE_BYTES);
+
+    // Check if third key storage buf is empty
+    cr_assert_arr_eq(cfs->keys_storage[2].aes_key_ciphered,
+                     (unsigned char[AES_KEY_SIZE_BYTES]){ 0 },
+                     AES_KEY_SIZE_BYTES);
+
+    // Free memory
+    EVP_PKEY_free(my_rsa);
+    EVP_PKEY_free(other_rsa);
+    free(cfs);
+}

@@ -9,7 +9,7 @@ typedef size_t block_t;
 /**
  * @brief Set the device path global variable.
  *
- * @param path The path to the device.
+ * @param path The path of the device.
  */
 void set_device_path(const char *path);
 

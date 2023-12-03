@@ -116,8 +116,8 @@ ssize_t find_rsa_matching_key(EVP_PKEY *rsa_private,
 /**
  * @brief Loads the RSA private and public keys from the given file.
  *
- * @param public_key_path The path to the public key file.
- * @param private_key_path The path to the private key file.
+ * @param public_key_path The path of the public key file.
+ * @param private_key_path The path of the private key file.
  * @param passphrase The passphrase used to decrypt the keys,
  * NULL if the keys are not encrypted.
  * @return EVP_PKEY* The loaded RSA keypair.

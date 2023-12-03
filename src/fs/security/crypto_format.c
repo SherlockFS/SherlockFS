@@ -126,8 +126,11 @@ void write_rsa_keys_on_disk(EVP_PKEY *rsa_keypair, const char *public_key_path,
 
         if (PEM_write_PUBKEY(public_key, rsa_keypair) != 1
             || fclose(public_key) != 0)
+        {
+            ERR_print_errors_fp(stderr);
             internal_error_exit("Failed to write the public key '%s'\n",
                                 EXIT_FAILURE, public_key_path);
+        }
     }
 
     if (private_key_path)
