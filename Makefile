@@ -27,6 +27,9 @@ MOUNT_SRC = $(SRC_DIR)/mount_fuse.c
 MOUNT_OBJ = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(MOUNT_SRC:.c=.o))
 
 all : shlkfs_formater mount shlkfs_adduser
+
+dependencies:
+	bash dependencies.sh
 	
 shlkfs_formater: $(BUILD_DIR)/shlkfs_formater
 

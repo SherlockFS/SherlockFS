@@ -25,7 +25,7 @@ Un troisième outil, `mount`, est prévu pour une intégration future après la 
 
 ## Prérequis
 
-Avant de démarrer, il est nécessaire d'installer les dépendances. Exécutez `bash dependencies.sh`. Ce script est compatible uniquement avec les gestionnaires de paquets `apt` ou `pacman`.
+Avant de démarrer, il est nécessaire d'installer les dépendances. Exécutez `make dependencies`. Ce script est compatible uniquement avec les gestionnaires de paquets `apt` ou `pacman`.
 
 ## Compilation
 
