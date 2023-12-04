@@ -2,11 +2,11 @@
 
 ![SherlockFS logo](images/SherlockFS_logo.png)
 
-**Development branch**
+**Branche de développement**
 
 [![DEV branch tests](https://github.com/SherlockFS/SherlockFS/actions/workflows/test_suite.yml/badge.svg?branch=dev)](https://github.com/SherlockFS/SherlockFS/actions/workflows/test_suite.yml)
 
-**Production branch**
+**Branche de production**
 
 [![MAIN branch tests](https://github.com/SherlockFS/SherlockFS/actions/workflows/test_suite.yml/badge.svg?branch=main)](https://github.com/SherlockFS/SherlockFS/actions/workflows/test_suite.yml)
 
