@@ -32,4 +32,4 @@ jobs:
         run: timeout $((2*60)) sudo bash dependencies.sh
 
       - name: Lancement de la suite de tests (`make check`)
-        run: timeout $((2*60)) make check
+        run: timeout $((2*60)) make -j check
