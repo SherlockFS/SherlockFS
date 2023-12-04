@@ -9,7 +9,7 @@
 # the `language` matrix defined below to confirm you have the correct set of
 # supported CodeQL languages.
 #
-name: "CodeQL"
+name: "CodeQL code analysis"
 
 on:
   push:
@@ -64,10 +64,12 @@ jobs:
     #   If the Autobuild fails above, remove it and uncomment the following three lines. 
     #   modify them (or add more) to build your code if your project, please refer to the EXAMPLE below for guidance.
 
-    - run: |
-       echo "Building the application"
-       make all
+    - name: Installation des dépendances de SherlockFS
+      run: timeout $((2*60)) bash dependencies.sh
 
-    - name: Perform CodeQL Analysis
+    - name: Compilation du projet SherlockFS
+      run: make
+
+    - name: Analyse du code avec CodeQL
       uses: github/codeql-action/analyze@v2
 
