@@ -15,16 +15,12 @@ if [ -x "$(command -v apt)" ]; then
     sudo apt update
     sudo apt install -y \
         build-essential make libssl-dev libfuse-dev
-
-    green "Dependencies installed successfully"
 elif [ -x "$(command -v yum)" ]; then
     sudo pacman -Syu
     sudo pacman -S --noconfirm \
         base-devel make libssl-dev libfuse-dev
-
-    green "Dependencies installed successfully"
 else
-    red "Unsupported OS"
+    red "Unsupported OS: Your system must use 'apt' or 'pacman' packages managers"
     exit 1
 fi
 
@@ -38,7 +34,7 @@ manual_openssl_install() {
         exit 1
     fi
 
-    echo "Downloading and installing OpenSSL '$ossl_version'"
+    echo "Downloading, configuring, compiling and installing OpenSSL '$ossl_version'"
     # Creating temporary directory
     tmp_dir=$(mktemp -d)
 
@@ -69,5 +65,7 @@ else
     red "OpenSSL not installed"
     manual_openssl_install
 fi
+
+green "Dependencies installed successfully!"
 
 exit 0
