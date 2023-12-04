@@ -1,11 +1,11 @@
 {
     "tasks": [
         {
-            "label": "make formater",
+            "label": "make shlkfs_formater",
             "type": "shell",
             "command": "/usr/bin/make",
             "args": [
-                "formater",
+                "shlkfs_formater",
                 "-j",
             ],
             "options": {

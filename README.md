@@ -10,7 +10,7 @@ SherlockFS est un système de fichiers chiffré, s'inspirant des principes de FA
 
 Actuellement, SherlockFS propose deux outils principaux :
 
-1. `formater` : Utilisé pour initialiser un périphérique avec le système de fichiers SherlockFS.
+1. `shlkfs_formater` : Utilisé pour initialiser un périphérique avec le système de fichiers SherlockFS.
 2. `shlkfs_adduser` : Permet d'ajouter un nouvel utilisateur (via sa clé publique) en utilisant les accès d'un utilisateur existant (sa clé privée).
 
 Un troisième outil, `mount`, est prévu pour une intégration future après la finalisation de l'implémentation FUSE.
@@ -24,7 +24,7 @@ Avant de démarrer, il est nécessaire d'installer les dépendances. Exécutez `
 Pour compiler les programmes :
 
 - `make` : Compile tous les programmes.
-- `make formater` : Compile uniquement le programme `formater`.
+- `make shlkfs_formater` : Compile uniquement le programme `shlkfs_formater`.
 - `make shlkfs_adduser` : Compile uniquement le programme `shlkfs_adduser`.
 - `make check`: Compile tous les programmes et exécute les tests unitaires.
 - `make clean` : Supprime les fichiers générés par la compilation.
@@ -34,17 +34,17 @@ Les exécutables compilés se trouveront dans le dossier `build/`.
 
 ## Utilisation
 
-### `formater`
+### `shlkfs_formater`
 
 ```shell
 
-# ./build/formater
+# ./build/shlkfs_formater
 
 SherlockFS v1 - Format a device
-        Usage: ./build/formater <device>
+        Usage: ./build/shlkfs_formater <device>
 ```
 
-`formater` permet d'initialiser un périphérique avec le système de fichiers SherlockFS. Il prend en paramètre le chemin vers le périphérique à formater. Le périphérique peut être vide mais doit être non monté. Si le périphérique est déjà formaté avec SherlockFS, il vous sera demandé si vous souhaitez le reformater.
+`shlkfs_formater` permet d'initialiser un périphérique avec le système de fichiers SherlockFS. Il prend en paramètre le chemin vers le périphérique à shlkfs_formater. Le périphérique peut être vide mais doit être non monté. Si le périphérique est déjà formaté avec SherlockFS, il vous sera demandé si vous souhaitez le reshlkfs_formater.
 
 Une fois le formatage effectué, les clés publiques et privées utisées lors du formatage seront sauvegardées dans le dossier `~/.sherlockfs` (`public.pem` et `private.pem`). Ces clés sont nécessaires pour monter le périphérique et ajouter de nouveaux utilisateurs au système de fichiers. **Il est donc important de les conserver en lieu sûr et de ne pas les perdre.**
 
@@ -66,7 +66,7 @@ SherlockFS v1 - Adding user to device keys storage
 
 Le projet est divisé en plusieurs dossiers :
 
-- `src/` : Contient les sources des programmes. La racine de ce dossier contient les sources "`main()`" de chaque programme (`formater`, `shlkfs_adduser`, etc.)
+- `src/` : Contient les sources des programmes. La racine de ce dossier contient les sources "`main()`" de chaque programme (`shlkfs_formater`, `shlkfs_adduser`, etc.)
   - `src/fs`: Contient les sources purement relatives au système de fichiers.
   - `src/fuse`: Contient les sources relatives à l'implémentation FUSE.
 - `include/` : Contient les en-têtes des programmes.
