@@ -2,6 +2,14 @@
 
 ![SherlockFS logo](images/SherlockFS_logo.png)
 
+**Development branch**
+
+[![DEV branch tests](https://github.com/SherlockFS/SherlockFS/actions/workflows/test_suite.yml/badge.svg?branch=dev)](https://github.com/SherlockFS/SherlockFS/actions/workflows/test_suite.yml)
+
+**Production branch**
+
+[![MAIN branch tests](https://github.com/SherlockFS/SherlockFS/actions/workflows/test_suite.yml/badge.svg?branch=main)](https://github.com/SherlockFS/SherlockFS/actions/workflows/test_suite.yml)
+
 ## Introduction
 
 SherlockFS est un système de fichiers chiffré, s'inspirant des principes de FAT et LUKS. Conçu pour plusieurs utilisateurs, il offre une solution sécurisée pour le stockage de fichiers sur un périphérique. La version actuelle (v1) de SherlockFS est une implémentation logicielle basée sur FUSE, bien qu'elle soit encore en cours de développement.
