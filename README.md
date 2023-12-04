@@ -54,7 +54,7 @@ Une fois le formatage effectué, les clés publiques et privées utisées lors d
 
 # ./build/shlkfs_adduser
 
-SherlockFS v1 - Add user to keys storage
+SherlockFS v1 - Adding user to device keys storage
         Usage: ./build/shlkfs_adduser <device> <other user public key path> [<registred user private key path>]
 ```
 

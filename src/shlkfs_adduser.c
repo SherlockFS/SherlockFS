@@ -29,7 +29,8 @@ int main(int argc, char *argv[])
         my_private_key_path = argv[3];
         break;
     default:
-        printf("SherlockFS v%d - Add user to keys storage\n", CRYPTFS_VERSION);
+        printf("SherlockFS v%d - Adding user to device keys storage\n",
+               CRYPTFS_VERSION);
         printf("\tUsage: %s <device> <other user public key path> [<registred "
                "user private key path>]\n",
                argv[0]);
