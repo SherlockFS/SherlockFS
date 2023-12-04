@@ -44,7 +44,7 @@ SherlockFS v1 - Format a device
         Usage: ./build/shlkfs_formater <device>
 ```
 
-`shlkfs_formater` permet d'initialiser un périphérique avec le système de fichiers SherlockFS. Il prend en paramètre le chemin vers le périphérique à shlkfs_formater. Le périphérique peut être vide mais doit être non monté. Si le périphérique est déjà formaté avec SherlockFS, il vous sera demandé si vous souhaitez le reshlkfs_formater.
+`shlkfs_formater` permet d'initialiser un périphérique avec le système de fichiers SherlockFS. Il prend en paramètre le chemin vers le périphérique à formater. Le périphérique peut être vide mais doit être non monté. Si le périphérique est déjà formaté avec SherlockFS, il vous sera demandé si vous souhaitez le reformater.
 
 Une fois le formatage effectué, les clés publiques et privées utisées lors du formatage seront sauvegardées dans le dossier `~/.sherlockfs` (`public.pem` et `private.pem`). Ces clés sont nécessaires pour monter le périphérique et ajouter de nouveaux utilisateurs au système de fichiers. **Il est donc important de les conserver en lieu sûr et de ne pas les perdre.**
 
