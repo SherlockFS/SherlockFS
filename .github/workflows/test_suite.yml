@@ -1,4 +1,4 @@
-name: Test suite
+name: Suite de tests
 
 on:
   push:
