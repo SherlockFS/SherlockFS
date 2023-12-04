@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Make sure the script is being executed with superuser privileges.
+if [[ "${UID}" -ne 0 ]]; then
+    echo "Please run this script with superuser privileges."
+    exit 1
+fi
+
 # Exit on error
 set -e
 
@@ -12,12 +18,12 @@ yellow() {
 }
 
 if [ -x "$(command -v apt)" ]; then
-    sudo apt update
-    sudo apt install -y \
+    apt update
+    apt install -y \
         build-essential make libssl-dev libfuse-dev
 elif [ -x "$(command -v yum)" ]; then
-    sudo pacman -Syu
-    sudo pacman -S --noconfirm \
+    pacman -Syu
+    pacman -S --noconfirm \
         base-devel make libssl-dev libfuse-dev
 else
     red "Unsupported OS: Your system must use 'apt' or 'pacman' packages managers"
@@ -34,6 +40,12 @@ manual_openssl_install() {
         exit 1
     fi
 
+    if [ -x "$(command -v apt)" ]; then
+        apt remove -y openssl libssl-dev
+    elif [ -x "$(command -v yum)" ]; then
+        pacman -R openssl libssl-dev
+    fi
+
     echo "Downloading, configuring, compiling and installing OpenSSL '$ossl_version'"
     # Creating temporary directory
     tmp_dir=$(mktemp -d)
@@ -42,8 +54,12 @@ manual_openssl_install() {
     cd $tmp_dir
     tar -xzf openssl-$ossl_version.tar.gz
     cd openssl-$ossl_version
-    sudo ./config --prefix=/usr/local/ssl --openssldir=/usr/local/ssl shared zlib
-    sudo make -j && sudo make -j install
+    ./config
+    make -j
+    make -j install
+
+    ldconfig
+    ln -s /usr/local/bin/openssl /usr/bin/
 
     # Cleaning temporary directory
     rm -rf $tmp_dir
