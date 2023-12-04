@@ -19,14 +19,14 @@ bool is_already_formatted(const char *device_path);
  * @brief File the `struct CryptFS` structure when first formatting the
  * filesystem.
  *
- * @param cfs The `struct CryptFS` structure to fill.
+ * @param shlkfs The `struct CryptFS` structure to fill.
  * @param rsa_passphrase The passphrase used to encrypt the RSA private key on
  * disk. Set to NULL if no passphrase is needed.
  * @param existing_rsa_keypair The RSA keypair to use.
  * @param public_key_path The path where the public key will be stored.
  * @param private_key_path The path where the private key will be stored.
  */
-void format_fill_filesystem_struct(struct CryptFS *cfs, char *rsa_passphrase,
+void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
                                    const EVP_PKEY *existing_rsa_keypair,
                                    const char *public_key_path,
                                    const char *private_key_path);

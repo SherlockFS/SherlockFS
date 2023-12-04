@@ -23,22 +23,22 @@
 int main(void)
 {
     // Set the device (global variable) to the file (used by read/write_blocks)
-    set_device_path("tests/blocksize.test.cfs");
+    set_device_path("tests/blocksize.test.shlkfs");
 
-    struct CryptFS *cfs = xcalloc(1, sizeof(struct CryptFS));
+    struct CryptFS *shlkfs = xcalloc(1, sizeof(struct CryptFS));
 
-    format_fs("tests/blocksize.test.cfs", "tests/blocksize.test.pub.pem",
+    format_fs("tests/blocksize.test.shlkfs", "tests/blocksize.test.pub.pem",
               "tests/blocksize.test.private.pem", NULL, NULL);
 
     // Change the blocksize
-    cfs->header.blocksize = 1024;
+    shlkfs->header.blocksize = 1024;
 
     // Write the CryptFS to the file
-    write_cryptfs_headers("tests/blocksize.test.cfs", cfs);
+    write_cryptfs_headers("tests/blocksize.test.shlkfs", shlkfs);
 
-    bool a = is_already_formatted("tests/blocksize.test.cfs");
+    bool a = is_already_formatted("tests/blocksize.test.shlkfs");
     printf("%d\n", a);
-    free(cfs);
+    free(shlkfs);
 
     return 0;
 }

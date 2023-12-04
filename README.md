@@ -11,7 +11,7 @@ SherlockFS est un système de fichiers chiffré, s'inspirant des principes de FA
 Actuellement, SherlockFS propose deux outils principaux :
 
 1. `formater` : Utilisé pour initialiser un périphérique avec le système de fichiers SherlockFS.
-2. `cfs_adduser` : Permet d'ajouter un nouvel utilisateur (via sa clé publique) en utilisant les accès d'un utilisateur existant (sa clé privée).
+2. `shlkfs_adduser` : Permet d'ajouter un nouvel utilisateur (via sa clé publique) en utilisant les accès d'un utilisateur existant (sa clé privée).
 
 Un troisième outil, `mount`, est prévu pour une intégration future après la finalisation de l'implémentation FUSE.
 
@@ -25,7 +25,7 @@ Pour compiler les programmes :
 
 - `make` : Compile tous les programmes.
 - `make formater` : Compile uniquement le programme `formater`.
-- `make cfs_adduser` : Compile uniquement le programme `cfs_adduser`.
+- `make shlkfs_adduser` : Compile uniquement le programme `shlkfs_adduser`.
 - `make check`: Compile tous les programmes et exécute les tests unitaires.
 - `make clean` : Supprime les fichiers générés par la compilation.
 - `make clean_all` : Supprime le dossier `build/`.
@@ -48,17 +48,17 @@ SherlockFS v1 - Format a device
 
 Une fois le formatage effectué, les clés publiques et privées utisées lors du formatage seront sauvegardées dans le dossier `~/.sherlockfs` (`public.pem` et `private.pem`). Ces clés sont nécessaires pour monter le périphérique et ajouter de nouveaux utilisateurs au système de fichiers. **Il est donc important de les conserver en lieu sûr et de ne pas les perdre.**
 
-### `cfs_adduser`
+### `shlkfs_adduser`
 
 ```shell
 
-# ./build/cfs_adduser
+# ./build/shlkfs_adduser
 
 SherlockFS v1 - Add user to keys storage
-        Usage: ./build/cfs_adduser <device> <other user public key path> [<registred user private key path>]
+        Usage: ./build/shlkfs_adduser <device> <other user public key path> [<registred user private key path>]
 ```
 
-`cfs_adduser` permet d'ajouter un nouvel utilisateur au système de fichiers. Il prend en paramètre le chemin vers le périphérique formaté avec SherlockFS, le chemin vers la clé publique de l'utilisateur à ajouter et éventuellement le chemin vers la clé privée d'un utilisateur déjà enregistré sur le périphérique. Si la clé privée n'est pas spécifiée, `cfs_adduser` cherchera à utiliser la clé privée de l'utilisateur courant (celui qui exécute le programme), dans le dossier `~/.sherlockfs/`.
+`shlkfs_adduser` permet d'ajouter un nouvel utilisateur au système de fichiers. Il prend en paramètre le chemin vers le périphérique formaté avec SherlockFS, le chemin vers la clé publique de l'utilisateur à ajouter et éventuellement le chemin vers la clé privée d'un utilisateur déjà enregistré sur le périphérique. Si la clé privée n'est pas spécifiée, `shlkfs_adduser` cherchera à utiliser la clé privée de l'utilisateur courant (celui qui exécute le programme), dans le dossier `~/.sherlockfs/`.
 
 ## Développement
 
@@ -66,7 +66,7 @@ SherlockFS v1 - Add user to keys storage
 
 Le projet est divisé en plusieurs dossiers :
 
-- `src/` : Contient les sources des programmes. La racine de ce dossier contient les sources "`main()`" de chaque programme (`formater`, `cfs_adduser`, etc.)
+- `src/` : Contient les sources des programmes. La racine de ce dossier contient les sources "`main()`" de chaque programme (`formater`, `shlkfs_adduser`, etc.)
   - `src/fs`: Contient les sources purement relatives au système de fichiers.
   - `src/fuse`: Contient les sources relatives à l'implémentation FUSE.
 - `include/` : Contient les en-têtes des programmes.

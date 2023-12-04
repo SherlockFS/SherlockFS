@@ -75,10 +75,10 @@
             "preLaunchTask": "make mount"
         },
         {
-            "name": "cfs_adduser",
+            "name": "shlkfs_adduser",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/cfs_adduser",
+            "program": "${workspaceFolder}/build/shlkfs_adduser",
             "args": [
                 "${input:mountDevice}",
                 "${input:publicKey}",
@@ -95,7 +95,7 @@
                     "ignoreFailures": true
                 },
             ],
-            "preLaunchTask": "make cfs_adduser"
+            "preLaunchTask": "make shlkfs_adduser"
         },
     ],
     "inputs": [
@@ -103,13 +103,13 @@
             "id": "formatArg",
             "description": "Fichier à formater",
             "type": "promptString",
-            "default": "test.cfs"
+            "default": "test.shlkfs"
         },
         {
             "id": "mountDevice",
             "description": "Disque à monter",
             "type": "promptString",
-            "default": "test.cfs"
+            "default": "test.shlkfs"
         },
         {
             "id": "mountPath",
