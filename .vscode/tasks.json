@@ -25,11 +25,11 @@
             }
         },
         {
-            "label": "make cfs_adduser",
+            "label": "make shlkfs_adduser",
             "type": "shell",
             "command": "/usr/bin/make",
             "args": [
-                "cfs_adduser",
+                "shlkfs_adduser",
                 "-j",
             ],
             "options": {

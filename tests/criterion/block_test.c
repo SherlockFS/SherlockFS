@@ -11,9 +11,9 @@
 
 Test(block, read_write, .init = cr_redirect_stdout, .timeout = 10)
 {
-    set_device_path("build/tests/block_read_write.test.cfs");
+    set_device_path("build/tests/block_read_write.test.shlkfs");
 
-    format_fs("build/tests/block_read_write.test.cfs",
+    format_fs("build/tests/block_read_write.test.shlkfs",
               "build/tests/block_read_write.test.public.pem",
               "build/tests/block_read_write.test.private.pem", NULL, NULL);
 
@@ -29,7 +29,7 @@ Test(block, read_write, .init = cr_redirect_stdout, .timeout = 10)
     cr_assert_arr_eq(buffer_before, buffer_after, CRYPTFS_BLOCK_SIZE_BYTES);
 
     // Remove the file
-    if (remove("build/tests/block_read_write.test.cfs") != 0)
+    if (remove("build/tests/block_read_write.test.shlkfs") != 0)
         cr_assert(false, "Impossible to delete the file");
 
     free(buffer_before);
@@ -39,9 +39,9 @@ Test(block, read_write, .init = cr_redirect_stdout, .timeout = 10)
 Test(block, read_write_with_encryption_decryption, .init = cr_redirect_stdout,
      .timeout = 10)
 {
-    set_device_path("build/tests/block_read_write_with_encryption.test.cfs");
+    set_device_path("build/tests/block_read_write_with_encryption.test.shlkfs");
 
-    format_fs("build/tests/block_read_write_with_encryption.test.cfs",
+    format_fs("build/tests/block_read_write_with_encryption.test.shlkfs",
               "build/tests/block_read_write_with_encryption.test.public.pem",
               "build/tests/block_read_write_with_encryption.test.private.pem",
               NULL, NULL);

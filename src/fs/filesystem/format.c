@@ -41,7 +41,7 @@ bool is_already_formatted(const char *device_path)
     return true;
 }
 
-void format_fill_filesystem_struct(struct CryptFS *cfs, char *rsa_passphrase,
+void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
                                    const EVP_PKEY *existing_rsa_keypair,
                                    const char *public_key_path,
                                    const char *private_key_path)
@@ -51,12 +51,12 @@ void format_fill_filesystem_struct(struct CryptFS *cfs, char *rsa_passphrase,
     /// ------------------------------------------------------------
 
     // Craft the header
-    cfs->header.magic = CRYPTFS_MAGIC;
-    cfs->header.version = CRYPTFS_VERSION;
-    cfs->header.blocksize = CRYPTFS_BLOCK_SIZE_BYTES;
+    shlkfs->header.magic = CRYPTFS_MAGIC;
+    shlkfs->header.version = CRYPTFS_VERSION;
+    shlkfs->header.blocksize = CRYPTFS_BLOCK_SIZE_BYTES;
 
     for (size_t i = 0; i < CRYPTFS_BOOT_SECTION_SIZE_BYTES; i++)
-        cfs->header.boot[i] = 0x90; // NOP sled
+        shlkfs->header.boot[i] = 0x90; // NOP sled
 
     /// ------------------------------------------------------------
     /// BLOCK 1 : KEYS STORAGE
@@ -72,7 +72,7 @@ void format_fill_filesystem_struct(struct CryptFS *cfs, char *rsa_passphrase,
         rsa_key = generate_rsa_keypair();
 
     // Store the RSA modulus and the RSA public exponent in the header
-    store_keys_in_keys_storage(cfs->keys_storage, rsa_key, aes_key);
+    store_keys_in_keys_storage(shlkfs->keys_storage, rsa_key, aes_key);
 
     // If the user provided a custom path for the keys
     if (public_key_path && private_key_path)
@@ -113,9 +113,9 @@ void format_fill_filesystem_struct(struct CryptFS *cfs, char *rsa_passphrase,
     /// BLOCK 2 : FAT (File Allocation Table)
     /// ------------------------------------------------------------
 
-    cfs->first_fat.next_fat_table = FAT_BLOCK_END;
+    shlkfs->first_fat.next_fat_table = FAT_BLOCK_END;
     for (size_t i = 0; i <= ROOT_DIR_BLOCK; i++)
-        write_fat_offset(&cfs->first_fat, i, FAT_BLOCK_END);
+        write_fat_offset(&shlkfs->first_fat, i, FAT_BLOCK_END);
 
     /// ------------------------------------------------------------
     /// BLOCK 3 : ROOT DIRECTORY
@@ -129,11 +129,11 @@ void format_fill_filesystem_struct(struct CryptFS *cfs, char *rsa_passphrase,
 void format_fs(const char *path, char *public_key_path, char *private_key_path,
                char *rsa_passphrase, EVP_PKEY *existing_rsa_keypair)
 {
-    struct CryptFS *cfs = xcalloc(1, sizeof(struct CryptFS));
+    struct CryptFS *shlkfs = xcalloc(1, sizeof(struct CryptFS));
 
     set_device_path(path);
 
-    format_fill_filesystem_struct(cfs, rsa_passphrase, existing_rsa_keypair,
+    format_fill_filesystem_struct(shlkfs, rsa_passphrase, existing_rsa_keypair,
                                   public_key_path, private_key_path);
 
     FILE *file = fopen(path, "w+");
@@ -142,11 +142,11 @@ void format_fs(const char *path, char *public_key_path, char *private_key_path,
 
     // Write the filesystem structure on the disk
     print_info("Writing the filesystem structure on the disk...\n");
-    if (fwrite(cfs, sizeof(*cfs), 1, file) != 1)
+    if (fwrite(shlkfs, sizeof(*shlkfs), 1, file) != 1)
         error_exit("Impossible to write the filesystem structure\n",
                    EXIT_FAILURE);
 
-    free(cfs);
+    free(shlkfs);
 
     fclose(file);
 }
