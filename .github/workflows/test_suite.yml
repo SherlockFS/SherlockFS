@@ -12,23 +12,20 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Downloading criterion package
+      - name: Téléchargement de l'outils Criterion
         run: sudo wget https://github.com/Snaipe/Criterion/releases/download/v2.3.3/criterion-v2.3.3-linux-x86_64.tar.bz2 -O /tmp/criterion.tar.bz2
 
-      - name: Initializing tmp directory
+      - name: Création du dossier d'extraction pour l'archive de Criterion
         run: sudo mkdir -p /tmp/criterion
         
-      - name: Extracting criterion package
+      - name: Extraction de l'archive Criterion
         run: sudo tar -xjf /tmp/criterion.tar.bz2 -C /tmp/criterion
 
-      - name: Installing criterion package
+      - name: Installation de Criterion depuis l'archive
         run: sudo cp -r /tmp/criterion/criterion-v2.3.3/share/* /usr/local/share &&
           sudo cp -r /tmp/criterion/criterion-v2.3.3/lib/* /usr/local/lib &&
           sudo cp -r /tmp/criterion/criterion-v2.3.3/lib/* /usr/lib &&
           sudo cp -r /tmp/criterion/criterion-v2.3.3/include/* /usr/local/include
 
-      - name: Checking version of openssl
-        run: openssl version
-
-      - name: Running `make check`
+      - name: Lancement de la suite de tests (`make check`)
         run: make check
