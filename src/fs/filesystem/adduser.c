@@ -48,6 +48,10 @@ int cryptfs_adduser(char *device_path, char *other_public_key_path,
             "The user with the public key '%s' is already in the keys "
             "storage of the device '%s'\n",
             other_public_key_path, device_path);
+        free(cryptfs);
+        free(passphrase);
+        EVP_PKEY_free(my_rsa);
+        EVP_PKEY_free(other_rsa);
         return -1;
     }
 
