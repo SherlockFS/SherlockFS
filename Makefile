@@ -17,7 +17,7 @@ OBJ = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(SRC:.c=.o))
 TESTS_SRC = $(shell find $(TESTS_DIR) -name '*.c')
 TESTS_OBJ = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(TESTS_SRC:.c=.o))
 
-FORMAT_SRC = $(SRC_DIR)/formater.c
+FORMAT_SRC = $(SRC_DIR)/shlkfs_formater.c
 FORMAT_OBJ = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(FORMAT_SRC:.c=.o))
 
 ADDUSER_SRC = $(SRC_DIR)/shlkfs_adduser.c
@@ -26,16 +26,16 @@ ADDUSER_OBJ = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(ADDUSER_SRC:.c=.o))
 MOUNT_SRC = $(SRC_DIR)/mount_fuse.c
 MOUNT_OBJ = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(MOUNT_SRC:.c=.o))
 
-all : formater mount shlkfs_adduser
+all : shlkfs_formater mount shlkfs_adduser
 	
-formater: $(BUILD_DIR)/formater
+shlkfs_formater: $(BUILD_DIR)/shlkfs_formater
 
 shlkfs_adduser: $(BUILD_DIR)/shlkfs_adduser
 	
 mount: $(BUILD_DIR)/mount
 
-$(BUILD_DIR)/formater: $(FORMAT_OBJ) $(OBJ)
-	$(CC) $(CFLAGS) $^ -o $(BUILD_DIR)/formater $(LDFLAGS)
+$(BUILD_DIR)/shlkfs_formater: $(FORMAT_OBJ) $(OBJ)
+	$(CC) $(CFLAGS) $^ -o $(BUILD_DIR)/shlkfs_formater $(LDFLAGS)
 
 $(BUILD_DIR)/shlkfs_adduser: $(ADDUSER_OBJ) $(OBJ)
 	$(CC) $(CFLAGS) -o $(BUILD_DIR)/shlkfs_adduser $^ $(LDFLAGS)
@@ -67,7 +67,7 @@ clean_all:
 
 clean:
 	find $(BUILD_DIR)/* -type d -print0 | xargs -0 -I {} echo {} | tac | xargs rm -rf
-	rm -f $(BUILD_DIR)/formater
+	rm -f $(BUILD_DIR)/shlkfs_formater
 	rm -f $(BUILD_DIR)/mount
 	rm -f $(BUILD_DIR)/shlkfs_adduser
 
