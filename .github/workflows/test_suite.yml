@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Téléchargement de l'outils Criterion
+      - name: Téléchargement de l'outil Criterion
         run: sudo wget https://github.com/Snaipe/Criterion/releases/download/v2.3.3/criterion-v2.3.3-linux-x86_64.tar.bz2 -O /tmp/criterion.tar.bz2
 
       - name: Création du dossier d'extraction pour l'archive de Criterion
