@@ -1,6 +1,7 @@
 #ifndef CRYPT_FS_H
 #define CRYPT_FS_H
 
+#include <openssl/sha.h>
 #include <stdint.h>
 
 #include "block.h"
@@ -48,16 +49,17 @@ struct CryptFS_Header
  * The key used to encrypt/decrypt the filesystem is an AES key. This key is
  * encrypted with the RSA public key of the user.
  *
- * @note An RSA public key is a pair of big integers (n and e). Because the
- * number e is always the same (RSA_EXPONENT), only the number n is stored in
- * the structure.
  */
-struct CryptFS_Key
+struct CryptFS_KeySlot
 {
-    uint8_t rsa_n[RSA_KEY_SIZE_BYTES]; // RSA public number 'n' (the modulus)
-    uint8_t aes_key_ciphered[RSA_KEY_SIZE_BYTES]; // AES key ciphered with RSA
-                                                  // public key
-} __attribute__((packed));
+    // SHA256 hash of the RSA
+    // public key. The hash is equal to SHA256(bigendian(rsa_n) +
+    // bigendian(rsa_e)
+    uint8_t rsa_public_hash[SHA256_DIGEST_LENGTH];
+
+    // AES key ciphered with RSApublic key
+    uint8_t aes_key_ciphered[RSA_KEY_SIZE_BYTES];
+} __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
 // -----------------------------------------------------------------------------
 // FAT (File Allocation Table) SECTION
@@ -164,16 +166,16 @@ typedef char f_cont_t; // File content type
 // CRYPTFS FILE SYSTEM
 // -----------------------------------------------------------------------------
 #define HEADER_BLOCK 0
-#define KEYS_STORAGE_BLOCK 1
-#define FIRST_FAT_BLOCK 65
-#define ROOT_DIR_BLOCK 66
+#define KEYS_STORAGE_BLOCK (HEADER_BLOCK + 1)
+#define FIRST_FAT_BLOCK (KEYS_STORAGE_BLOCK + 64)
+#define ROOT_DIR_BLOCK (FIRST_FAT_BLOCK + 1)
 
 struct CryptFS
 {
     struct CryptFS_Header header; // BLOCK 0: Header
-    struct CryptFS_Key keys_storage[NB_ENCRYPTION_KEYS]; // BLOCK 1-64: Keys
+    struct CryptFS_KeySlot keys_storage[NB_ENCRYPTION_KEYS]; // BLOCK 1-64: Keys
     struct CryptFS_FAT first_fat; // BLOCK 65: First FAT
     struct CryptFS_Directory root_directory; // BLOCK 66: Root directory
-};
+} __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
 #endif /* CRYPT_FS_H */

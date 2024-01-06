@@ -11,6 +11,7 @@
 
 #include "cryptfs.h"
 #include "crypto.h"
+#include "hash.h"
 #include "passphrase.h"
 #include "print.h"
 #include "xalloc.h"
@@ -56,27 +57,24 @@ EVP_PKEY *generate_rsa_keypair(void)
 }
 
 char zero[RSA_KEY_SIZE_BYTES] = { 0 };
-void store_keys_in_keys_storage(struct CryptFS_Key *keys_storage,
+void store_keys_in_keys_storage(struct CryptFS_KeySlot *keys_storage,
                                 EVP_PKEY *rsa_keypair, unsigned char *aes_key)
 {
     size_t i = 0;
     while (i < NB_ENCRYPTION_KEYS)
     {
         // Check if keys_storage[i].rsa_n is full of 0
-        if (memcmp(keys_storage[i].rsa_n, zero, RSA_KEY_SIZE_BYTES) == 0)
+        if (memcmp(keys_storage[i].rsa_public_hash, zero, SHA256_DIGEST_LENGTH)
+            == 0)
         {
-            // Get the RSA modulus
-            BIGNUM *modulus = NULL;
-            if (EVP_PKEY_get_bn_param(rsa_keypair, OSSL_PKEY_PARAM_RSA_N,
-                                      &modulus)
-                    != 1 // Get the RSA modulus
-                || BN_bn2bin(modulus,
-                             (unsigned char *)&keys_storage[i].rsa_n)
-                    != RSA_KEY_SIZE_BYTES) // Store the RSA modulus in
-                                           // keys_storage[i].rsa_n
-                internal_error_exit("Failed to store RSA modulus\n",
-                                    EXIT_FAILURE);
-            BN_free(modulus);
+            unsigned char *rsa_public_hash = hash_rsa_public_key(rsa_keypair);
+
+            if (memcpy(keys_storage[i].rsa_public_hash, rsa_public_hash,
+                       SHA256_DIGEST_LENGTH)
+                == NULL)
+                internal_error_exit(
+                    "Failed to memcpy RSA key hash to corresponding KeySlot\n",
+                    EXIT_FAILURE);
 
             // EVP_PKEY_encrypt CTX setup with the RSA keypair
             EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new(rsa_keypair, NULL);
@@ -100,6 +98,7 @@ void store_keys_in_keys_storage(struct CryptFS_Key *keys_storage,
 
             EVP_PKEY_CTX_free(pctx);
             free(aes_key_encrypted);
+            free(rsa_public_hash);
 
             break;
         }
