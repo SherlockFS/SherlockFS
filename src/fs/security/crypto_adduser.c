@@ -7,7 +7,7 @@
 #include "print.h"
 
 ssize_t find_rsa_matching_key(EVP_PKEY *rsa_keypair,
-                              struct CryptFS_Key *keys_storage)
+                              struct CryptFS_KeySlot *keys_storage)
 {
     BIGNUM *rsa_keypair_modulus = NULL;
 

@@ -52,7 +52,7 @@ struct CryptFS_Header
  * number e is always the same (RSA_EXPONENT), only the number n is stored in
  * the structure.
  */
-struct CryptFS_Key
+struct CryptFS_KeySlot
 {
     uint8_t rsa_n[RSA_KEY_SIZE_BYTES]; // RSA public number 'n' (the modulus)
     uint8_t aes_key_ciphered[RSA_KEY_SIZE_BYTES]; // AES key ciphered with RSA
@@ -171,7 +171,7 @@ typedef char f_cont_t; // File content type
 struct CryptFS
 {
     struct CryptFS_Header header; // BLOCK 0: Header
-    struct CryptFS_Key keys_storage[NB_ENCRYPTION_KEYS]; // BLOCK 1-64: Keys
+    struct CryptFS_KeySlot keys_storage[NB_ENCRYPTION_KEYS]; // BLOCK 1-64: Keys
     struct CryptFS_FAT first_fat; // BLOCK 65: First FAT
     struct CryptFS_Directory root_directory; // BLOCK 66: Root directory
 };

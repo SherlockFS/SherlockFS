@@ -87,7 +87,7 @@ EVP_PKEY *generate_rsa_keypair(void);
  * stored.
  * @param aes_key The AES key: RSAPUB_Encrypt(aes_key) will be stored.
  */
-void store_keys_in_keys_storage(struct CryptFS_Key *keys_storage,
+void store_keys_in_keys_storage(struct CryptFS_KeySlot *keys_storage,
                                 EVP_PKEY *rsa_keypair, unsigned char *aes_key);
 
 /**
@@ -111,7 +111,7 @@ void write_rsa_keys_on_disk(EVP_PKEY *rsa_keypair, const char *public_key_path,
  * @return ssize_t The index of the key in the header, -1 if not found.
  */
 ssize_t find_rsa_matching_key(EVP_PKEY *rsa_private,
-                              struct CryptFS_Key *keys_storage);
+                              struct CryptFS_KeySlot *keys_storage);
 
 /**
  * @brief Loads the RSA private and public keys from the given file.

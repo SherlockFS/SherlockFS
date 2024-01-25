@@ -56,7 +56,7 @@ EVP_PKEY *generate_rsa_keypair(void)
 }
 
 char zero[RSA_KEY_SIZE_BYTES] = { 0 };
-void store_keys_in_keys_storage(struct CryptFS_Key *keys_storage,
+void store_keys_in_keys_storage(struct CryptFS_KeySlot *keys_storage,
                                 EVP_PKEY *rsa_keypair, unsigned char *aes_key)
 {
     size_t i = 0;
