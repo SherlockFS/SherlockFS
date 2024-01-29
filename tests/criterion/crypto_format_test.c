@@ -56,7 +56,7 @@ Test(store_keys_in_keys_storage, store_keys_in_keys_storage,
     // Check if the RSA modulus and the RSA public exponent are stored in the
     // header
     BIGNUM *e = BN_new();
-    BN_set_word(e, RSA_EXPONENT);
+    BN_set_word(e, RSA_F4);
     BIGNUM *n = BN_bin2bn((const unsigned char *)&keys_storage[0].rsa_n,
                           RSA_KEY_SIZE_BYTES, NULL);
 

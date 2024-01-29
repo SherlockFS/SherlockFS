@@ -8,8 +8,6 @@
 
 #include "cryptfs.h"
 
-#define RSA_EXPONENT RSA_F4
-
 /**
  * @brief Encrypts `data` of size `data_size` with `rsa_key` public key.
  *

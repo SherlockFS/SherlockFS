@@ -9,10 +9,10 @@
 // -----------------------------------------------------------------------------
 // HEADER SECTION
 // -----------------------------------------------------------------------------
-#define CRYPTFS_BOOT_SECTION_SIZE_BYTES 5
+#define CRYPTFS_BOOT_SECTION_SIZE_BYTES 512
 #define CRYPTFS_MAGIC 0x63727970746673
 #define CRYPTFS_VERSION 1
-#define CRYPTFS_BLOCK_SIZE_BYTES 512
+#define CRYPTFS_BLOCK_SIZE_BYTES 4096
 #define CRYPTFS_BLOCK_SIZE_BITS (CRYPTFS_BLOCK_SIZE_BYTES * 8)
 
 /**
@@ -54,10 +54,10 @@ struct CryptFS_Header
  */
 struct CryptFS_KeySlot
 {
-    uint8_t rsa_n[RSA_KEY_SIZE_BYTES]; // RSA public number 'n' (the modulus)
     uint8_t aes_key_ciphered[RSA_KEY_SIZE_BYTES]; // AES key ciphered with RSA
-                                                  // public key
-} __attribute__((packed));
+    uint8_t rsa_n[RSA_KEY_SIZE_BYTES]; // RSA public modulus 'n'
+    uint32_t rsa_e; // RSA public exponent 'e'
+} __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
 // -----------------------------------------------------------------------------
 // FAT (File Allocation Table) SECTION
@@ -100,7 +100,7 @@ struct CryptFS_FAT
 
 enum FAT_BLOCK_TYPE
 {
-    FAT_BLOCK_END = -2, // End of file.
+    FAT_BLOCK_END = -1, // End of file.
     FAT_BLOCK_ERROR = -1, // Error related to FAT. (Never written in any FAT)
     FAT_BLOCK_FREE = 0, // The block is free.
 };
@@ -113,11 +113,10 @@ enum FAT_BLOCK_TYPE
 
 enum ENTRY_TYPE
 {
-    ENTRY_TYPE_FILE = 0,
-    ENTRY_TYPE_DIRECTORY = 1,
-    ENTRY_TYPE_HARDLINK = 2,
-    ENTRY_TYPE_SYMLINK = 3,
-    ENTRY_TYPE_UNKNOWN = 4
+    ENTRY_TYPE_FILE = 0, // start_block -> blob
+    ENTRY_TYPE_DIRECTORY = 1, // start_block -> struct CryptFS_Directory
+    ENTRY_TYPE_HARDLINK = 2, // start_block -> same blob
+    ENTRY_TYPE_SYMLINK = 3 // start_block -> a block which contains a string
 };
 
 /**
@@ -164,9 +163,9 @@ typedef char f_cont_t; // File content type
 // CRYPTFS FILE SYSTEM
 // -----------------------------------------------------------------------------
 #define HEADER_BLOCK 0
-#define KEYS_STORAGE_BLOCK 1
-#define FIRST_FAT_BLOCK 65
-#define ROOT_DIR_BLOCK 66
+#define KEYS_STORAGE_BLOCK (HEADER_BLOCK + 1)
+#define FIRST_FAT_BLOCK (KEYS_STORAGE_BLOCK + NB_ENCRYPTION_KEYS)
+#define ROOT_DIR_BLOCK (FIRST_FAT_BLOCK + 1)
 
 struct CryptFS
 {
@@ -174,6 +173,6 @@ struct CryptFS
     struct CryptFS_KeySlot keys_storage[NB_ENCRYPTION_KEYS]; // BLOCK 1-64: Keys
     struct CryptFS_FAT first_fat; // BLOCK 65: First FAT
     struct CryptFS_Directory root_directory; // BLOCK 66: Root directory
-};
+} __attribute__((packed));
 
 #endif /* CRYPT_FS_H */

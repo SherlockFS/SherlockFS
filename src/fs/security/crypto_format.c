@@ -1,3 +1,4 @@
+#include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
 #include <openssl/core_names.h>
@@ -34,7 +35,7 @@ EVP_PKEY *generate_rsa_keypair(void)
 
     print_info("Generating a RSA keypair (for the AES key encryption)...\n");
     unsigned int bits = RSA_KEY_SIZE_BITS;
-    unsigned int e = RSA_EXPONENT;
+    unsigned int e = RSA_F4;
     OSSL_PARAM params[3];
     EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
 
@@ -63,10 +64,15 @@ void store_keys_in_keys_storage(struct CryptFS_KeySlot *keys_storage,
     while (i < NB_ENCRYPTION_KEYS)
     {
         // Check if keys_storage[i].rsa_n is full of 0
-        if (memcmp(keys_storage[i].rsa_n, zero, RSA_KEY_SIZE_BYTES) == 0)
+        if (memcmp(keys_storage[i].rsa_n, zero, RSA_KEY_SIZE_BYTES) == 0
+            && memcmp(keys_storage[i].rsa_e, zero,
+                      sizeof(keys_storage[i].rsa_e)))
         {
             // Get the RSA modulus
             BIGNUM *modulus = NULL;
+            uint32_t exponent = NULL;
+
+            // Get N from rsa_keypair as a BIGNUM
             if (EVP_PKEY_get_bn_param(rsa_keypair, OSSL_PKEY_PARAM_RSA_N,
                                       &modulus)
                     != 1 // Get the RSA modulus
@@ -77,6 +83,12 @@ void store_keys_in_keys_storage(struct CryptFS_KeySlot *keys_storage,
                 internal_error_exit("Failed to store RSA modulus\n",
                                     EXIT_FAILURE);
             BN_free(modulus);
+
+            // Get E from rsa_keypair as a uint64_t
+            if (BN_(exponent,
+                             (unsigned char *)&keys_storage[i].rsa_n)
+                    != RSA_KEY_SIZE_BYTES
+            // TODO
 
             // EVP_PKEY_encrypt CTX setup with the RSA keypair
             EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new(rsa_keypair, NULL);

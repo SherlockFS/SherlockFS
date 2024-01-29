@@ -36,7 +36,10 @@ bool is_already_formatted(const char *device_path)
     // Check if the blocksize is exactly CRYPTFS_BLOCK_SIZE_BYTES
     // (the only supported block size in this implementation)
     else if (header.blocksize != CRYPTFS_BLOCK_SIZE_BYTES)
+    {
+        print_error("The size '%d' is not supported in this implementation",header.blocksize);
         return false;
+    }
 
     return true;
 }
