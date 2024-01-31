@@ -1,18 +1,6 @@
 {
     "configurations": [
         {
-            "name": "Linux",
-            "includePath": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/include"
-            ],
-            "defines": ["_XOPEN_SOURCE"],
-            "compilerPath": "/usr/bin/gcc",
-            "cStandard": "gnu17",
-            "cppStandard": "gnu++17",
-            "intelliSenseMode": "linux-gcc-x64"
-        },
-        {
             "name": "Linux - GCC GNU",
             "includePath": [
                 "${workspaceFolder}/**",

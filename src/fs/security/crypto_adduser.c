@@ -30,32 +30,26 @@ ssize_t find_rsa_matching_key(EVP_PKEY *rsa_keypair,
         // Compare the exponent and the modulus of the both keys
         BIGNUM *key_storage_modulus =
             BN_bin2bn(keys_storage[i].rsa_n, RSA_KEY_SIZE_BYTES, NULL);
-        BIGNUM *key_storage_exponent = BN_bin2bn(
-            ntoh(keys_storage[i].rsa_e), sizeof(keys_storage[i].rsa_e), NULL);
+
+        uint32_t exponent_host_endianness = ntohl(keys_storage[i].rsa_e);
+        BIGNUM *key_storage_exponent = BN_new();
+        if (!BN_set_word(key_storage_exponent, exponent_host_endianness))
+            internal_error_exit("Failed to set the public RSA exponent\n",
+                                EXIT_FAILURE);
 
         if (BN_cmp(key_storage_modulus, rsa_keypair_modulus) == 0
             && BN_cmp(key_storage_exponent, rsa_keypair_exponent) == 0)
         {
-            // Init for checking the RSA private parameters
-            EVP_PKEY_CTX *rsa_private_ctx = EVP_PKEY_CTX_new(rsa_keypair, NULL);
-
-            if (rsa_private_ctx == NULL)
-                internal_error_exit("Failed to create the EVP_PKEY_CTX\n",
-                                    EXIT_FAILURE);
-
-            if (EVP_PKEY_pairwise_check(rsa_private_ctx) == 1)
-            {
-                BN_free(key_storage_modulus);
-                BN_free(key_storage_exponent);
-                EVP_PKEY_CTX_free(rsa_private_ctx);
-                break;
-            }
-            EVP_PKEY_CTX_free(rsa_private_ctx);
+            BN_free(key_storage_modulus);
+            BN_free(key_storage_exponent);
+            break;
         }
+
         BN_free(key_storage_modulus);
         BN_free(key_storage_exponent);
     }
     BN_free(rsa_keypair_modulus);
+    BN_free(rsa_keypair_exponent);
 
     return i == NB_ENCRYPTION_KEYS ? -1 : i;
 }

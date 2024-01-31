@@ -45,8 +45,9 @@ Test(generate_keys, generate_keys, .init = cr_redirect_stdout, .timeout = 10)
 Test(store_keys_in_keys_storage, store_keys_in_keys_storage,
      .init = cr_redirect_stdout, .timeout = 10)
 {
-    struct CryptFS_KeySlot *keys_storage = xaligned_calloc(
-        CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_KeySlot));
+    struct CryptFS_KeySlot *keys_storage =
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, NB_ENCRYPTION_KEYS,
+                        sizeof(struct CryptFS_KeySlot));
 
     EVP_PKEY *rsa_keypair = generate_rsa_keypair();
     unsigned char *aes_key = generate_aes_key();
@@ -128,7 +129,8 @@ Test(write_rsa_keys_on_disk, write_rsa_keys_on_disk, .init = cr_redirect_stdout,
 Test(find_rsa_matching_key, no_key, .init = cr_redirect_stdout, .timeout = 10)
 {
     struct CryptFS_KeySlot *keys_storage =
-        xcalloc(1, sizeof(struct CryptFS_KeySlot));
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, NB_ENCRYPTION_KEYS,
+                        sizeof(struct CryptFS_KeySlot));
 
     EVP_PKEY *rsa_keypair = generate_rsa_keypair();
     EVP_PKEY *rsa_keypair_different = generate_rsa_keypair();
@@ -148,8 +150,9 @@ Test(find_rsa_matching_key, no_key, .init = cr_redirect_stdout, .timeout = 10)
 
 Test(find_rsa_matching_key, key, .init = cr_redirect_stdout, .timeout = 10)
 {
-    struct CryptFS_KeySlot *keys_storage = xaligned_calloc(
-        CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_KeySlot));
+    struct CryptFS_KeySlot *keys_storage =
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, NB_ENCRYPTION_KEYS,
+                        sizeof(struct CryptFS_KeySlot));
 
     EVP_PKEY *rsa_keypair = generate_rsa_keypair();
 

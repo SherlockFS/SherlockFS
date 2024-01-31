@@ -132,7 +132,8 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
 void format_fs(const char *path, char *public_key_path, char *private_key_path,
                char *rsa_passphrase, EVP_PKEY *existing_rsa_keypair)
 {
-    struct CryptFS *shlkfs = xcalloc(1, sizeof(struct CryptFS));
+    struct CryptFS *shlkfs =
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS));
 
     set_device_path(path);
 

@@ -45,7 +45,8 @@ Test(find_first_free_block, on_first_fat, .timeout = 10,
               "build/tests/find_first_free_block.on_first_fat.private.pem",
               NULL, NULL);
 
-    struct CryptFS *shlkfs = xcalloc(1, sizeof(struct CryptFS));
+    struct CryptFS *shlkfs =
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS));
     memset(shlkfs->first_fat.entries, 0xDEAD,
            NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
 
@@ -79,7 +80,8 @@ Test(find_first_free_block, on_second_fat, .timeout = 10,
               NULL, NULL);
 
     struct CryptFS *shlkfs =
-        xcalloc(1, sizeof(struct CryptFS) + sizeof(struct CryptFS_FAT));
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                        sizeof(struct CryptFS) + sizeof(struct CryptFS_FAT));
 
     struct CryptFS_FAT *second_fat =
         (struct CryptFS_FAT *)((char *)shlkfs + sizeof(struct CryptFS));
@@ -161,7 +163,8 @@ Test(find_first_free_block, on_second_fat_not_contigious, .timeout = 10,
 
 Test(create_fat, second_fat, .init = cr_redirect_stdout, .timeout = 10)
 {
-    struct CryptFS *shlkfs = xcalloc(1, sizeof(struct CryptFS));
+    struct CryptFS *shlkfs =
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS));
 
     // Setting the device and block size for read/write operations
     set_device_path("build/tests/create_fat.second_fat.test.shlkfs");
@@ -188,7 +191,8 @@ Test(create_fat, second_fat, .init = cr_redirect_stdout, .timeout = 10)
 
 Test(create_fat, third_fat, .init = cr_redirect_stdout, .timeout = 10)
 {
-    struct CryptFS *shlkfs = xcalloc(1, sizeof(struct CryptFS));
+    struct CryptFS *shlkfs =
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS));
 
     // Setting the device and block size for read/write operations
     set_device_path("build/tests/create_fat.third_fat.test.shlkfs");
