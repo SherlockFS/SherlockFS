@@ -48,6 +48,9 @@
         "utility": "c",
         "readfs.h": "c",
         "adduser.h": "c",
-        "filesystem": "c"
-    }
+        "filesystem": "c",
+        "stdint.h": "c",
+        "cstdint": "c"
+    },
+    "C_Cpp.default.compilerPath": "/usr/bin/gcc"
 }

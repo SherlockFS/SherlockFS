@@ -45,18 +45,26 @@ Test(generate_keys, generate_keys, .init = cr_redirect_stdout, .timeout = 10)
 Test(store_keys_in_keys_storage, store_keys_in_keys_storage,
      .init = cr_redirect_stdout, .timeout = 10)
 {
-    struct CryptFS_KeySlot *keys_storage = xaligned_calloc(
-        CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_KeySlot));
+    struct CryptFS_KeySlot *keys_storage =
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, NB_ENCRYPTION_KEYS,
+                        sizeof(struct CryptFS_KeySlot));
 
     EVP_PKEY *rsa_keypair = generate_rsa_keypair();
     unsigned char *aes_key = generate_aes_key();
 
     store_keys_in_keys_storage(keys_storage, rsa_keypair, aes_key);
 
-    // Check if the RSA modulus hashes in memory and KeySlot are the same
-    unsigned char *memory_hash = hash_rsa_public_key(rsa_keypair);
-    cr_assert_arr_eq(memory_hash, keys_storage[0].rsa_public_hash,
-                     SHA256_DIGEST_LENGTH);
+    // Check if the RSA modulus and the RSA public exponent are stored in the
+    // header
+    BIGNUM *e = BN_new();
+    BN_set_word(e, RSA_F4);
+    BIGNUM *n = BN_bin2bn((const unsigned char *)&keys_storage[0].rsa_n,
+                          RSA_KEY_SIZE_BYTES, NULL);
+
+    BIGNUM *n_storage = NULL;
+    EVP_PKEY_get_bn_param(rsa_keypair, "n", &n_storage);
+    cr_assert(BN_cmp(n, n_storage) == 0, "%s != %s\n", BN_bn2hex(n),
+              BN_bn2hex(n_storage));
 
     // Decrypt stored AES key and compares it to the constant aes_key_const
     size_t aes_key_size = 0;
@@ -69,8 +77,10 @@ Test(store_keys_in_keys_storage, store_keys_in_keys_storage,
     free(aes_key);
     free(aes_key_decrypted);
     free(keys_storage);
-    free(memory_hash);
     EVP_PKEY_free(rsa_keypair);
+    BN_free(e);
+    BN_free(n);
+    BN_free(n_storage);
 }
 
 Test(write_rsa_keys_on_disk, write_rsa_keys_on_disk, .init = cr_redirect_stdout,
@@ -140,8 +150,9 @@ Test(find_rsa_matching_key, no_key, .init = cr_redirect_stdout, .timeout = 10)
 
 Test(find_rsa_matching_key, key, .init = cr_redirect_stdout, .timeout = 10)
 {
-    struct CryptFS_KeySlot *keys_storage = xaligned_calloc(
-        CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_KeySlot));
+    struct CryptFS_KeySlot *keys_storage =
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, NB_ENCRYPTION_KEYS,
+                        sizeof(struct CryptFS_KeySlot));
 
     EVP_PKEY *rsa_keypair = generate_rsa_keypair();
 

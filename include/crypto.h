@@ -3,12 +3,11 @@
 
 #include <openssl/aes.h>
 #include <openssl/evp.h>
+#include <stdbool.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include "cryptfs.h"
-
-#define RSA_EXPONENT RSA_F4
 
 /**
  * @brief Encrypts `data` of size `data_size` with `rsa_key` public key.
@@ -78,6 +77,22 @@ unsigned char *generate_aes_key(void);
  * @return EVP_PKEY* The generated RSA keypair.
  */
 EVP_PKEY *generate_rsa_keypair(void);
+
+/**
+ * @brief Checks if the given RSA key is valid.
+ *
+ * @note The key is considered valid if:
+ * - It is not NULL,
+ * - It is a RSA key,
+ * - The RSA key is valid (RSA_check_key),
+ * - The RSA modulus is RSA_KEY_SIZE_BYTES bits long,
+ * - The RSA exponent is a uint32_t.
+ *
+ * @param rsa_key The RSA key to check.
+ * @return true
+ * @return false
+ */
+bool is_key_valid(EVP_PKEY *rsa_key);
 
 /**
  * @brief Stores the RSA modulus and the RSA public exponent in a keys storage.
