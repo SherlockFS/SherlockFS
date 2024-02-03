@@ -31,48 +31,55 @@ MOUNT_SRC = $(SRC_DIR)/shlkfs_mount.c
 MOUNT_OBJ = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(MOUNT_SRC:.c=.o))
 
 all : shlkfs_formater shlkfs_mount shlkfs_adduser shlkfs_deluser
+	@echo $(call greentext,"Tous les binaires ont été compilés avec succès")
 
 dependencies:
+	@echo $(call bluetext,"Installation des dépendances")
 	bash dependencies.sh
 
 shlkfs_formater: $(BUILD_DIR)/shlkfs_formater
+	@echo $(call greentext,"Le binaire shlkfs_formater a été compilé avec succès")
 
 shlkfs_adduser: $(BUILD_DIR)/shlkfs_adduser
+	@echo $(call greentext,"Le binaire shlkfs_adduser a été compilé avec succès")
 
 shlkfs_deluser: $(BUILD_DIR)/shlkfs_deluser
+	@echo $(call greentext,"Le binaire shlkfs_deluser a été compilé avec succès")
 
 shlkfs_mount: $(BUILD_DIR)/shlkfs_mount
+	@echo $(call greentext,"Le binaire shlkfs_mount a été compilé avec succès")
 
 $(BUILD_DIR)/shlkfs_formater: $(FORMAT_OBJ) $(OBJ)
-	$(CC) $(CFLAGS) $^ -o $(BUILD_DIR)/shlkfs_formater $(LDFLAGS)
+	@$(CC) $(CFLAGS) $^ -o $(BUILD_DIR)/shlkfs_formater $(LDFLAGS)
 
 $(BUILD_DIR)/shlkfs_adduser: $(ADDUSER_OBJ) $(OBJ)
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/shlkfs_adduser $^ $(LDFLAGS)
+	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/shlkfs_adduser $^ $(LDFLAGS)
 
 $(BUILD_DIR)/shlkfs_deluser: $(DELUSER_OBJ) $(OBJ)
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/shlkfs_deluser $^ $(LDFLAGS)
+	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/shlkfs_deluser $^ $(LDFLAGS)
 
 $(BUILD_DIR)/shlkfs_mount: $(MOUNT_OBJ) $(OBJ)
-	$(CC) $(CFLAGS) $^ -o $(BUILD_DIR)/shlkfs_mount $(LDFLAGS)
+	@$(CC) $(CFLAGS) $^ -o $(BUILD_DIR)/shlkfs_mount $(LDFLAGS)
 
 $(BUILD_DIR)/%.o: $(PROJECT_DIR)/%.c
-	mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@ $(LDFLAGS)
+	@mkdir -p $(dir $@)
+	@echo "Compilation de '$<'"
+	@$(CC) $(CFLAGS) -c $< -o $@ $(LDFLAGS)
 
 tests_suite: $(BUILD_DIR)/tests_suite
 	
 $(BUILD_DIR)/tests_suite: LDFLAGS += -lcriterion
 $(BUILD_DIR)/tests_suite: $(TESTS_OBJ) $(OBJ)
-	$(CC) $(CFLAGS) $^ -o $(BUILD_DIR)/tests_suite $(LDFLAGS)
+	@$(CC) $(CFLAGS) $^ -o $(BUILD_DIR)/tests_suite $(LDFLAGS)
 
 test_main: $(BUILD_DIR)/test_main
 	
-
 $(BUILD_DIR)/test_main: $(OBJ) $(BUILD_DIR)/tests/test_main.o
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_main $^ $(LDFLAGS)
+	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_main $^ $(LDFLAGS)
 
 check: tests_suite
-	$(BUILD_DIR)/tests_suite
+	@echo $(call bluetext,"Lancement des tests unitaires")
+	@$(BUILD_DIR)/tests_suite
 
 clean_all:
 	rm -rf $(BUILD_DIR)
@@ -85,5 +92,4 @@ clean:
 	rm -f $(BUILD_DIR)/shlkfs_adduser
 	rm -f $(BUILD_DIR)/shlkfs_deluser
 
-
-.PHONY: clean
+.PHONY: clean clean_all check
