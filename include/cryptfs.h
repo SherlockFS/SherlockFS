@@ -52,6 +52,7 @@ struct CryptFS_Header
  */
 struct CryptFS_KeySlot
 {
+    uint8_t occupied; // 1 if the slot is occupied, 0 if free
     uint8_t aes_key_ciphered[RSA_KEY_SIZE_BYTES]; // AES key ciphered with RSA
     uint8_t rsa_n[RSA_KEY_SIZE_BYTES]; // RSA public modulus 'n'
     uint32_t rsa_e; // RSA public exponent 'e' (big endian)

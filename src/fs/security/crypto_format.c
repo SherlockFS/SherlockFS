@@ -24,7 +24,7 @@ unsigned char *generate_aes_key(void)
     print_info("Generating AES key...\n");
     if (RAND_bytes(aes_key, AES_KEY_SIZE_BYTES) != 1)
         internal_error_exit("Failed to generate AES key\n", EXIT_FAILURE);
-
+    print_success("AES key generated successfully!\n");
     return aes_key;
 }
 
@@ -61,15 +61,12 @@ EVP_PKEY *generate_rsa_keypair(void)
 void store_keys_in_keys_storage(struct CryptFS_KeySlot *keys_storage,
                                 EVP_PKEY *rsa_keypair, unsigned char *aes_key)
 {
-    static char zero[RSA_KEY_SIZE_BYTES] = { 0 };
-
     size_t i = 0;
     while (i < NB_ENCRYPTION_KEYS)
     {
         // Check if keys_storage[i].rsa_n is full of 0
         // and keys_storage[i].rsa_e is 0
-        if (memcmp(keys_storage[i].rsa_n, zero, RSA_KEY_SIZE_BYTES) == 0
-            && keys_storage[i].rsa_e == 0)
+        if (!keys_storage[i].occupied)
         {
             // Get the RSA modulus
             BIGNUM *modulus_bn = NULL;
@@ -113,6 +110,9 @@ void store_keys_in_keys_storage(struct CryptFS_KeySlot *keys_storage,
             // Copy the encrypted AES key in keys_storage[i].aes_key_ciphered
             memcpy(keys_storage[i].aes_key_ciphered, aes_key_encrypted,
                    aes_key_encrypted_size);
+
+            // Set the slot as occupied
+            keys_storage[i].occupied = 1;
 
             BN_free(modulus_bn);
             EVP_PKEY_CTX_free(pctx);

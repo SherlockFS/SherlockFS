@@ -53,11 +53,11 @@ int main(int argc, char *argv[])
         char answer = get_char_from_stdin();
         if (answer != 'y' && answer != 'Y')
         {
-            printf("Aborting...\n");
+            print_info("Aborting...");
             return 0;
         }
         else
-            printf("Overwriting...\n");
+            print_info("Overwriting...\n");
     }
 
     // KEYS ALREADY PRESENT IN HOME

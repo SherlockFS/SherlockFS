@@ -77,8 +77,8 @@ int cryptfs_adduser(char *device_path, char *other_public_key_path,
     store_keys_in_keys_storage(cryptfs->keys_storage, other_rsa,
                                decrypted_master_key);
 
-    // Write the new CryptFS headers on disk
-    print_info("Writing the new headers on disk...\n");
+    // Write the new CryptFS headers on device
+    print_info("Writing the new headers on device...\n");
     write_cryptfs_headers(device_path, cryptfs);
 
     // Free memory

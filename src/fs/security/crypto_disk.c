@@ -87,12 +87,18 @@ void get_rsa_keys_home_paths(char **public_key_path, char **private_key_path)
         internal_error_exit("'HOME' envariable is not defined but required. \n",
                             EXIT_FAILURE);
 
-    *public_key_path = xcalloc(PATH_MAX + 1, sizeof(char));
-    *private_key_path = xcalloc(PATH_MAX + 1, sizeof(char));
-    snprintf(*public_key_path, PATH_MAX, "%s/%s", home,
-             ".sherlockfs/public.pem");
-    snprintf(*private_key_path, PATH_MAX, "%s/%s", home,
-             ".sherlockfs/private.pem");
+    if (public_key_path)
+    {
+        *public_key_path = xcalloc(PATH_MAX + 1, sizeof(char));
+        snprintf(*public_key_path, PATH_MAX, "%s/%s", home,
+                 ".sherlockfs/public.pem");
+    }
+    if (private_key_path)
+    {
+        *private_key_path = xcalloc(PATH_MAX + 1, sizeof(char));
+        snprintf(*private_key_path, PATH_MAX, "%s/%s", home,
+                 ".sherlockfs/private.pem");
+    }
 }
 
 EVP_PKEY *load_rsa_keypair_from_home(char **passphrase)

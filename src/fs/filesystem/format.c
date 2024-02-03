@@ -145,13 +145,12 @@ void format_fs(const char *path, char *public_key_path, char *private_key_path,
         error_exit("Impossible to open the fill\n", EXIT_FAILURE);
 
     // Write the filesystem structure on the disk
-    print_info("Writing the filesystem structure on the disk...\n");
+    print_info("Writing the filesystem structure on the device...\n");
     if (fwrite(shlkfs, sizeof(*shlkfs), 1, file) != 1)
         error_exit("Impossible to write the filesystem structure\n",
                    EXIT_FAILURE);
 
     free(shlkfs);
-
     fclose(file);
 }
 

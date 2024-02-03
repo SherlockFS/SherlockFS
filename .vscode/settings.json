@@ -50,7 +50,8 @@
         "adduser.h": "c",
         "filesystem": "c",
         "stdint.h": "c",
-        "cstdint": "c"
+        "cstdint": "c",
+        "deluser.h": "c"
     },
     "C_Cpp.default.compilerPath": "/usr/bin/gcc"
 }

@@ -12,6 +12,7 @@
 #define RED_STR(STR) "\x1b[31m" STR "\x1b[0m"
 #define GREEN_STR(STR) "\x1b[32m" STR "\x1b[0m"
 #define BLUE_STR(STR) "\x1b[34m" STR "\x1b[0m"
+#define MAGENTA_STR(STR) "\x1b[35m" STR "\x1b[0m"
 
 void internal_error_exit(const char *msg, int error_code, ...)
 {
@@ -96,4 +97,17 @@ void print_success(const char *msg, ...)
     fprintf(stdout, GREEN_STR("[SUCCESS]: "));
     vfprintf(stdout, msg, args);
     va_end(args);
+}
+
+void print_debug(const char *msg, ...)
+{
+#ifndef NO_PRINT_DEBUG
+    va_list args;
+    va_start(args, msg);
+    fprintf(stdout, MAGENTA_STR("[DEBUG]: "));
+    vfprintf(stdout, msg, args);
+    va_end(args);
+#else
+    (void)msg;
+#endif
 }

@@ -15,6 +15,7 @@
 #include "block.h"
 #include "cryptfs.h"
 #include "crypto.h"
+#include "deluser.h"
 #include "fat.h"
 #include "format.h"
 #include "print.h"
@@ -29,46 +30,46 @@
 int main(void)
 {
     // Set the device (global variable) to the file (used by read/write_blocks)
-    set_device_path("tests/shlkfs_adduser.formated.test.shlkfs");
+    set_device_path("tests/shlkfs_deluser.two_users.test.shlkfs");
 
     EVP_PKEY *my_rsa = generate_rsa_keypair();
 
-    format_fs("tests/shlkfs_adduser.formated.test.shlkfs",
-              "tests/shlkfs_adduser.formated.test.public.pem",
-              "tests/shlkfs_adduser.formated.test.private.pem", NULL, my_rsa);
-    printf("is_already_formatted: %d\n",
-           is_already_formatted("tests/shlkfs_adduser.formated.test.shlkfs"));
+    format_fs("tests/shlkfs_deluser.two_users.test.shlkfs",
+              "tests/shlkfs_deluser.two_users.test.public.pem",
+              "tests/shlkfs_deluser.two_users.test.private.pem", NULL, my_rsa);
+    assert(is_already_formatted("tests/shlkfs_deluser.two_users.test.shlkfs"));
 
     // Read CryptFS structure
     struct CryptFS *shlkfs =
-        read_cryptfs_headers("tests/shlkfs_adduser.formated.test.shlkfs");
+        read_cryptfs_headers("tests/shlkfs_deluser.two_users.test.shlkfs");
 
-    // ! Check if second key storage buf is empty
-    // cr_assert_arr_eq(shlkfs->keys_storage[1].aes_key_ciphered,
-    //                  (unsigned char[AES_KEY_SIZE_BYTES]){ 0 },
-    //                  AES_KEY_SIZE_BYTES);
+    // Check if second key storage buf is empty
+    assert(shlkfs->keys_storage[1].occupied == 0);
 
     // OpenSSL generate keypair and write it to a file
     EVP_PKEY *other_rsa = generate_rsa_keypair();
-    write_rsa_keys_on_disk(
-        my_rsa, "tests/shlkfs_adduser.formated.my_public.pem",
-        "tests/shlkfs_adduser.formated.my_private.pem", NULL);
     write_rsa_keys_on_disk(other_rsa,
-                           "tests/shlkfs_adduser.formated.other_public.pem",
+                           "tests/shlkfs_deluser.two_users.other_public.pem",
                            NULL, NULL);
 
-    cryptfs_adduser("tests/shlkfs_adduser.formated.test.shlkfs",
-                    "tests/shlkfs_adduser.formated.other_public.pem",
-                    "tests/shlkfs_adduser.formated.my_private.pem");
+    // Add user
+    assert(cryptfs_adduser("tests/shlkfs_deluser.two_users.test.shlkfs",
+                           "tests/shlkfs_deluser.two_users.other_public.pem",
+                           "tests/shlkfs_deluser.two_users.test.private.pem")
+           == 0);
+
+    // Delete the other user
+    assert(cryptfs_deluser("tests/shlkfs_deluser.two_users.test.shlkfs",
+                           "tests/shlkfs_deluser.two_users.my_private.pem",
+                           "tests/shlkfs_deluser.two_users.other_public.pem")
+           == 0);
 
     // Read CryptFS structure
     free(shlkfs);
-    shlkfs = read_cryptfs_headers("tests/shlkfs_adduser.formated.test.shlkfs");
+    shlkfs = read_cryptfs_headers("tests/shlkfs_deluser.two_users.test.shlkfs");
 
-    // ! Check if second key storage buf is not empty
-    // cr_assert_arr_neq(shlkfs->keys_storage[1].aes_key_ciphered,
-    //                   (unsigned char[AES_KEY_SIZE_BYTES]){ 0 },
-    //                   AES_KEY_SIZE_BYTES);
+    // Check if second key storage buf is not empty
+    assert(shlkfs->keys_storage[1].occupied == 0);
 
     // Free memory
     EVP_PKEY_free(my_rsa);

@@ -30,6 +30,9 @@ ssize_t find_rsa_matching_key(EVP_PKEY *rsa_keypair,
     uint8_t i = 0;
     for (; i < NB_ENCRYPTION_KEYS; i++)
     {
+        if (!keys_storage[i].occupied)
+            continue;
+
         // Compare the exponent and the modulus of the both keys
         BIGNUM *key_storage_modulus =
             BN_bin2bn(keys_storage[i].rsa_n, RSA_KEY_SIZE_BYTES, NULL);
