@@ -45,7 +45,7 @@ unsigned char *rsa_decrypt_data(EVP_PKEY *rsa_key,
  * @param encrypted_data_size The size of the encrypted data (returned).
  * @return unsigned char* The encrypted data.
  */
-unsigned char *aes_encrypt_data(unsigned char *aes_key,
+unsigned char *aes_encrypt_data(const unsigned char *aes_key,
                                 const unsigned char *data, size_t data_size,
                                 size_t *encrypted_data_size);
 
@@ -59,7 +59,7 @@ unsigned char *aes_encrypt_data(unsigned char *aes_key,
  * @param decrypted_data_size The size of the decrypted data (returned).
  * @return unsigned char* The decrypted data.
  */
-unsigned char *aes_decrypt_data(unsigned char *aes_key,
+unsigned char *aes_decrypt_data(const unsigned char *aes_key,
                                 const unsigned char *encrypted_data,
                                 size_t encrypted_data_size,
                                 size_t *decrypted_data_size);
@@ -103,7 +103,8 @@ bool is_key_valid(EVP_PKEY *rsa_key);
  * @param aes_key The AES key: RSAPUB_Encrypt(aes_key) will be stored.
  */
 void store_keys_in_keys_storage(struct CryptFS_KeySlot *keys_storage,
-                                EVP_PKEY *rsa_keypair, unsigned char *aes_key);
+                                EVP_PKEY *rsa_keypair,
+                                const unsigned char *aes_key);
 
 /**
  * @brief Writes the RSA private and public keys to a file.
@@ -126,7 +127,7 @@ void write_rsa_keys_on_disk(EVP_PKEY *rsa_keypair, const char *public_key_path,
  * @return ssize_t The index of the key in the header, -1 if not found.
  */
 ssize_t find_rsa_matching_key(EVP_PKEY *rsa_private,
-                              struct CryptFS_KeySlot *keys_storage);
+                              const struct CryptFS_KeySlot *keys_storage);
 
 /**
  * @brief Loads the RSA private and public keys from the given file.
@@ -158,5 +159,16 @@ void get_rsa_keys_home_paths(char **public_key_path, char **private_key_path);
  * @return EVP_PKEY* The loaded RSA keypair.
  */
 EVP_PKEY *load_rsa_keypair_from_home(char **passphrase);
+
+/**
+ * @brief Extracts the AES key from the keys storage.
+ *
+ * @param device_path A path of the device to extract the AES key from
+ * @param private_key_path A path of the private key file.
+ * @return unsigned char* The extracted AES key., or NULL if the key cannot be
+ * extracted.
+ */
+unsigned char *extract_aes_key(const char *device_path,
+                               const char *private_key_path);
 
 #endif /* CRYPTO_H */

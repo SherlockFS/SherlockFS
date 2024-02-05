@@ -3,8 +3,10 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <sys/types.h>
 
 typedef size_t block_t;
+typedef ssize_t sblock_t;
 
 /**
  * @brief Set the device path global variable.
@@ -18,7 +20,7 @@ void set_device_path(const char *path);
  *
  * @return The device path global variable.
  */
-const char *get_device_path();
+const char *get_device_path(void);
 
 /**
  * @brief Read blocks from the device.
@@ -41,7 +43,7 @@ int read_blocks(block_t start_block, size_t nb_blocks, void *buffer);
  *
  * @return 0 on success, -1 on error.
  */
-int write_blocks(block_t start_block, size_t nb_blocks, void *buffer);
+int write_blocks(block_t start_block, size_t nb_blocks, const void *buffer);
 
 /**
  * @brief Read a block from the device and decrypt it.
@@ -52,8 +54,9 @@ int write_blocks(block_t start_block, size_t nb_blocks, void *buffer);
  * @param buffer The buffer to fill with the blocks.
  * @return int 0 on success, -1 on error.
  */
-int read_blocks_with_decryption(unsigned char *aes_key, block_t start_block,
-                                size_t nb_blocks, void *buffer);
+int read_blocks_with_decryption(const unsigned char *aes_key,
+                                block_t start_block, size_t nb_blocks,
+                                void *buffer);
 
 /**
  * @brief Write a block to the device and encrypt it.
@@ -64,7 +67,8 @@ int read_blocks_with_decryption(unsigned char *aes_key, block_t start_block,
  * @param buffer The buffer containing the blocks.
  * @return int 0 on success, -1 on error.
  */
-int write_blocks_with_encryption(unsigned char *aes_key, block_t start_block,
-                                 size_t nb_blocks, void *buffer);
+int write_blocks_with_encryption(const unsigned char *aes_key,
+                                 block_t start_block, size_t nb_blocks,
+                                 const void *buffer);
 
 #endif /* BLOCK_H */

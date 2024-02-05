@@ -10,7 +10,7 @@
 // -----------------------------------------------------------------------------
 // HEADER SECTION
 // -----------------------------------------------------------------------------
-#define CRYPTFS_BOOT_SECTION_SIZE_BYTES 512
+#define CRYPTFS_BOOT_SECTION_SIZE_BYTES 1024
 #define CRYPTFS_MAGIC 0x63727970746673
 #define CRYPTFS_VERSION 1
 #define CRYPTFS_BLOCK_SIZE_BYTES 4096
@@ -29,6 +29,8 @@ struct CryptFS_Header
     uint64_t magic; // CRYPTFS_MAGIC
     uint8_t version; // CRYPTFS_VERSION
     uint32_t blocksize; // in bytes
+    uint64_t device_size; // in bytes
+    uint64_t last_fat_block; // Last FAT block index
 } __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
 // -----------------------------------------------------------------------------
@@ -69,7 +71,7 @@ struct CryptFS_KeySlot
  * linked- list.
  *
  * @example If a file/directory is a size of 4 blocks, and starts at block 5,
- * the FAT chain can be: 5 -> 34 -> 42 -> 24 -> 20 -> FAT_BLOCK_END.
+ * the FAT chain can be: 5 -> 34 -> 42 -> 24 -> 20 -> BLOCK_END.
  */
 struct CryptFS_FAT_Entry
 {
@@ -81,15 +83,15 @@ struct CryptFS_FAT_Entry
  *
  * A FAT block is a linked-list of FAT entries.
  *
- * @note The value FAT_BLOCK_END is used to mark the end of the FAT chain.
- * @example If on the block 42, the next block is FAT_BLOCK_END, the file is
+ * @note The value BLOCK_END is used to mark the end of the FAT chain.
+ * @example If on the block 42, the next block is BLOCK_END, the file is
  * finished.
  *
  * @link https://en.wikipedia.org/wiki/File_Allocation_Table
  */
 struct CryptFS_FAT
 {
-    uint64_t next_fat_table; // Next FAT table in the FAT chain
+    uint64_t next_fat_table; // Next FAT table block in the FAT chain
     struct CryptFS_FAT_Entry entries[]; // FAT entries
 } __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
@@ -97,11 +99,11 @@ struct CryptFS_FAT
     ((CRYPTFS_BLOCK_SIZE_BYTES - sizeof(uint64_t))                             \
      / sizeof(struct CryptFS_FAT_Entry))
 
-enum FAT_BLOCK_TYPE
+enum BLOCK_TYPE
 {
-    FAT_BLOCK_END = -1, // End of file.
-    FAT_BLOCK_ERROR = -1, // Error related to FAT.
-    FAT_BLOCK_FREE = 0, // The block is free.
+    BLOCK_ERROR = -2, // Error related to blocks. (Never written on the device)
+    BLOCK_END = -1, // End of file.
+    BLOCK_FREE = 0, // The block is free.
 };
 
 // -----------------------------------------------------------------------------
@@ -123,6 +125,35 @@ enum ENTRY_TYPE
  *
  * This structure contains all the metadata of an entry (size, name,
  * permissions, ...).
+ *
+ * @details DIRECTORY:
+ * A directory contains entries (files, links, other directories, ...).
+ *
+ * The start_block of a directory entry points to a block that contains a
+ * contiguous list of entries. The number of entries that can be stored in one
+ * block is defined by the macro NB_ENTRIES_PER_BLOCK. Of course, it's important
+ * to relate to FAT entries. For example, if a directory has a size of 26, which
+ * means it contains 26 entries, which also means 2 entries more than the number
+ * of entries that can be stored in a block (for a block size of 4096 bytes),
+ * then the directory will be stored in 2 blocks.
+ *
+ * @details FILE:
+ * A file contains a blob of data. The start_block of a file entry points to the
+ * first block of the blob. The size of the blob is the size of the entry. The
+ * file may be trucated in multiple blocks. Thus, it's important to relate to
+ * FAT entries.
+ *
+ * @details HARDLINK:
+ * A hardlink is a reference to another entry. The start_block of a hardlink
+ * entry points to the same blob as the entry it references and its size is the
+ * size of the entry it references.
+ *
+ * @details SYMLINK:
+ * A symlink is a reference to a string. The start_block of a symlink entry
+ * points to a block that contains a string. The string is the path of the
+ * target. The size of the string is the size of the entry. The string is NOT
+ * NUL terminated. The string may be trucated in multiple blocks. Thus, it's
+ * important to relate to FAT entries.
  */
 struct CryptFS_Entry
 {
@@ -130,7 +161,7 @@ struct CryptFS_Entry
     uint8_t type; // ENTRY_TYPE
     uint64_t start_block; // First block of the entry
     char name[ENTRY_NAME_MAX_LEN]; // Name of the entry
-    uint64_t size; // in bytes
+    uint64_t size; // in number of entries for directories, in bytes for others
     uint32_t uid; // User ID
     uint32_t gid; // Group ID
     uint32_t mode; // Permissions (Unix-like)
@@ -139,18 +170,8 @@ struct CryptFS_Entry
     uint32_t ctime; // Creation time
 } __attribute__((packed));
 
-/**
- * @brief Structure that describes a directory.
- *
- * A directory contains entries (files, links, other directories, ...).
- */
-struct CryptFS_Directory
-{
-    uint32_t num_entries;
-    struct CryptFS_Entry entries[];
-} __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
-
-#define CRYPTFS_MAX_ENTRIES_PER_DIR (CRYPTFS_BLOCK_SIZE_BYTES - sizeof(uint8_t) - sizeof(uint32_t)) / sizeof(struct CryptFS_Entry))
+#define NB_ENTRIES_PER_BLOCK                                                   \
+    (CRYPTFS_BLOCK_SIZE_BYTES / sizeof(struct CryptFS_Entry))
 
 // -----------------------------------------------------------------------------
 // CRYPTFS FILE SYSTEM
@@ -165,7 +186,7 @@ struct CryptFS
     struct CryptFS_Header header; // BLOCK 0: Header
     struct CryptFS_KeySlot keys_storage[NB_ENCRYPTION_KEYS]; // BLOCK 1-64: Keys
     struct CryptFS_FAT first_fat; // BLOCK 65: First FAT
-    struct CryptFS_Directory root_directory; // BLOCK 66: Root directory
+    struct CryptFS_Entry root_directory; // BLOCK 66: Root directory
 } __attribute__((aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
 #endif /* CRYPT_FS_H */

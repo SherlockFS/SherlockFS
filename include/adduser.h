@@ -11,7 +11,7 @@
  * @param my_private_key_path A path to the private key already registered
  * @return int 0 if success, -1 user not added
  */
-int cryptfs_adduser(char *device_path, char *other_public_key_path,
-                    char *my_private_key_path);
+int cryptfs_adduser(const char *device_path, const char *other_public_key_path,
+                    const char *my_private_key_path);
 
 #endif /* ADDUSER_H */

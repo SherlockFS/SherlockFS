@@ -59,7 +59,8 @@ EVP_PKEY *generate_rsa_keypair(void)
 }
 
 void store_keys_in_keys_storage(struct CryptFS_KeySlot *keys_storage,
-                                EVP_PKEY *rsa_keypair, unsigned char *aes_key)
+                                EVP_PKEY *rsa_keypair,
+                                const unsigned char *aes_key)
 {
     size_t i = 0;
     while (i < NB_ENCRYPTION_KEYS)

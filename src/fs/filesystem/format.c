@@ -37,7 +37,8 @@ bool is_already_formatted(const char *device_path)
     // (the only supported block size in this implementation)
     else if (header.blocksize != CRYPTFS_BLOCK_SIZE_BYTES)
     {
-        print_error("The size '%d' is not supported in this implementation",header.blocksize);
+        print_error("The size '%d' is not supported in this implementation",
+                    header.blocksize);
         return false;
     }
 
@@ -45,7 +46,7 @@ bool is_already_formatted(const char *device_path)
 }
 
 void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
-                                   const EVP_PKEY *existing_rsa_keypair,
+                                   EVP_PKEY *existing_rsa_keypair,
                                    const char *public_key_path,
                                    const char *private_key_path)
 {
@@ -57,6 +58,7 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
     shlkfs->header.magic = CRYPTFS_MAGIC;
     shlkfs->header.version = CRYPTFS_VERSION;
     shlkfs->header.blocksize = CRYPTFS_BLOCK_SIZE_BYTES;
+    shlkfs->header.last_fat_block = FIRST_FAT_BLOCK;
 
     for (size_t i = 0; i < CRYPTFS_BOOT_SECTION_SIZE_BYTES; i++)
         shlkfs->header.boot[i] = 0x90; // NOP sled
@@ -116,14 +118,28 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
     /// BLOCK 2 : FAT (File Allocation Table)
     /// ------------------------------------------------------------
 
-    shlkfs->first_fat.next_fat_table = FAT_BLOCK_END;
-    for (size_t i = 0; i <= ROOT_DIR_BLOCK; i++)
-        write_fat_offset(&shlkfs->first_fat, i, FAT_BLOCK_END);
+    shlkfs->first_fat.next_fat_table = BLOCK_END;
+    for (size_t i = 0; i <= ROOT_DIR_BLOCK + 1; i++)
+        write_fat_offset(aes_key, i, BLOCK_END);
 
     /// ------------------------------------------------------------
     /// BLOCK 3 : ROOT DIRECTORY
     /// ------------------------------------------------------------
-    //// Noting to add
+
+    // Add an entry at ROOT_DIR_BLOCK for the root directory
+    struct CryptFS_Entry root_dir = { 0 };
+    root_dir.used = 1;
+    root_dir.type = ENTRY_TYPE_DIRECTORY;
+    root_dir.start_block = ROOT_DIR_BLOCK + 1;
+    strcpy(root_dir.name, "/");
+    write_blocks(ROOT_DIR_BLOCK, 1, &root_dir);
+
+    /// ------------------------------------------------------------
+    /// Encrypting FAT and ROOT DIRECTORY with AES
+    /// ------------------------------------------------------------
+    write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
+                                 &shlkfs->first_fat);
+    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK, 1, &root_dir);
 
     free(aes_key);
     EVP_PKEY_free(rsa_key);

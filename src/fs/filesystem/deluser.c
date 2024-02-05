@@ -11,8 +11,8 @@
 #include "string.h"
 #include "writefs.h"
 
-int cryptfs_deluser(char *device_path, char *my_private_key_path,
-                    char *deleting_user_public_key_path)
+int cryptfs_deluser(const char *device_path, const char *my_private_key_path,
+                    const char *deleting_user_public_key_path)
 {
     // Check if the device is already formatted
     if (!is_already_formatted(device_path))

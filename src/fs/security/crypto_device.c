@@ -5,6 +5,7 @@
 #include "crypto.h"
 #include "passphrase.h"
 #include "print.h"
+#include "readfs.h"
 #include "xalloc.h"
 
 bool is_key_valid(EVP_PKEY *rsa_key)
@@ -118,4 +119,38 @@ EVP_PKEY *load_rsa_keypair_from_home(char **passphrase)
     free(public_path);
 
     return rsa_keypair;
+}
+
+// TODO: Add a test for this function
+unsigned char *extract_aes_key(const char *device_path,
+                               const char *private_key_path)
+{
+    struct CryptFS *shlkfs = read_cryptfs_headers(device_path);
+
+    EVP_PKEY *rsa_keypair =
+        load_rsa_keypair_from_disk(NULL, private_key_path, NULL);
+
+    if (rsa_keypair == NULL)
+        error_exit("Impossible to load the RSA keypair\n", EXIT_FAILURE);
+
+    ssize_t index = find_rsa_matching_key(rsa_keypair, shlkfs->keys_storage);
+
+    if (index == -1)
+        return NULL;
+
+    size_t extraction_size = 0;
+    unsigned char *aes_key = rsa_decrypt_data(
+        rsa_keypair, shlkfs->keys_storage[index].aes_key_ciphered,
+        RSA_KEY_SIZE_BYTES, &extraction_size);
+
+    if (extraction_size != AES_KEY_SIZE_BYTES)
+    {
+        if (aes_key)
+            free(aes_key);
+        free(shlkfs);
+        return NULL;
+    }
+
+    free(shlkfs);
+    return aes_key;
 }

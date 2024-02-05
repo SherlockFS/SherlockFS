@@ -12,7 +12,6 @@
 __attribute__((unused)) static void my_constraints()
 {
     STATIC_ASSERT(sizeof(struct CryptFS_KeySlot) <= CRYPTFS_BLOCK_SIZE_BYTES);
-    STATIC_ASSERT(sizeof(struct CryptFS_Directory) <= CRYPTFS_BLOCK_SIZE_BYTES);
     STATIC_ASSERT(sizeof(struct CryptFS_Header) <= CRYPTFS_BLOCK_SIZE_BYTES);
     STATIC_ASSERT(sizeof(struct CryptFS_Entry) <= CRYPTFS_BLOCK_SIZE_BYTES);
 }

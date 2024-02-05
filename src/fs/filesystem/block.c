@@ -1,11 +1,13 @@
 #include "block.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "cryptfs.h"
 #include "crypto.h"
+#include "print.h"
 #include "xalloc.h"
 
 const char *DEVICE_PATH = NULL;
@@ -29,14 +31,22 @@ int read_blocks(block_t start_block, size_t nb_blocks, void *buffer)
     if (nb_blocks == 0)
         return 0;
     if (!buffer)
-        return -1;
+        return BLOCK_ERROR;
 
     FILE *file = fopen(DEVICE_PATH, "r");
     if (!file)
-        return -1;
+    {
+        error_exit("fopen '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
+                   strerror(errno));
+        return BLOCK_ERROR;
+    }
 
     if (fseek(file, start_block * CRYPTFS_BLOCK_SIZE_BYTES, SEEK_SET) != 0)
-        return -1;
+    {
+        error_exit("fseek '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
+                   strerror(errno));
+        return BLOCK_ERROR;
+    }
 
     size_t read = 0;
     while (read < nb_blocks)
@@ -44,31 +54,47 @@ int read_blocks(block_t start_block, size_t nb_blocks, void *buffer)
         size_t n = fread(buffer + read * CRYPTFS_BLOCK_SIZE_BYTES,
                          CRYPTFS_BLOCK_SIZE_BYTES, nb_blocks - read, file);
         if (n == 0)
-            return -1;
+        {
+            error_exit("fread '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
+                       strerror(errno));
+            return BLOCK_ERROR;
+        }
         read += n;
     }
 
     if (fclose(file) != 0)
-        return -1;
+    {
+        error_exit("fclose '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
+                   strerror(errno));
+        return BLOCK_ERROR;
+    }
 
     return 0;
 }
 
-int write_blocks(block_t start_block, size_t nb_blocks, void *buffer)
+int write_blocks(block_t start_block, size_t nb_blocks, const void *buffer)
 {
     assert(DEVICE_PATH != NULL);
 
     if (nb_blocks == 0)
         return 0;
     if (buffer == NULL)
-        return -1;
+        return BLOCK_ERROR;
 
     FILE *file = fopen(DEVICE_PATH, "r+");
-    if (file == NULL)
-        return -1;
+    if (!file)
+    {
+        error_exit("fopen '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
+                   strerror(errno));
+        return BLOCK_ERROR;
+    }
 
     if (fseek(file, start_block * CRYPTFS_BLOCK_SIZE_BYTES, SEEK_SET) == -1)
-        return -1;
+    {
+        error_exit("fseek '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
+                   strerror(errno));
+        return BLOCK_ERROR;
+    }
 
     size_t written = 0;
     while (written < nb_blocks)
@@ -76,18 +102,27 @@ int write_blocks(block_t start_block, size_t nb_blocks, void *buffer)
         size_t n = fwrite(buffer + written * CRYPTFS_BLOCK_SIZE_BYTES,
                           CRYPTFS_BLOCK_SIZE_BYTES, nb_blocks - written, file);
         if (n == 0)
-            return -1;
+        {
+            error_exit("fwrite '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
+                       strerror(errno));
+            return BLOCK_ERROR;
+        }
         written += n;
     }
 
     if (fclose(file) == -1)
-        return -1;
+    {
+        error_exit("fclose '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
+                   strerror(errno));
+        return BLOCK_ERROR;
+    }
 
     return 0;
 }
 
-int read_blocks_with_decryption(unsigned char *aes_key, block_t start_block,
-                                size_t nb_blocks, void *buffer)
+int read_blocks_with_decryption(const unsigned char *aes_key,
+                                block_t start_block, size_t nb_blocks,
+                                void *buffer)
 {
     unsigned char *encrypted_buffer =
         xmalloc(nb_blocks, CRYPTFS_BLOCK_SIZE_BYTES);
@@ -117,8 +152,9 @@ int read_blocks_with_decryption(unsigned char *aes_key, block_t start_block,
     return 0;
 }
 
-int write_blocks_with_encryption(unsigned char *aes_key, size_t start_block,
-                                 size_t nb_blocks, void *buffer)
+int write_blocks_with_encryption(const unsigned char *aes_key,
+                                 block_t start_block, size_t nb_blocks,
+                                 const void *buffer)
 {
     size_t useless_size = 0;
     unsigned char *encrypted_buffer = aes_encrypt_data(

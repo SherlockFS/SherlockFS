@@ -5,7 +5,8 @@
 
 #include "print.h"
 
-void write_cryptfs_headers(char *device_path, struct CryptFS *cryptfs)
+void write_cryptfs_headers(const char *device_path,
+                           const struct CryptFS *cryptfs)
 {
     FILE *device = fopen(device_path, "r+");
 

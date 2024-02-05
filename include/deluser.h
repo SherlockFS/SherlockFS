@@ -14,8 +14,8 @@
  * the keys storage
  * @return int 0 if success, -1 not deleted for any reason
  */
-int cryptfs_deluser(char *device_path, char *my_private_key_path,
-                    char *deleting_user_public_key_path);
+int cryptfs_deluser(const char *device_path, const char *my_private_key_path,
+                    const char *deleting_user_public_key_path);
 /**
  * @brief Count the number of available key slots in the keys storage
  *

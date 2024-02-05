@@ -9,8 +9,8 @@
 #include "readfs.h"
 #include "writefs.h"
 
-int cryptfs_adduser(char *device_path, char *other_public_key_path,
-                    char *my_private_key_path)
+int cryptfs_adduser(const char *device_path, const char *other_public_key_path,
+                    const char *my_private_key_path)
 {
     char *passphrase = NULL;
 

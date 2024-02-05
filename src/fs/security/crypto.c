@@ -63,7 +63,7 @@ unsigned char *rsa_decrypt_data(EVP_PKEY *rsa_key,
     return decrypted_data;
 }
 
-unsigned char *aes_encrypt_data(unsigned char *aes_key,
+unsigned char *aes_encrypt_data(const unsigned char *aes_key,
                                 const unsigned char *data, size_t data_size,
                                 size_t *encrypted_data_size)
 {
@@ -88,7 +88,7 @@ unsigned char *aes_encrypt_data(unsigned char *aes_key,
     return encrypted_data;
 }
 
-unsigned char *aes_decrypt_data(unsigned char *aes_key,
+unsigned char *aes_decrypt_data(const unsigned char *aes_key,
                                 const unsigned char *encrypted_data,
                                 size_t encrypted_data_size,
                                 size_t *decrypted_data_size)

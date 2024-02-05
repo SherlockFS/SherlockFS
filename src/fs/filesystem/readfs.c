@@ -6,7 +6,7 @@
 #include "print.h"
 #include "xalloc.h"
 
-struct CryptFS *read_cryptfs_headers(char *device_path)
+struct CryptFS *read_cryptfs_headers(const char *device_path)
 {
     FILE *device = fopen(device_path, "r");
     if (device == NULL)
