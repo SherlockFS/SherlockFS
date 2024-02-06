@@ -16,6 +16,14 @@ void set_device_path(const char *path)
 {
     assert(path != NULL);
     DEVICE_PATH = path;
+
+    // Create file (if not created)
+    FILE *tmp_file = fopen(path, "w+");
+    if (!tmp_file)
+        error_exit("Impossible to create device file '%s'\n", EXIT_FAILURE,
+                   path);
+
+    fclose(tmp_file);
 }
 
 const char *get_device_path()
@@ -33,7 +41,7 @@ int read_blocks(block_t start_block, size_t nb_blocks, void *buffer)
     if (!buffer)
         return BLOCK_ERROR;
 
-    FILE *file = fopen(DEVICE_PATH, "r");
+    FILE *file = fopen(DEVICE_PATH, "r+");
     if (!file)
     {
         error_exit("fopen '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
@@ -54,20 +62,13 @@ int read_blocks(block_t start_block, size_t nb_blocks, void *buffer)
         size_t n = fread(buffer + read * CRYPTFS_BLOCK_SIZE_BYTES,
                          CRYPTFS_BLOCK_SIZE_BYTES, nb_blocks - read, file);
         if (n == 0)
-        {
-            error_exit("fread '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
-                       strerror(errno));
             return BLOCK_ERROR;
-        }
+
         read += n;
     }
 
     if (fclose(file) != 0)
-    {
-        error_exit("fclose '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
-                   strerror(errno));
         return BLOCK_ERROR;
-    }
 
     return 0;
 }
@@ -102,20 +103,13 @@ int write_blocks(block_t start_block, size_t nb_blocks, const void *buffer)
         size_t n = fwrite(buffer + written * CRYPTFS_BLOCK_SIZE_BYTES,
                           CRYPTFS_BLOCK_SIZE_BYTES, nb_blocks - written, file);
         if (n == 0)
-        {
-            error_exit("fwrite '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
-                       strerror(errno));
             return BLOCK_ERROR;
-        }
+
         written += n;
     }
 
     if (fclose(file) == -1)
-    {
-        error_exit("fclose '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
-                   strerror(errno));
         return BLOCK_ERROR;
-    }
 
     return 0;
 }
@@ -128,10 +122,10 @@ int read_blocks_with_decryption(const unsigned char *aes_key,
         xmalloc(nb_blocks, CRYPTFS_BLOCK_SIZE_BYTES);
     int read_blocks_res = read_blocks(start_block, nb_blocks, encrypted_buffer);
 
-    if (read_blocks_res == -1)
+    if (read_blocks_res < 0)
     {
         free(encrypted_buffer);
-        return -1;
+        return read_blocks_res;
     }
 
     size_t useless_size = 0;

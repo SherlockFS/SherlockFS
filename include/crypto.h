@@ -18,7 +18,7 @@
  * @param encrypted_data_size The size of the encrypted data (returned).
  * @return unsigned char* The encrypted data.
  */
-unsigned char *rsa_encrypt_data(EVP_PKEY *rsa_key, const unsigned char *data,
+unsigned char *rsa_encrypt_data(EVP_PKEY *rsa_key, const void *data,
                                 size_t data_size, size_t *encrypted_data_size);
 
 /**
@@ -31,8 +31,7 @@ unsigned char *rsa_encrypt_data(EVP_PKEY *rsa_key, const unsigned char *data,
  * @param decrypted_data_size The size of the decrypted data (returned).
  * @return unsigned char* The decrypted data.
  */
-unsigned char *rsa_decrypt_data(EVP_PKEY *rsa_key,
-                                const unsigned char *encrypted_data,
+unsigned char *rsa_decrypt_data(EVP_PKEY *rsa_key, const void *encrypted_data,
                                 size_t encrypted_data_size,
                                 size_t *decrypted_data_size);
 
@@ -45,9 +44,8 @@ unsigned char *rsa_decrypt_data(EVP_PKEY *rsa_key,
  * @param encrypted_data_size The size of the encrypted data (returned).
  * @return unsigned char* The encrypted data.
  */
-unsigned char *aes_encrypt_data(const unsigned char *aes_key,
-                                const unsigned char *data, size_t data_size,
-                                size_t *encrypted_data_size);
+unsigned char *aes_encrypt_data(const unsigned char *aes_key, const void *data,
+                                size_t data_size, size_t *encrypted_data_size);
 
 /**
  * @brief Decrypts `encrypted_data` of size `encrypted_data_size` with
@@ -60,7 +58,7 @@ unsigned char *aes_encrypt_data(const unsigned char *aes_key,
  * @return unsigned char* The decrypted data.
  */
 unsigned char *aes_decrypt_data(const unsigned char *aes_key,
-                                const unsigned char *encrypted_data,
+                                const void *encrypted_data,
                                 size_t encrypted_data_size,
                                 size_t *decrypted_data_size);
 

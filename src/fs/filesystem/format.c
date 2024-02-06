@@ -120,7 +120,7 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
 
     shlkfs->first_fat.next_fat_table = BLOCK_END;
     for (size_t i = 0; i <= ROOT_DIR_BLOCK + 1; i++)
-        write_fat_offset(aes_key, i, BLOCK_END);
+        shlkfs->first_fat.entries[i].next_block = BLOCK_END;
 
     /// ------------------------------------------------------------
     /// BLOCK 3 : ROOT DIRECTORY
@@ -132,17 +132,28 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
     root_dir.type = ENTRY_TYPE_DIRECTORY;
     root_dir.start_block = ROOT_DIR_BLOCK + 1;
     strcpy(root_dir.name, "/");
-    write_blocks(ROOT_DIR_BLOCK, 1, &root_dir);
 
     /// ------------------------------------------------------------
     /// Encrypting FAT and ROOT DIRECTORY with AES
     /// ------------------------------------------------------------
-    write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
-                                 &shlkfs->first_fat);
-    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK, 1, &root_dir);
+    size_t encrypted_fat_size = 0;
+    unsigned char *encrypted_fat =
+        aes_encrypt_data(aes_key, &shlkfs->first_fat, CRYPTFS_BLOCK_SIZE_BYTES,
+                         &encrypted_fat_size);
+    memset(&shlkfs->first_fat, 0, CRYPTFS_BLOCK_SIZE_BYTES);
+    memcpy(&shlkfs->first_fat, encrypted_fat, encrypted_fat_size);
+
+    size_t encrypted_entry_size;
+    unsigned char *encrypted_root_dir =
+        aes_encrypt_data(aes_key, &shlkfs->root_directory,
+                         CRYPTFS_BLOCK_SIZE_BYTES, &encrypted_entry_size);
+    memset(&shlkfs->root_directory, 0, CRYPTFS_BLOCK_SIZE_BYTES);
+    memcpy(&shlkfs->root_directory, encrypted_root_dir, encrypted_entry_size);
 
     free(aes_key);
     EVP_PKEY_free(rsa_key);
+    free(encrypted_fat);
+    free(encrypted_root_dir);
 }
 
 void format_fs(const char *path, char *public_key_path, char *private_key_path,

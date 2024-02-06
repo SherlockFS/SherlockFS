@@ -38,16 +38,16 @@ dependencies:
 	bash dependencies.sh
 
 shlkfs_formater: $(BUILD_DIR)/shlkfs_formater
-	@echo $(call greentext,"Le binaire shlkfs_formater a été compilé avec succès")
+	@echo $(call greentext,"Le binaire 'shlkfs_formater' a été compilé avec succès")
 
 shlkfs_adduser: $(BUILD_DIR)/shlkfs_adduser
-	@echo $(call greentext,"Le binaire shlkfs_adduser a été compilé avec succès")
+	@echo $(call greentext,"Le binaire 'shlkfs_adduser' a été compilé avec succès")
 
 shlkfs_deluser: $(BUILD_DIR)/shlkfs_deluser
-	@echo $(call greentext,"Le binaire shlkfs_deluser a été compilé avec succès")
+	@echo $(call greentext,"Le binaire 'shlkfs_deluser' a été compilé avec succès")
 
 shlkfs_mount: $(BUILD_DIR)/shlkfs_mount
-	@echo $(call greentext,"Le binaire shlkfs_mount a été compilé avec succès")
+	@echo $(call greentext,"Le binaire 'shlkfs_mount' a été compilé avec succès")
 
 $(BUILD_DIR)/shlkfs_formater: $(FORMAT_OBJ) $(OBJ)
 	@$(CC) $(CFLAGS) $^ -o $(BUILD_DIR)/shlkfs_formater $(LDFLAGS)
@@ -87,6 +87,7 @@ clean_all:
 clean:
 	find $(BUILD_DIR)/* -type d -print0 | xargs -0 -I {} echo {} | tac | xargs rm -rf
 	rm -f $(BUILD_DIR)/tests_suite
+	rm -f $(BUILD_DIR)/test_main
 	rm -f $(BUILD_DIR)/shlkfs_formater
 	rm -f $(BUILD_DIR)/shlkfs_mount
 	rm -f $(BUILD_DIR)/shlkfs_adduser

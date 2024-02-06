@@ -101,8 +101,9 @@ struct CryptFS_FAT
 
 enum BLOCK_TYPE
 {
+    BLOCK_FAT_OOB = -3, // FAT index is out of band
     BLOCK_ERROR = -2, // Error related to blocks. (Never written on the device)
-    BLOCK_END = -1, // End of file.
+    BLOCK_END = -1, // End of entity.
     BLOCK_FREE = 0, // The block is free.
 };
 

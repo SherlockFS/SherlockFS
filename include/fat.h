@@ -34,7 +34,8 @@ sblock_t create_fat(const unsigned char *aes_key);
  * @param aes_key The AES key to use for in place decryption of the FAT tables.
  * @param offset The index of the FAT table to write to.
  * @param value The value to write.
- * @return int 0 on success, BLOCK_ERROR on error.
+ * @return int 0 on success, BLOCK_ERROR on error. BLOCK_FAT_OOB in case of out
+ * of range.
  */
 int write_fat_offset(const unsigned char *aes_key, uint64_t offset,
                      uint64_t value);
@@ -45,7 +46,7 @@ int write_fat_offset(const unsigned char *aes_key, uint64_t offset,
  * @param aes_key The AES key to use for in place decryption of the FAT tables.
  * @param offset The index of the FAT table to read from.
  * @return uint32_t The value at `offset` index in the FAT table. BLOCK_ERROR
- * on error. BLOCK_END in case of out of range.
+ * on error. BLOCK_FAT_OOB in case of out of range.
  */
 uint32_t read_fat_offset(const unsigned char *aes_key, uint64_t offset);
 

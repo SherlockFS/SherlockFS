@@ -147,10 +147,12 @@ unsigned char *extract_aes_key(const char *device_path,
     {
         if (aes_key)
             free(aes_key);
+        EVP_PKEY_free(rsa_keypair);
         free(shlkfs);
         return NULL;
     }
 
+    EVP_PKEY_free(rsa_keypair);
     free(shlkfs);
     return aes_key;
 }
