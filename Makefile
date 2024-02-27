@@ -10,7 +10,7 @@ FSANITIZE = -fsanitize=address
 CC = gcc
 CFLAGS = -Wall -Wextra -Werror -Iinclude -g -std=gnu99 -D_ISOC11_SOURCE
 CFLAGS += -DINTERNAL_ERROR_NO_BACKTRACE
-LDFLAGS = -lm -lcrypto $(FSANITIZE)
+LDFLAGS = -lm -lcrypto
 
 SRC = $(shell find $(FS_CORE_DIR) -name '*.c')
 OBJ = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(SRC:.c=.o))
@@ -66,7 +66,10 @@ $(BUILD_DIR)/%.o: $(PROJECT_DIR)/%.c
 	@echo "Compilation de '$<'"
 	@$(CC) $(CFLAGS) -c $< -o $@ $(LDFLAGS)
 
+tests_suite: LDFLAGS += $(FSANITIZE)
 tests_suite: $(BUILD_DIR)/tests_suite
+
+tests_suite_no_asan: $(BUILD_DIR)/tests_suite
 	
 $(BUILD_DIR)/tests_suite: LDFLAGS += -lcriterion
 $(BUILD_DIR)/tests_suite: $(TESTS_OBJ) $(OBJ)

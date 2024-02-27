@@ -31,5 +31,8 @@ jobs:
       - name: Installation des dépendances de SherlockFS
         run: timeout $((2*60)) sudo bash dependencies.sh
 
+      - name: Installation de Valgrind
+        run: sudo apt install valgrind
+
       - name: Lancement de la suite de tests (`make check`)
-        run: timeout $((2*60)) make -j check
+        run: make -j tests_suite_no_asan && timeout $((2*60)) valgrind --leak-check=full --show-leak-kinds=all ./build/tests_suite
