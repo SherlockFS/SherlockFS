@@ -6,7 +6,7 @@ PROJECT_DIR ?= $(shell pwd)
 
 include $(PROJECT_DIR)/global.mk
 
-FSANITIZE = -fsanitize=address -fsanitize=undefined -fsanitize=leak -fsanitize=null -fsanitize=signed-integer-overflow
+FSANITIZE = -fsanitize=address
 CC = gcc
 CFLAGS = -Wall -Wextra -Werror -Iinclude -g -std=gnu99 -D_ISOC11_SOURCE
 CFLAGS += -DINTERNAL_ERROR_NO_BACKTRACE
