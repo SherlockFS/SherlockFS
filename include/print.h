@@ -48,10 +48,17 @@ void print_warning(const char *msg, ...);
 void print_info(const char *msg, ...);
 
 /**
+ * @brief Prints a success message on stdout.
+ *
+ * @param msg The success message to print.
+ */
+void print_success(const char *msg, ...);
+
+/**
  * @brief Prints a debug message on stdout.
  *
  * @param msg The debug message to print.
  */
-void print_success(const char *msg, ...);
+void print_debug(const char *msg, ...);
 
 #endif /* PRINT_H */

@@ -9,6 +9,6 @@
  * @param device_path Path to the CryptFS device
  * @return struct CryptFS* Pointer to a CryptFS struct
  */
-struct CryptFS *read_cryptfs_headers(char *device_path);
+struct CryptFS *read_cryptfs_headers(const char *device_path);
 
 #endif /* READFS_H */

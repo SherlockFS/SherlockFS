@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     set_device_path(device_path);
 
     // Read the keys storage from the device
-    struct CryptFS_Key *keys_storage =
+    struct CryptFS_KeySlot *keys_storage =
         xcalloc(NB_ENCRYPTION_KEYS, CRYPTFS_BLOCK_SIZE_BYTES);
 
     read_blocks(KEYS_STORAGE_BLOCK, NB_ENCRYPTION_KEYS, keys_storage);

@@ -17,7 +17,7 @@ Test(block, read_write, .init = cr_redirect_stdout, .timeout = 10)
               "build/tests/block_read_write.test.public.pem",
               "build/tests/block_read_write.test.private.pem", NULL, NULL);
 
-    uint8_t *buffer_before = xmalloc(1, CRYPTFS_BLOCK_SIZE_BYTES);
+    uint8_t *buffer_before = xcalloc(1, CRYPTFS_BLOCK_SIZE_BYTES);
     uint8_t *buffer_after = xcalloc(1, CRYPTFS_BLOCK_SIZE_BYTES);
 
     cr_assert(RAND_bytes(buffer_before, CRYPTFS_BLOCK_SIZE_BYTES) == 1);

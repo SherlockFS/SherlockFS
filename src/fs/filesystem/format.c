@@ -36,13 +36,17 @@ bool is_already_formatted(const char *device_path)
     // Check if the blocksize is exactly CRYPTFS_BLOCK_SIZE_BYTES
     // (the only supported block size in this implementation)
     else if (header.blocksize != CRYPTFS_BLOCK_SIZE_BYTES)
+    {
+        print_error("The size '%d' is not supported in this implementation",
+                    header.blocksize);
         return false;
+    }
 
     return true;
 }
 
 void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
-                                   const EVP_PKEY *existing_rsa_keypair,
+                                   EVP_PKEY *existing_rsa_keypair,
                                    const char *public_key_path,
                                    const char *private_key_path)
 {
@@ -54,6 +58,7 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
     shlkfs->header.magic = CRYPTFS_MAGIC;
     shlkfs->header.version = CRYPTFS_VERSION;
     shlkfs->header.blocksize = CRYPTFS_BLOCK_SIZE_BYTES;
+    shlkfs->header.last_fat_block = FIRST_FAT_BLOCK;
 
     for (size_t i = 0; i < CRYPTFS_BOOT_SECTION_SIZE_BYTES; i++)
         shlkfs->header.boot[i] = 0x90; // NOP sled
@@ -113,23 +118,49 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
     /// BLOCK 2 : FAT (File Allocation Table)
     /// ------------------------------------------------------------
 
-    shlkfs->first_fat.next_fat_table = FAT_BLOCK_END;
-    for (size_t i = 0; i <= ROOT_DIR_BLOCK; i++)
-        write_fat_offset(&shlkfs->first_fat, i, FAT_BLOCK_END);
+    shlkfs->first_fat.next_fat_table = BLOCK_END;
+    for (size_t i = 0; i <= ROOT_DIR_BLOCK + 1; i++)
+        shlkfs->first_fat.entries[i].next_block = BLOCK_END;
 
     /// ------------------------------------------------------------
     /// BLOCK 3 : ROOT DIRECTORY
     /// ------------------------------------------------------------
-    //// Noting to add
+
+    // Add an entry at ROOT_DIR_BLOCK for the root directory
+    struct CryptFS_Entry root_dir = { 0 };
+    root_dir.used = 1;
+    root_dir.type = ENTRY_TYPE_DIRECTORY;
+    root_dir.start_block = ROOT_DIR_BLOCK + 1;
+    strcpy(root_dir.name, "/");
+
+    /// ------------------------------------------------------------
+    /// Encrypting FAT and ROOT DIRECTORY with AES
+    /// ------------------------------------------------------------
+    size_t encrypted_fat_size = 0;
+    unsigned char *encrypted_fat =
+        aes_encrypt_data(aes_key, &shlkfs->first_fat, CRYPTFS_BLOCK_SIZE_BYTES,
+                         &encrypted_fat_size);
+    memset(&shlkfs->first_fat, 0, CRYPTFS_BLOCK_SIZE_BYTES);
+    memcpy(&shlkfs->first_fat, encrypted_fat, encrypted_fat_size);
+
+    size_t encrypted_entry_size;
+    unsigned char *encrypted_root_dir =
+        aes_encrypt_data(aes_key, &shlkfs->root_directory,
+                         CRYPTFS_BLOCK_SIZE_BYTES, &encrypted_entry_size);
+    memset(&shlkfs->root_directory, 0, CRYPTFS_BLOCK_SIZE_BYTES);
+    memcpy(&shlkfs->root_directory, encrypted_root_dir, encrypted_entry_size);
 
     free(aes_key);
     EVP_PKEY_free(rsa_key);
+    free(encrypted_fat);
+    free(encrypted_root_dir);
 }
 
 void format_fs(const char *path, char *public_key_path, char *private_key_path,
                char *rsa_passphrase, EVP_PKEY *existing_rsa_keypair)
 {
-    struct CryptFS *shlkfs = xcalloc(1, sizeof(struct CryptFS));
+    struct CryptFS *shlkfs =
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS));
 
     set_device_path(path);
 
@@ -141,13 +172,12 @@ void format_fs(const char *path, char *public_key_path, char *private_key_path,
         error_exit("Impossible to open the fill\n", EXIT_FAILURE);
 
     // Write the filesystem structure on the disk
-    print_info("Writing the filesystem structure on the disk...\n");
+    print_info("Writing the filesystem structure on the device...\n");
     if (fwrite(shlkfs, sizeof(*shlkfs), 1, file) != 1)
         error_exit("Impossible to write the filesystem structure\n",
                    EXIT_FAILURE);
 
     free(shlkfs);
-
     fclose(file);
 }
 

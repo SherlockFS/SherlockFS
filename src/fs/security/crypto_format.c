@@ -1,3 +1,4 @@
+#include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
 #include <openssl/core_names.h>
@@ -11,6 +12,7 @@
 
 #include "cryptfs.h"
 #include "crypto.h"
+#include "hash.h"
 #include "passphrase.h"
 #include "print.h"
 #include "xalloc.h"
@@ -22,7 +24,7 @@ unsigned char *generate_aes_key(void)
     print_info("Generating AES key...\n");
     if (RAND_bytes(aes_key, AES_KEY_SIZE_BYTES) != 1)
         internal_error_exit("Failed to generate AES key\n", EXIT_FAILURE);
-
+    print_success("AES key generated successfully!\n");
     return aes_key;
 }
 
@@ -32,9 +34,9 @@ EVP_PKEY *generate_rsa_keypair(void)
     if (!rsa_keypair)
         internal_error_exit("Failed to allocate RSA keypair\n", EXIT_FAILURE);
 
-    print_info("Generating a RSA keypair (for the AES key encryption)...\n");
+    print_info("Generating a RSA keypair (for AES key encryption)...\n");
     unsigned int bits = RSA_KEY_SIZE_BITS;
-    unsigned int e = RSA_EXPONENT;
+    unsigned int e = RSA_F4;
     OSSL_PARAM params[3];
     EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
 
@@ -52,31 +54,43 @@ EVP_PKEY *generate_rsa_keypair(void)
         internal_error_exit("Failed to generate RSA keypair\n", EXIT_FAILURE);
     EVP_PKEY_CTX_free(pctx);
 
+    print_success("RSA keypair generated successfully!\n");
     return rsa_keypair;
 }
 
-char zero[RSA_KEY_SIZE_BYTES] = { 0 };
-void store_keys_in_keys_storage(struct CryptFS_Key *keys_storage,
-                                EVP_PKEY *rsa_keypair, unsigned char *aes_key)
+void store_keys_in_keys_storage(struct CryptFS_KeySlot *keys_storage,
+                                EVP_PKEY *rsa_keypair,
+                                const unsigned char *aes_key)
 {
     size_t i = 0;
     while (i < NB_ENCRYPTION_KEYS)
     {
         // Check if keys_storage[i].rsa_n is full of 0
-        if (memcmp(keys_storage[i].rsa_n, zero, RSA_KEY_SIZE_BYTES) == 0)
+        // and keys_storage[i].rsa_e is 0
+        if (!keys_storage[i].occupied)
         {
             // Get the RSA modulus
-            BIGNUM *modulus = NULL;
+            BIGNUM *modulus_bn = NULL;
+            BIGNUM *exponent_bn = NULL;
+
+            // Get N from rsa_keypair as a BIGNUM
             if (EVP_PKEY_get_bn_param(rsa_keypair, OSSL_PKEY_PARAM_RSA_N,
-                                      &modulus)
+                                      &modulus_bn)
                     != 1 // Get the RSA modulus
-                || BN_bn2bin(modulus,
+                || BN_bn2bin(modulus_bn,
                              (unsigned char *)&keys_storage[i].rsa_n)
                     != RSA_KEY_SIZE_BYTES) // Store the RSA modulus in
                                            // keys_storage[i].rsa_n
                 internal_error_exit("Failed to store RSA modulus\n",
                                     EXIT_FAILURE);
-            BN_free(modulus);
+
+            // Get E from rsa_keypair as a uint32_t
+            if (EVP_PKEY_get_bn_param(rsa_keypair, OSSL_PKEY_PARAM_RSA_E,
+                                      &exponent_bn)
+                != 1)
+                internal_error_exit("Failed to store RSA exponent\n",
+                                    EXIT_FAILURE);
+            keys_storage[i].rsa_e = htonl(BN_get_word(exponent_bn));
 
             // EVP_PKEY_encrypt CTX setup with the RSA keypair
             EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new(rsa_keypair, NULL);
@@ -98,7 +112,12 @@ void store_keys_in_keys_storage(struct CryptFS_Key *keys_storage,
             memcpy(keys_storage[i].aes_key_ciphered, aes_key_encrypted,
                    aes_key_encrypted_size);
 
+            // Set the slot as occupied
+            keys_storage[i].occupied = 1;
+
+            BN_free(modulus_bn);
             EVP_PKEY_CTX_free(pctx);
+            BN_free(exponent_bn);
             free(aes_key_encrypted);
 
             break;

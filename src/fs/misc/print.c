@@ -12,6 +12,7 @@
 #define RED_STR(STR) "\x1b[31m" STR "\x1b[0m"
 #define GREEN_STR(STR) "\x1b[32m" STR "\x1b[0m"
 #define BLUE_STR(STR) "\x1b[34m" STR "\x1b[0m"
+#define MAGENTA_STR(STR) "\x1b[35m" STR "\x1b[0m"
 
 void internal_error_exit(const char *msg, int error_code, ...)
 {
@@ -21,6 +22,7 @@ void internal_error_exit(const char *msg, int error_code, ...)
     fprintf(stderr, RED_STR("[INTERNAL ERROR]: "));
     vfprintf(stderr, msg, args);
 
+#ifndef INTERNAL_ERROR_NO_BACKTRACE
     // Printing backtrace
     void *array[BACKTRACE_SIZE];
     size_t size;
@@ -34,7 +36,7 @@ void internal_error_exit(const char *msg, int error_code, ...)
     for (i = 0; i < size; i++)
         fprintf(stderr, RED_STR("[CRYPTFS STACK FRAMES]: ") "%s\n", strings[i]);
     free(strings);
-
+#endif
     va_end(args);
     exit(error_code);
 }
@@ -95,4 +97,17 @@ void print_success(const char *msg, ...)
     fprintf(stdout, GREEN_STR("[SUCCESS]: "));
     vfprintf(stdout, msg, args);
     va_end(args);
+}
+
+void print_debug(const char *msg, ...)
+{
+#ifndef NO_PRINT_DEBUG
+    va_list args;
+    va_start(args, msg);
+    fprintf(stdout, MAGENTA_STR("[DEBUG]: "));
+    vfprintf(stdout, msg, args);
+    va_end(args);
+#else
+    (void)msg;
+#endif
 }

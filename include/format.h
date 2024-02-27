@@ -27,7 +27,7 @@ bool is_already_formatted(const char *device_path);
  * @param private_key_path The path where the private key will be stored.
  */
 void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
-                                   const EVP_PKEY *existing_rsa_keypair,
+                                   EVP_PKEY *existing_rsa_keypair,
                                    const char *public_key_path,
                                    const char *private_key_path);
 

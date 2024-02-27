@@ -1,6 +1,7 @@
 #ifndef HASH_H
 #define HASH_H
 
+#include <openssl/evp.h>
 #include <stddef.h>
 
 /**
@@ -8,8 +9,8 @@
  *
  * @param data The data to hash.
  * @param len_data The length of the data to hash.
- * @return char* The hash. (of length SHA256_DIGEST_LENGTH)
+ * @return unsigned char* The hash. (of length SHA256_DIGEST_LENGTH)
  */
-unsigned char *sha256_data(void *data, size_t len_data);
+unsigned char *sha256_data(const void *data, size_t len_data);
 
 #endif /* HASH_H */

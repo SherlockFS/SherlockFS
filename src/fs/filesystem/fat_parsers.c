@@ -4,73 +4,122 @@
 
 #include "block.h"
 #include "fat.h"
+#include "print.h"
 #include "xalloc.h"
 
-int64_t find_first_free_block(struct CryptFS_FAT *first_fat)
+sblock_t find_first_free_block(const unsigned char *aes_key)
 {
-    if (!first_fat)
-        return FAT_BLOCK_ERROR;
-
     for (int64_t i = 0; i < INT64_MAX; i++)
-        switch (read_fat_offset(first_fat, (uint64_t)i))
+        switch (read_fat_offset(aes_key, (uint64_t)i))
         {
-        case FAT_BLOCK_FREE:
+        case BLOCK_FREE:
             return i;
-        case FAT_BLOCK_ERROR:
-            return FAT_BLOCK_ERROR;
+        case BLOCK_FAT_OOB:
+            return -i;
+        case BLOCK_ERROR:
+            return BLOCK_ERROR;
         default:
             break;
         }
 
-    return FAT_BLOCK_ERROR;
+    return BLOCK_ERROR;
 }
 
-int64_t create_fat(struct CryptFS_FAT *any_fat)
+sblock_t create_fat(const unsigned char *aes_key)
 {
-    // Find a free block in the disk.
-    int64_t created_fat_block = find_first_free_block(any_fat);
-    if (created_fat_block == FAT_BLOCK_ERROR)
-        return FAT_BLOCK_ERROR;
+    // Header (which contains last_fat_block index)
+    struct CryptFS_Header *header = xaligned_alloc(
+        CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_Header));
+    // Last already in place FAT (at index last_fat_block)
+    struct CryptFS_FAT *last_fat =
+        xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_FAT));
+    // New created FAT
+    struct CryptFS_FAT *new_fat =
+        xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_FAT));
 
-    // Craft the new FAT block.
-    struct CryptFS_FAT *created_fat = xaligned_calloc(
-        sizeof(struct CryptFS_FAT), 1, CRYPTFS_BLOCK_SIZE_BYTES);
+    // Loading last in place FAT into memory
+    if (read_blocks(HEADER_BLOCK, 1, header) == BLOCK_ERROR)
+        goto err_create_fat;
+    if (read_blocks_with_decryption(aes_key, header->last_fat_block, 1,
+                                    last_fat)
+        == BLOCK_ERROR)
+        goto err_create_fat;
 
-    created_fat->next_fat_table = FAT_BLOCK_END;
+    // Finding an available block to store the new FAT
+    int64_t new_fat_block = find_first_free_block(aes_key);
+    if (new_fat_block == BLOCK_ERROR)
+        return BLOCK_ERROR;
 
-    // Save the first FAT (for `write_fat_offset()`)
-    struct CryptFS_FAT *first_fat_cpy = memcpy(
-        xaligned_alloc(sizeof(struct CryptFS_FAT), 1, CRYPTFS_BLOCK_SIZE_BYTES),
-        any_fat, CRYPTFS_BLOCK_SIZE_BYTES);
-    if (first_fat_cpy == NULL)
-        return FAT_BLOCK_ERROR;
+    if (new_fat_block < 0) // Out of FAT at index -new_fat_block
+    {
+        // The new FAT is just after the last handled index in current FATs
+        uint64_t new_oob_fat_block = (uint64_t)-new_fat_block;
 
-    // Find the last FAT in the FAT linked-list.
-    struct CryptFS_FAT *last_fat = any_fat;
-    while (last_fat->next_fat_table != (uint64_t)FAT_BLOCK_END)
-        if (read_blocks(last_fat->next_fat_table, 1, last_fat) != 0)
-            return FAT_BLOCK_ERROR;
+        // Creating new FAT at block `new_oob_fat_block`
+        new_fat->next_fat_table = BLOCK_END;
+        new_fat->entries[0].next_block = BLOCK_END;
+        if (write_blocks_with_encryption(aes_key, new_oob_fat_block, 1, new_fat)
+            == BLOCK_ERROR)
+            goto err_create_fat;
 
-    // Change the last FAT's next_fat_table to the new FAT block.
-    last_fat->next_fat_table = created_fat_block;
+        // Updating the last FAT to point to the new OOB FAT
+        last_fat->next_fat_table = new_oob_fat_block;
+        if (write_blocks_with_encryption(aes_key, header->last_fat_block, 1,
+                                         last_fat)
+            == BLOCK_ERROR)
+            goto err_create_fat;
 
-    // Write the new FAT block to the disk.
-    write_blocks(created_fat_block, 1, created_fat);
+        // Updating the header to point to the new OOB FAT
+        header->last_fat_block = new_oob_fat_block;
+        if (write_blocks(HEADER_BLOCK, 1, header) == BLOCK_ERROR)
+            goto err_create_fat;
 
-    // Mark the new FAT block as used.
-    write_fat_offset(first_fat_cpy, created_fat_block, FAT_BLOCK_END);
+        free(last_fat);
+        free(new_fat);
+        free(header);
+        return new_oob_fat_block;
+    }
+    else
+    {
+        // Craft the new FAT block.
+        new_fat->next_fat_table = BLOCK_END;
 
-    free(created_fat);
-    free(first_fat_cpy);
+        // Change the last FAT's next_fat_table to the new FAT block.
+        last_fat->next_fat_table = new_fat_block;
 
-    return created_fat_block;
+        // Write the new FAT block to the disk.
+        if (write_blocks_with_encryption(aes_key, new_fat_block, 1, new_fat))
+            goto err_create_fat;
+
+        // Mark the new FAT block as used.
+        if (write_fat_offset(aes_key, new_fat_block, BLOCK_END))
+            goto err_create_fat;
+
+        // Updating the header to point to the new OOB FAT
+        header->last_fat_block = new_fat_block;
+        if (write_blocks(HEADER_BLOCK, 1, header) == BLOCK_ERROR)
+            goto err_create_fat;
+
+        free(last_fat);
+        free(new_fat);
+        free(header);
+        return new_fat_block;
+    }
+
+err_create_fat:
+    free(last_fat);
+    free(new_fat);
+    free(header);
+    return BLOCK_ERROR;
 }
 
-int write_fat_offset(struct CryptFS_FAT *first_fat, uint64_t offset,
+int write_fat_offset(const unsigned char *aes_key, uint64_t offset,
                      uint64_t value)
 {
-    if (!first_fat)
-        return FAT_BLOCK_ERROR;
+    // Find a free block in the disk.
+    struct CryptFS_FAT first_fat = { 0 };
+    if (read_blocks_with_decryption(aes_key, FIRST_FAT_BLOCK, 1, &first_fat))
+        return BLOCK_ERROR;
 
     uint64_t concerned_fat = offset / NB_FAT_ENTRIES_PER_BLOCK;
 
@@ -78,60 +127,43 @@ int write_fat_offset(struct CryptFS_FAT *first_fat, uint64_t offset,
     uint64_t current_fat_block = FIRST_FAT_BLOCK;
     for (uint64_t i = 0; i < concerned_fat; i++)
     {
-        current_fat_block = first_fat->next_fat_table;
-        if (read_blocks(first_fat->next_fat_table, 1, first_fat) == -1)
-        {
-            int64_t new_fat_block = create_fat(first_fat);
-            if (new_fat_block == FAT_BLOCK_ERROR)
-                return FAT_BLOCK_ERROR;
-            first_fat->next_fat_table = new_fat_block;
-        }
+        current_fat_block = first_fat.next_fat_table;
+        if (first_fat.next_fat_table == (uint64_t)BLOCK_END)
+            return BLOCK_FAT_OOB;
+        if (read_blocks_with_decryption(aes_key, first_fat.next_fat_table, 1,
+                                        &first_fat)
+            == BLOCK_ERROR)
+            return BLOCK_ERROR;
     }
 
-    struct CryptFS_FAT_Entry *entry =
-        &first_fat->entries[offset % NB_FAT_ENTRIES_PER_BLOCK];
+    first_fat.entries[offset % NB_FAT_ENTRIES_PER_BLOCK].next_block = value;
 
-    entry->next_block = value;
-
-    write_blocks(current_fat_block, 1, first_fat);
-
-    // Update first FAT if concerned
-    if (concerned_fat == 0 && read_blocks(FIRST_FAT_BLOCK, 1, first_fat) == -1)
-        return FAT_BLOCK_ERROR;
+    if (write_blocks_with_encryption(aes_key, current_fat_block, 1, &first_fat))
+        return BLOCK_ERROR;
 
     return 0;
 }
 
-int64_t read_fat_offset(struct CryptFS_FAT *first_fat, uint64_t offset)
+uint32_t read_fat_offset(const unsigned char *aes_key, uint64_t offset)
 {
-    if (!first_fat)
-        return FAT_BLOCK_ERROR;
+    // Find a free block in the disk.
+    struct CryptFS_FAT tmp_fat = { 0 };
+    if (read_blocks_with_decryption(aes_key, FIRST_FAT_BLOCK, 1, &tmp_fat))
+        return BLOCK_ERROR;
 
     uint64_t concerned_fat = offset / NB_FAT_ENTRIES_PER_BLOCK;
 
-    struct CryptFS_FAT *tmp_fat = xaligned_calloc(sizeof(struct CryptFS_FAT), 1,
-                                                  CRYPTFS_BLOCK_SIZE_BYTES);
-    memcpy(tmp_fat, first_fat, CRYPTFS_BLOCK_SIZE_BYTES);
-
     // Parsing the FAT linked-list
     for (uint64_t i = 0; i < concerned_fat; i++)
-        if (tmp_fat->next_fat_table == (uint64_t)FAT_BLOCK_END
-            || read_blocks(tmp_fat->next_fat_table, 1, tmp_fat) == -1)
-        {
-            free(tmp_fat);
-            return FAT_BLOCK_ERROR;
-        }
-
-    // Update first FAT if concerned
-    if (concerned_fat == 0 && read_blocks(FIRST_FAT_BLOCK, 1, first_fat) == -1)
     {
-        free(tmp_fat);
-        return FAT_BLOCK_ERROR;
+        if (tmp_fat.next_fat_table == (uint64_t)BLOCK_END)
+            return BLOCK_FAT_OOB;
+
+        if (read_blocks_with_decryption(aes_key, tmp_fat.next_fat_table, 1,
+                                        &tmp_fat)
+            == -1)
+            return BLOCK_ERROR;
     }
 
-    uint32_t entry_next_block =
-        tmp_fat->entries[offset % NB_FAT_ENTRIES_PER_BLOCK].next_block;
-
-    free(tmp_fat);
-    return entry_next_block;
+    return tmp_fat.entries[offset % NB_FAT_ENTRIES_PER_BLOCK].next_block;
 }

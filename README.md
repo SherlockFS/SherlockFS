@@ -20,8 +20,9 @@ Actuellement, SherlockFS propose deux outils principaux :
 
 1. `shlkfs_formater` : Utilisé pour initialiser un périphérique avec le système de fichiers SherlockFS.
 2. `shlkfs_adduser` : Permet d'ajouter un nouvel utilisateur (via sa clé publique) en utilisant les accès d'un utilisateur existant (sa clé privée).
+3. `shlkfs_deluser` : Permet de supprimer un utilisateur du système de fichiers.
 
-Un troisième outil, `mount`, est prévu pour une intégration future après la finalisation de l'implémentation FUSE.
+Un quatrième outil, `shlkfs_mount`, est prévu pour une intégration future après la finalisation de l'implémentation FUSE.
 
 ## Prérequis
 
@@ -34,6 +35,7 @@ Pour compiler les programmes :
 - `make` : Compile tous les programmes.
 - `make shlkfs_formater` : Compile uniquement le programme `shlkfs_formater`.
 - `make shlkfs_adduser` : Compile uniquement le programme `shlkfs_adduser`.
+- `make shlkfs_deluser` : Compile uniquement le programme `shlkfs_deluser`.
 - `make check`: Compile tous les programmes et exécute les tests unitaires.
 - `make clean` : Supprime les fichiers générés par la compilation.
 - `make clean_all` : Supprime le dossier `build/`.
@@ -63,10 +65,19 @@ Une fois le formatage effectué, les clés publiques et privées utisées lors d
 # ./build/shlkfs_adduser
 
 SherlockFS v1 - Adding user to device keys storage
-        Usage: ./build/shlkfs_adduser <device> <other user public key path> [<registred user private key path>]
+        Usage: ./build/shlkfs_adduser <device> <other user public key path> [registred user private key path]
 ```
 
 `shlkfs_adduser` permet d'ajouter un nouvel utilisateur au système de fichiers. Il prend en paramètre le chemin vers le périphérique formaté avec SherlockFS, le chemin vers la clé publique de l'utilisateur à ajouter et éventuellement le chemin vers la clé privée d'un utilisateur déjà enregistré sur le périphérique. Si la clé privée n'est pas spécifiée, `shlkfs_adduser` cherchera à utiliser la clé privée de l'utilisateur courant (celui qui exécute le programme), dans le dossier `~/.sherlockfs/`.
+
+### `shlkfs_deluser`
+
+```shell
+SherlockFS v1 - Deleting user from device keys storage
+        Usage: ./build/shlkfs_deluser <device> <deleting user public key path> [registred user private key path]
+```
+
+`shlkfs_deluser` permet de supprimer un utilisateur du système de fichiers. Il prend en paramètre le chemin vers le périphérique formaté avec SherlockFS, le chemin vers la clé publique de l'utilisateur à supprimer et éventuellement le chemin vers la clé privée d'un utilisateur déjà enregistré sur le périphérique. Si la clé privée n'est pas spécifiée, `shlkfs_deluser` cherchera à utiliser la clé privée de l'utilisateur courant (celui qui exécute le programme), dans le dossier `~/.sherlockfs/`.
 
 ## Développement
 
