@@ -1,8 +1,8 @@
 ---
 name: Bug report
-about: 'Help us fix SherlockFS: Submit a Report'
-title: "[BUG] "
-labels: ''
+about: 'Help us fix SherlockFS: Submit a Bug Report'
+title: "[SHLKFS][BUG] "
+labels: 'triage,bug'
 assignees: ''
 
 ---
@@ -24,8 +24,12 @@ assignees: ''
 
 **Pre-Execution Checklist:**
 
-- [ ] Confirmed execution of ./dependencies.sh script without errors.
-- [ ] Verified OpenSSL / libssl version is >= 3.0.10.
+- [ ] Operating system confirmed as Linux-based.
+- [ ] Confirmed execution of `./dependencies.sh` script without errors.
+    - [ ] Verified OpenSSL / libssl correct installation.
+    - [ ] Verified OpenSSL / libssl version >= `3.0.10`.
+    - [ ] Verified FUSE / libfuse correct installation.
+    - [ ] (Verified libcriterion correct installation).
 
 **Reproduction Steps:**
 
@@ -33,6 +37,10 @@ assignees: ''
 2. Run the command [command].
 3. Input [input/data].
 4. Encounter the error at [specific moment].
+
+```log
+[Output logs goes here]
+```
 
 **Expected vs. Actual Behavior:**
 
@@ -48,9 +56,9 @@ assignees: ''
 
 **System Environment:**
 
-- Operating System: [your OS and its version]
-- OpenSSL Version: [your OpenSSL / libssl version]
-- FUSE Version: [your FUSE version]
+- Operating System: [your OS and its version (`uname -a`)]
+- OpenSSL Version: [your OpenSSL / libssl version (`openssl version`)]
+- FUSE Version: [your FUSE version (`fusermount -V`)]
 
 **Additional Context:**
 
@@ -66,8 +74,8 @@ assignees: ''
 
 **Issue Submission Checklist:**
 
-- [ ] I have run ./dependencies.sh as part of the setup.
-- [ ] My OpenSSL / libssl version is >= 3.0.10.
+- [ ] My operating system is Linux-based.
+- [ ] I have run `./dependencies.sh` as part of the setup.
 - [ ] I have checked the issue tracker for similar issues.
 - [ ] I have provided a detailed account of steps to reproduce the issue.
 - [ ] I have detailed my environment information.
