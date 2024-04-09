@@ -25,6 +25,22 @@ sblock_t find_first_free_block(const unsigned char *aes_key)
     return BLOCK_ERROR;
 }
 
+block_t find_first_free_block_safe(const unsigned char *aes_key)
+{
+    sblock_t index = find_first_free_block(aes_key);
+    if (index == BLOCK_ERROR)
+        return BLOCK_ERROR;
+    if (index < 0)
+    {
+        if (create_fat(aes_key) == BLOCK_ERROR)
+            return BLOCK_ERROR;
+        return -index + 1;
+    }
+    
+    return index;
+}
+
+
 sblock_t create_fat(const unsigned char *aes_key)
 {
     // Header (which contains last_fat_block index)
@@ -35,7 +51,7 @@ sblock_t create_fat(const unsigned char *aes_key)
         xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_FAT));
     // New created FAT
     struct CryptFS_FAT *new_fat =
-        xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_FAT));
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_FAT));
 
     // Loading last in place FAT into memory
     if (read_blocks(HEADER_BLOCK, 1, header) == BLOCK_ERROR)
