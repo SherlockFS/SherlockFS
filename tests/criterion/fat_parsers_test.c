@@ -139,7 +139,8 @@ Test(find_first_free_block, on_second_fat, .timeout = 10,
     free(shlkfs);
 }
 
-Test(find_first_free_block_safe, out_of_band_return_available, .timeout = 10, .init = cr_redirect_stdout)
+Test(find_first_free_block_safe, not_found, .timeout = 10, 
+    .init = cr_redirect_stdout)
 {
     set_device_path(
         "build/tests/find_first_free_block_safe.not_found.test.shlkfs");
