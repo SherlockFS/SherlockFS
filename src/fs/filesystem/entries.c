@@ -205,7 +205,6 @@ int entry_truncate(unsigned char* aes_key, block_t directory_block, uint32_t dir
             goto err_truncate_entry;
     }
     // Do nothing if new_size is equal to entry.size
-
     free(dir);
     return 0;
 
@@ -259,8 +258,7 @@ int entry_write_buffer_from(unsigned char* aes_key, block_t directory_block, uin
     char *block_buffer = 
         xmalloc(1, CRYPTFS_BLOCK_SIZE_BYTES);
     
-    printf("S_BLOCK= %lu\n", s_block);
-    // '\0' ou ' ' pour remplir ?
+    // If block is empty, initialize buffer to avoid reading in STACK
     if (read_blocks_with_decryption(aes_key, s_block, 1, block_buffer))
         memset(block_buffer, '\0', CRYPTFS_BLOCK_SIZE_BYTES);
 
@@ -301,32 +299,79 @@ int entry_write_buffer_from(unsigned char* aes_key, block_t directory_block, uin
         free(block_buffer);
         free(dir);
         return BLOCK_ERROR;
+}
 
-    // TESTING (je voulais faire un read de plusieurs blocs mais vu que read_blocks 
-    // lit de maniere contigue -> a voir pour faire une fonction qui lis une suite 
-    // de blocs selon la FAT)
+int entry_write_buffer(unsigned char* aes_key, block_t directory_block, uint32_t directory_index, void* buffer, size_t count)
+{
+    return entry_write_buffer_from(aes_key, directory_block, directory_index, 0, buffer, count);
+}
 
-     // Check number of blocks to read
-    // int nb_blocks_to_read = blocks_needed_for_file(r_start + count);
+ssize_t entry_read_raw_data(unsigned char* aes_key, block_t directory_block, uint32_t directory_index, size_t start_from, void* buf, size_t count)
+{
+    ssize_t result = 0;
 
-    // char *buffer_blocks = 
-    //     xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
-    //                     nb_blocks_to_read * CRYPTFS_BLOCK_SIZE_BYTES);
+    // Find the real block and index
+    if (search_entry_in_directory(aes_key, &directory_block, &directory_index))
+        return BLOCK_ERROR;
 
-    // if (read_blocks_with_decryption(aes_key, s_block, nb_blocks_to_read, buffer_blocks))
-    //     goto err_write_buffer_entry_2;
+    // allocate struct for reading directory_block
+    struct CryptFS_Directory *dir =
+        xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                        sizeof(struct CryptFS_Directory));
+
+    if (read_blocks_with_decryption(aes_key, directory_block, 1, dir) == BLOCK_ERROR)
+        goto err_read_entry;
     
-    // // Loop to write Buffer in buffer_blocks
-    // for (size_t i = r_start; i < r_start + count; i++)
-    // {
-    //     buffer_blocks[i] = ((char*)buffer)[i - r_start];
-    // }
+    // Get the correct Entry
+    struct CryptFS_Entry entry = dir->entries[directory_index];
 
-    // // Write back buffer_blocks
-
-    // if (write_blocks_with_encryption(aes_key, s_blo))
+    // Check if the offset to read is correct
+    if (entry.size < start_from + count)
+        goto err_read_entry;
     
-    // Parcourir les Blocks de l'entree pour arriver jusqu'au start_from ieme byte 
-    //      while (start_from > CRYPTFS_BLOCK_SIZE_BYTES) start_from -= CRYPTFS.. && block = read_fat_offset(block)
-    // Pour chaque block, l'extraire au complet, ecrire dessus, et le reecrire sur le BLOCK
+    sblock_t s_block = entry.start_block;
+    while (start_from >= CRYPTFS_BLOCK_SIZE_BYTES)
+    {
+        s_block = read_fat_offset(aes_key, s_block);
+        if (s_block)
+            goto err_read_entry;
+        start_from -= CRYPTFS_BLOCK_SIZE_BYTES;
+    }
+
+    // Loop to read buffer_blocks to buffer
+
+    // allocate block_buffer to read block    
+    char *block_buffer = 
+        xmalloc(1, CRYPTFS_BLOCK_SIZE_BYTES);
+    
+    // If block is empty, return BLOCK_ERROR
+    if (read_blocks_with_decryption(aes_key, s_block, 1, block_buffer))
+        goto err_read_entry;
+
+    size_t modulo_index = 0;
+    for (size_t i = 0; i < count; i++)
+    {
+        if (start_from + modulo_index >= CRYPTFS_BLOCK_SIZE_BYTES) 
+        {
+            s_block = read_fat_offset(aes_key, s_block);
+            if (s_block == (sblock_t) BLOCK_ERROR)
+                goto err_read_entry;
+            start_from = 0;
+            modulo_index = 0;
+            if (read_blocks_with_decryption(aes_key, s_block, 1, block_buffer))
+                goto err_read_entry;
+        }
+        ((char*)buf)[i] = block_buffer[start_from + modulo_index];
+        modulo_index++;
+        result++;
+    }
+    
+    free(dir);
+    free(block_buffer);
+    return result;
+
+    err_read_entry:
+        free(dir);
+        free(block_buffer);
+        return BLOCK_ERROR;
 }
