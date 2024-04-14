@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "entries.h"
 #include "block.h"
@@ -81,6 +82,7 @@ int free_blocks(unsigned char* aes_key, size_t new_blocks_needed, struct CryptFS
             return -1;
         // Update entry.start_entry to 0
         entry->start_block = 0;
+        entry->used = 0;
     }
     else
     {
@@ -109,7 +111,7 @@ int free_blocks(unsigned char* aes_key, size_t new_blocks_needed, struct CryptFS
     return 0;
 }
 
-// Move to the correcto directory block and update the index for this block
+// Move to the correct directory block and update the index for this block
 int search_entry_in_directory(unsigned char* aes_key, block_t* directory_block, uint32_t* index)
 {
     if (*index > NB_ENTRIES_PER_BLOCK)
@@ -124,20 +126,7 @@ int search_entry_in_directory(unsigned char* aes_key, block_t* directory_block, 
         if (count > 1)
             return -1;
     }
-    return 0;
-    
-    
-    // while (*index > NB_ENTRIES_PER_BLOCK && read_fat_offset(aes_key, *directory_block))
-    // {
-    //     *index -= NB_ENTRIES_PER_BLOCK;
-    //     *directory_block = read_fat_offset(aes_key, *directory_block);
-    // }
-    // if (*index > NB_ENTRIES_PER_BLOCK)
-    // {
-    //     return -1;
-    // }
-    // return 0;
-    
+    return 0; 
 }
 
 int entry_truncate(unsigned char* aes_key, block_t directory_block, uint32_t directory_index, size_t new_size)
@@ -150,7 +139,7 @@ int entry_truncate(unsigned char* aes_key, block_t directory_block, uint32_t dir
         xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
                         sizeof(struct CryptFS_Directory));
 
-    if (read_blocks_with_decryption(aes_key, directory_block, 1, dir) == BLOCK_ERROR)
+    if (read_blocks_with_decryption(aes_key, directory_block, 1, dir))
         goto err_truncate_entry;
     
     // Get the correct Entry
@@ -200,6 +189,7 @@ int entry_truncate(unsigned char* aes_key, block_t directory_block, uint32_t dir
 
         // Update entry size in the header and write back in directory block
         entry.size = new_size;
+        entry.mtime = (uint32_t) time(NULL);
         dir->entries[directory_index] = entry;
         if (write_blocks_with_encryption(aes_key, directory_block, 1, dir))
             goto err_truncate_entry;
@@ -228,7 +218,7 @@ int entry_write_buffer_from(unsigned char* aes_key, block_t directory_block, uin
                         sizeof(struct CryptFS_Directory));
     
 
-    if (read_blocks_with_decryption(aes_key, dir_block_real, 1, dir) == BLOCK_ERROR)
+    if (read_blocks_with_decryption(aes_key, dir_block_real, 1, dir))
         goto err_write_buffer_entry;
     
     // Get the correct Entry
@@ -240,7 +230,12 @@ int entry_write_buffer_from(unsigned char* aes_key, block_t directory_block, uin
 
     size_t sum_writing = start_from + count;
     if (sum_writing > entry.size)
+    {
         entry_truncate(aes_key, directory_block, directory_index, sum_writing);
+        // update entry
+        read_blocks_with_decryption(aes_key, dir_block_real, 1, dir);
+        entry = dir->entries[dir_index_real];
+    }
 
     block_t s_block = entry.start_block;
     int count_blocks = start_from / CRYPTFS_BLOCK_SIZE_BYTES; // Number of the block to start writing
@@ -287,6 +282,12 @@ int entry_write_buffer_from(unsigned char* aes_key, block_t directory_block, uin
     if (write_blocks_with_encryption(aes_key, s_block, 1, block_buffer))
         goto err_write_buffer_entry_2;
 
+    // Update entry timestamp
+    entry.mtime = (uint32_t) time(NULL);
+    dir->entries[directory_index] = entry;
+    if (write_blocks_with_encryption(aes_key, dir_block_real, 1, dir))
+        goto err_write_buffer_entry_2;
+
     free(block_buffer);
     free(dir);  
     return 0;
@@ -319,7 +320,7 @@ ssize_t entry_read_raw_data(unsigned char* aes_key, block_t directory_block, uin
         xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
                         sizeof(struct CryptFS_Directory));
 
-    if (read_blocks_with_decryption(aes_key, directory_block, 1, dir) == BLOCK_ERROR)
+    if (read_blocks_with_decryption(aes_key, directory_block, 1, dir))
         goto err_read_entry;
     
     // Get the correct Entry
@@ -365,6 +366,12 @@ ssize_t entry_read_raw_data(unsigned char* aes_key, block_t directory_block, uin
         modulo_index++;
         result++;
     }
+
+    // Update entry timestamp
+    entry.atime = (uint32_t) time(NULL);
+    dir->entries[directory_index] = entry;
+    if (write_blocks_with_encryption(aes_key, directory_block, 1, dir))
+        goto err_read_entry;
     
     free(dir);
     free(block_buffer);
@@ -373,5 +380,36 @@ ssize_t entry_read_raw_data(unsigned char* aes_key, block_t directory_block, uin
     err_read_entry:
         free(dir);
         free(block_buffer);
+        return BLOCK_ERROR;
+}
+
+int entry_delete(unsigned char* aes_key, block_t directory_block, uint32_t directory_index)
+{
+    // Find the real block and index
+    if (search_entry_in_directory(aes_key, &directory_block, &directory_index))
+        return BLOCK_ERROR;
+
+    // allocate struct for reading directory_block
+    struct CryptFS_Directory *dir =
+        xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                        sizeof(struct CryptFS_Directory));
+
+    if (read_blocks_with_decryption(aes_key, directory_block, 1, dir))
+        goto err_entry_delete;
+    
+    // Get the correct Entry
+    struct CryptFS_Entry entry = dir->entries[directory_index];
+
+    if (entry.type == ENTRY_TYPE_DIRECTORY && entry.size != 0)
+        goto err_entry_delete;
+    
+    if (entry_truncate(aes_key, directory_block, directory_index, 0))
+        goto err_entry_delete;
+    
+    free(dir);
+    return 0;
+
+    err_entry_delete:
+        free(dir);
         return BLOCK_ERROR;
 }

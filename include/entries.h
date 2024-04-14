@@ -68,14 +68,15 @@ int entry_write_buffer(unsigned char* aes_key, block_t directory_block, uint32_t
  */
 ssize_t entry_read_raw_data(unsigned char* aes_key, block_t directory_block, uint32_t directory_index, size_t start_from, void* buf, size_t count);
 
-// /**
-//  * @brief Delete an entry.
-//  *
-//  * @param aes_key The AES key used for encryption/decryption.
-//  * @param entry_block The block index to struct CryptFS_Entry.
-//  * @return 0 when success, BLOCK_ERROR otherwise.
-//  */
-// int entry_delete(unsigned char* aes_key, block_t directory_block, uint32_t directory_index);
+/**
+ * @brief Delete an entry.
+ *
+ * @param aes_key The AES key used for encryption/decryption.
+ * @param directory_block The block index to struct CryptFS_Directory.
+ * @param directory_index Index of the entry in the directory
+ * @return 0 when success, BLOCK_ERROR otherwise.
+ */
+int entry_delete(unsigned char* aes_key, block_t directory_block, uint32_t directory_index);
 
 // /**
 //  * @brief Create an empty file.
