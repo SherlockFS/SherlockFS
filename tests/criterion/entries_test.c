@@ -90,7 +90,7 @@ Test(entry_truncate, file_add_blocks, .timeout = 10,
     cr_assert_eq(result, 0);
 
     cr_assert_eq(read_fat_offset(aes_key,
-     entry_block + blocks_needed_for_file(resize_number) - 1), BLOCK_END);
+     entry_block + __blocks_needed_for_file(resize_number) - 1), BLOCK_END);
 
     read_blocks_with_decryption(aes_key, dir_block, 1, dir);
 
@@ -173,7 +173,7 @@ Test(entry_truncate, file_remove_blocks, .timeout = 10,
     cr_assert_eq(result, 0);
 
     cr_assert_eq(read_fat_offset(aes_key,
-     entry_block + blocks_needed_for_file(resize_number) - 1), BLOCK_END);
+     entry_block + __blocks_needed_for_file(resize_number) - 1), BLOCK_END);
 
     read_blocks_with_decryption(aes_key, dir_block, 1, dir);
 
@@ -332,7 +332,7 @@ Test(entry_truncate, directory_add_blocks, .timeout = 10,
     cr_assert_eq(result, 0);
 
     cr_assert_eq(read_fat_offset(aes_key,
-     entry_block + blocks_needed_for_dir(resize_number) - 1), BLOCK_END);
+     entry_block + __blocks_needed_for_dir(resize_number) - 1), BLOCK_END);
 
     read_blocks_with_decryption(aes_key, dir_block, 1, dir);
 
@@ -387,11 +387,10 @@ Test(entry_write_buffer_from, begining_add, .timeout = 10,
     write_fat_offset(aes_key, dir_block, BLOCK_END);
 
     // Create an entry
-    int64_t entry_block = find_first_free_block_safe(aes_key);
     struct CryptFS_Entry entry = {
         .used = 1,
         .type = ENTRY_TYPE_FILE,
-        .start_block = entry_block,
+        .start_block = 0,
         .name = "test_entry.txt",
         .size = 11,
         .uid = 1000,
@@ -405,15 +404,10 @@ Test(entry_write_buffer_from, begining_add, .timeout = 10,
     // Write Directory in BLOCK and update FAT
     dir->entries[0] = entry;
     write_blocks_with_encryption(aes_key, dir_block, 1, dir);
-    write_fat_offset(aes_key, entry_block, BLOCK_END);
 
     // Initial Buffer
     char *block_buffer = 
-        xcalloc(1, CRYPTFS_BLOCK_SIZE_BYTES);
-    const char* initial_string = "Hello World!";
-    strcpy(block_buffer, initial_string);
-    // Write the initial buffer in the block
-    write_blocks_with_encryption(aes_key, entry_block, 1, block_buffer);
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, CRYPTFS_BLOCK_SIZE_BYTES);
 
     // TEST
     char* added_string = "This is a Test";
@@ -422,9 +416,9 @@ Test(entry_write_buffer_from, begining_add, .timeout = 10,
     cr_assert_eq(result, 0);
 
     // Read BLOCK result
-    read_blocks_with_decryption(aes_key, entry_block, 1, block_buffer);
-    char* expected_string = "This is a Test";
-    result = memcmp(block_buffer, expected_string, strlen(expected_string));
+    read_blocks_with_decryption(aes_key, dir_block, 1, dir);
+    read_blocks_with_decryption(aes_key, dir->entries[0].start_block, 1, block_buffer);
+    result = memcmp(block_buffer, added_string, strlen(added_string));
     cr_assert_eq(result, 0);
 
     free(block_buffer);
@@ -640,25 +634,25 @@ Test(entry_delete, file_and_directory, .timeout = 10,
     shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
 
     // Reading the structure from the file
-    unsigned char *ase_key = extract_aes_key(
+    unsigned char *aes_key = extract_aes_key(
         "build/tests/entry_delete.file_and_directory.test.shlkfs",
         "build/tests/entry_delete.file_and_directory.private.pem");
 
-    write_blocks_with_encryption(ase_key, FIRST_FAT_BLOCK, 1,
+    write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
-    write_blocks_with_encryption(ase_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
 
     // Create a directory
-    int64_t dir_block = find_first_free_block_safe(ase_key);
+    int64_t dir_block = find_first_free_block_safe(aes_key);
     struct CryptFS_Directory *dir =
         xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
                         sizeof(struct CryptFS_Directory));
 
     // Update FAT
-    write_fat_offset(ase_key, dir_block, BLOCK_END);
+    write_fat_offset(aes_key, dir_block, BLOCK_END);
 
-    int64_t entry_block = find_first_free_block_safe(ase_key);
     // Create an entry
+    int64_t entry_block = find_first_free_block_safe(aes_key);
     struct CryptFS_Entry entry = {
         .used = 1,
         .type = ENTRY_TYPE_FILE,
@@ -672,17 +666,16 @@ Test(entry_delete, file_and_directory, .timeout = 10,
         .mtime = 0,
         .ctime = 0
     };
+    write_fat_offset(aes_key, entry_block, BLOCK_END);
 
-    write_fat_offset(ase_key, entry_block, BLOCK_END);
-
-    int64_t new_directory_block = find_first_free_block_safe(ase_key);
     // Create an entry
+    int64_t new_directory_block = find_first_free_block_safe(aes_key);
     struct CryptFS_Entry new_dir = {
         .used = 1,
         .type = ENTRY_TYPE_DIRECTORY,
         .start_block = new_directory_block,
         .name = "Dossier Vacances",
-        .size = 1,
+        .size = 2,
         .uid = 1000,
         .gid = 1000,
         .mode = 0666,
@@ -690,33 +683,235 @@ Test(entry_delete, file_and_directory, .timeout = 10,
         .mtime = 0,
         .ctime = 0
     };
-
-    write_fat_offset(ase_key, new_directory_block, BLOCK_END);
+    write_fat_offset(aes_key, new_directory_block, BLOCK_END);
 
     // Put entries in Directory and Write in BLOCK
     dir->entries[0] = entry;
     dir->entries[1] = new_dir;
-    write_blocks_with_encryption(ase_key, dir_block, 1, dir);
+    write_blocks_with_encryption(aes_key, dir_block, 1, dir);
+
+    // Create 2 entries to put in the Parent directory "Dossier Vacances"
+    int64_t test_file_block = find_first_free_block_safe(aes_key);
+    struct CryptFS_Entry test_file = {
+        .used = 1,
+        .type = ENTRY_TYPE_FILE,
+        .start_block = test_file_block,
+        .name = "flag.txt",
+        .size = 4000,
+        .uid = 1000,
+        .gid = 1000,
+        .mode = 0666,
+        .atime = 0,
+        .mtime = 0,
+        .ctime = 0
+    };
+    write_fat_offset(aes_key, test_file_block, BLOCK_END);
+
+    int64_t test_dir_block = find_first_free_block_safe(aes_key);
+    struct CryptFS_Entry test_dir = {
+        .used = 1,
+        .type = ENTRY_TYPE_DIRECTORY,
+        .start_block = test_dir_block,
+        .name = "flag.txt",
+        .size = 20,
+        .uid = 1000,
+        .gid = 1000,
+        .mode = 777,
+        .atime = 0,
+        .mtime = 0,
+        .ctime = 0
+    };
+    write_fat_offset(aes_key, test_dir_block, BLOCK_END);
+
+    dir->entries[0] = test_file;
+    dir->entries[1] = test_dir;
+    write_blocks_with_encryption(aes_key, new_directory_block, 1, dir);
     
     char *buff = xmalloc(1, 8900);
     memset(buff, '6',8900);
 
     // Write bytes in file
-    entry_write_buffer_from(ase_key, dir_block, 0, 2000, buff, 8900);
+    entry_write_buffer_from(aes_key, dir_block, 0, 2000, buff, 8900);
     
-    cr_assert_eq(entry_delete(ase_key, dir_block, 0), 0);
+    cr_assert_eq(entry_delete(aes_key, dir_block, 1, 0), 0);
 
     // check updated entry
-    read_blocks_with_decryption(ase_key, dir_block, 1, dir);
+    read_blocks_with_decryption(aes_key, new_directory_block, 1, dir);
 
     cr_assert_eq(dir->entries[0].start_block, 0);
     cr_assert_eq(dir->entries[0].size, 0);
     cr_assert_eq(dir->entries[0].used, 0);
 
-    cr_assert_eq(entry_delete(ase_key, dir_block, 1), -2);
+    cr_assert_eq(entry_delete(aes_key, dir_block, 1, 1), -2);
 
     free(buff);
     free(dir);
-    free(ase_key);
+    free(aes_key);
+    free(shlkfs);
+}
+
+// TEST entry_create_empty_file
+Test(entry_create_empty_file, in_one_block, .timeout = 10,
+     .init = cr_redirect_stdout)
+{
+    // Setting the device and block size for read/write operations
+    set_device_path(
+        "build/tests/entry_create_empty_file.in_one_block.test.shlkfs");
+
+    format_fs("build/tests/entry_create_empty_file.in_one_block.test.shlkfs",
+              "build/tests/entry_create_empty_file.in_one_block.public.pem",
+              "build/tests/entry_create_empty_file.in_one_block.private.pem",
+              NULL, NULL);
+
+    struct CryptFS *shlkfs =
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                        sizeof(struct CryptFS) + sizeof(struct CryptFS_FAT));
+
+    struct CryptFS_FAT *second_fat =
+        (struct CryptFS_FAT *)((char *)shlkfs + sizeof(struct CryptFS));
+
+    // Filling first FAT
+    memset(shlkfs->first_fat.entries, BLOCK_END,
+           NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
+    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+
+    // Reading the structure from the file
+    unsigned char *aes_key = extract_aes_key(
+        "build/tests/entry_create_empty_file.in_one_block.test.shlkfs",
+        "build/tests/entry_create_empty_file.in_one_block.private.pem");
+
+    write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
+                                 &shlkfs->first_fat);
+    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+
+    // Create a directory
+    int64_t dir_block = find_first_free_block_safe(aes_key);
+    struct CryptFS_Directory *dir =
+        xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                        sizeof(struct CryptFS_Directory));
+
+    // Update FAT
+    write_fat_offset(aes_key, dir_block, BLOCK_END);
+
+    // Create an entry
+    struct CryptFS_Entry new_dir = {
+        .used = 1,
+        .type = ENTRY_TYPE_DIRECTORY,
+        .start_block = 0,
+        .name = "Dossier Vacances",
+        .size = 0,
+        .uid = 1000,
+        .gid = 1000,
+        .mode = 777,
+        .atime = 1,
+        .mtime = 0,
+        .ctime = 0
+    };
+    dir->entries[0]=new_dir;
+    write_blocks_with_encryption(aes_key, dir_block, 1, dir);
+
+    // adding Files
+    cr_assert_eq(entry_create_empty_file(aes_key, dir_block, 0, "Vacances"), 0);
+    cr_assert_eq(entry_create_empty_file(aes_key, dir_block, 0, "Vacances2"), 1);
+    cr_assert_eq(entry_create_empty_file(aes_key, dir_block, 0, "LALA"), 2);
+
+    // Reading Parent Directory metadata
+    read_blocks_with_decryption(aes_key, dir_block, 1, dir);
+    cr_assert_eq(dir->entries[0].size, 3);
+    // Reading entries in Parent Directory
+    read_blocks_with_decryption(aes_key, dir->entries[0].start_block, 1, dir);
+    cr_assert_eq(dir->entries[0].used, 1);
+    cr_assert_eq(dir->entries[0].used, 1);
+    cr_assert_eq(dir->entries[0].used, 1);
+
+    free(dir);
+    free(aes_key);
+    free(shlkfs);
+}
+
+Test(entry_create_empty_file, in_multiple_blocks, .timeout = 10,
+     .init = cr_redirect_stdout)
+{
+    // Setting the device and block size for read/write operations
+    set_device_path(
+        "build/tests/entry_create_empty_file.in_multiple_blocks.test.shlkfs");
+
+    format_fs("build/tests/entry_create_empty_file.in_multiple_blocks.test.shlkfs",
+              "build/tests/entry_create_empty_file.in_multiple_blocks.public.pem",
+              "build/tests/entry_create_empty_file.in_multiple_blocks.private.pem",
+              NULL, NULL);
+
+    struct CryptFS *shlkfs =
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                        sizeof(struct CryptFS) + sizeof(struct CryptFS_FAT));
+
+    struct CryptFS_FAT *second_fat =
+        (struct CryptFS_FAT *)((char *)shlkfs + sizeof(struct CryptFS));
+
+    // Filling first FAT
+    memset(shlkfs->first_fat.entries, BLOCK_END,
+           NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
+    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+
+    // Reading the structure from the file
+    unsigned char *aes_key = extract_aes_key(
+        "build/tests/entry_create_empty_file.in_multiple_blocks.test.shlkfs",
+        "build/tests/entry_create_empty_file.in_multiple_blocks.private.pem");
+
+    write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
+                                 &shlkfs->first_fat);
+    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+
+    // Create a directory
+    int64_t dir_block = find_first_free_block_safe(aes_key);
+    struct CryptFS_Directory *dir =
+        xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                        sizeof(struct CryptFS_Directory));
+
+    // Update FAT
+    write_fat_offset(aes_key, dir_block, BLOCK_END);
+
+    // Create an entry
+    struct CryptFS_Entry new_dir = {
+        .used = 1,
+        .type = ENTRY_TYPE_DIRECTORY,
+        .start_block = 0,
+        .name = "Dossier Vacances",
+        .size = 0,
+        .uid = 1000,
+        .gid = 1000,
+        .mode = 777,
+        .atime = 1,
+        .mtime = 0,
+        .ctime = 0
+    };
+    dir->entries[0]=new_dir;
+    write_blocks_with_encryption(aes_key, dir_block, 1, dir);
+
+    // adding Files to more than one block size directory
+    size_t number_files = 26;
+    for (size_t i = 0; i < number_files; i++)
+    {
+        cr_assert_eq(entry_create_empty_file(aes_key, dir_block, 0, "TEST"), i);
+    }
+
+    // Reading Parent Directory metadata
+    read_blocks_with_decryption(aes_key, dir_block, 1, dir);
+    cr_assert_eq(dir->entries[0].size, number_files);
+    // Reading entries in Parent Directory
+    read_blocks_with_decryption(aes_key, dir->entries[0].start_block, 1, dir);
+    for (size_t i = 0; i < number_files; i++)
+    {
+        if (i == NB_ENTRIES_PER_BLOCK)
+        {
+            // read next directory block
+            read_blocks_with_decryption(aes_key, read_fat_offset(aes_key, dir->entries[0].start_block), 1, dir);
+        }
+        cr_assert_eq(dir->entries[i % NB_ENTRIES_PER_BLOCK].used, 1);   
+    }
+    
+
+    free(dir);
+    free(aes_key);
     free(shlkfs);
 }
