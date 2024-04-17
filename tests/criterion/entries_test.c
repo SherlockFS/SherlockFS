@@ -1007,3 +1007,106 @@ Test(entry_create_directory, embedded_directories, .timeout = 10,
     free(aes_key);
     free(shlkfs);
 }
+
+// TEST entry_create_hardlink
+Test(entry_create_hardlink, simple_hardlink, .timeout = 10,
+     .init = cr_redirect_stdout)
+{
+    // Setting the device and block size for read/write operations
+    set_device_path(
+        "build/tests/entry_create_hardlink.simple_hardlink.test.shlkfs");
+
+    format_fs("build/tests/entry_create_hardlink.simple_hardlink.test.shlkfs",
+              "build/tests/entry_create_hardlink.simple_hardlink.public.pem",
+              "build/tests/entry_create_hardlink.simple_hardlink.private.pem",
+              NULL, NULL);
+
+    struct CryptFS *shlkfs =
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                        sizeof(struct CryptFS) + sizeof(struct CryptFS_FAT));
+
+    struct CryptFS_FAT *second_fat =
+        (struct CryptFS_FAT *)((char *)shlkfs + sizeof(struct CryptFS));
+
+    // Filling first FAT
+    memset(shlkfs->first_fat.entries, BLOCK_END,
+           NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
+    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+
+    // Reading the structure from the file
+    unsigned char *aes_key = extract_aes_key(
+        "build/tests/entry_create_hardlink.simple_hardlink.test.shlkfs",
+        "build/tests/entry_create_hardlink.simple_hardlink.private.pem");
+
+    write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
+                                 &shlkfs->first_fat);
+    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+
+    // Create a directory
+    int64_t dir_block = find_first_free_block_safe(aes_key);
+    struct CryptFS_Directory *dir =
+        xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                        sizeof(struct CryptFS_Directory));
+
+    // Update FAT
+    write_fat_offset(aes_key, dir_block, BLOCK_END);
+
+    // Create an entry
+    struct CryptFS_Entry new_dir = {
+        .used = 1,
+        .type = ENTRY_TYPE_DIRECTORY,
+        .start_block = 0,
+        .name = "TEST",
+        .size = 0,
+        .uid = 1000,
+        .gid = 1000,
+        .mode = 777,
+        .atime = 1,
+        .mtime = 0,
+        .ctime = 0
+    };
+    dir->entries[0]=new_dir;
+    write_blocks_with_encryption(aes_key, dir_block, 1, dir);
+
+    // adding Original File in TEST directory placed in dir_block[0]
+    entry_create_empty_file(aes_key, dir_block, 0, "Original");
+    // Update dir_block
+    read_blocks_with_decryption(aes_key, dir_block, 1, dir);
+    // Write into it
+    size_t size = 17; // Eroor asan if > real size
+    char *content = "Testing Hardlink";
+    entry_write_buffer(aes_key, dir->entries[0].start_block, 0, content, size);
+
+    // Update dir_block
+    read_blocks_with_decryption(aes_key, dir_block, 1, dir);
+    // Creating Hardlink
+    uint32_t res = entry_create_hardlink(aes_key, dir_block, 0, "Hardlink_to_Original",
+         dir->entries[0].start_block, 0);
+
+    // Check TEST directory metadata
+    read_blocks_with_decryption(aes_key, dir_block, 1, dir);
+    struct CryptFS_Entry TEST_entry = dir->entries[0];
+    cr_assert_eq(TEST_entry.size, 2);
+
+    // Check Hardlink
+    read_blocks_with_decryption(aes_key, TEST_entry.start_block, 1, dir);
+    struct CryptFS_Entry Original_entry = dir->entries[0];
+    struct CryptFS_Entry Hardlink_entry = dir->entries[1];
+    cr_assert_eq(Hardlink_entry.type, ENTRY_TYPE_HARDLINK);
+    cr_assert_str_eq(Hardlink_entry.name, "Hardlink_to_Original");
+    cr_assert_eq(Hardlink_entry.start_block, Original_entry.start_block);
+    cr_assert_eq(Hardlink_entry.size, Original_entry.size);
+    // buff
+    char *buff1 = malloc(size);
+    char *buff2 = malloc(size);
+    entry_read_raw_data(aes_key, TEST_entry.start_block, 0, 0, buff1, size);
+    entry_read_raw_data(aes_key, TEST_entry.start_block, 1, 0, buff2, size);
+    cr_assert_str_eq(buff1, buff2);
+    cr_assert_eq(res, 1);
+
+    free(buff1);
+    free(buff2);
+    free(dir);
+    free(aes_key);
+    free(shlkfs);
+}

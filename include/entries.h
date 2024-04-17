@@ -68,7 +68,7 @@ ssize_t entry_read_raw_data(unsigned char* aes_key, block_t directory_block, uin
  *
  * @param aes_key The AES key used for encryption/decryption.
  * @param directory_block The block index to struct CryptFS_Directory where is contained the parent directory entry of the wanted entry.
- * @param parent_directory_index Index of the parent directory entry in the actual directory.
+ * @param parent_directory_index Index of the parent directory in the entry list.
  * @param entry_index Index of the entry in the parent directory.
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
@@ -79,8 +79,8 @@ int entry_delete(unsigned char* aes_key, block_t directory_block,
  * @brief Create an empty file.
  *
  * @param aes_key The AES key used for encryption/decryption.
- * @param directory_block The block index where a struct CryptFS_Entry of type directory is located.
- * @param parent_directory_index Index of the parent directory entry in the actual directory.
+ * @param directory_block Directory start_block or ROOT_DIR_ENTRY where the parent directory is located.
+ * @param parent_directory_index Index of the parent directory in the entry list.
  * @param name The name of the file to create.
  * @return Index where the file entry is located in parent_directory on success, or BLOCK_ERROR otherwise.
  */
@@ -90,29 +90,32 @@ uint32_t entry_create_empty_file(unsigned char* aes_key, block_t directory_block
  * @brief Create a directory.
  *
  * @param aes_key The AES key used for encryption/decryption.
- * @param directory_block The block index where a struct CryptFS_Entry of type directory is located.
- * @param parent_directory_index Index of the parent directory entry in the actual directory.
+ * @param directory_block Directory start_block or ROOT_DIR_ENTRY where the parent directory is located.
+ * @param parent_directory_index Index of the parent directory in the entry list.
  * @param name The name of the directory to create.
  * @return Index where the directory entry is located in parent_directory on success, or BLOCK_ERROR otherwise.
  */
 uint32_t entry_create_directory(unsigned char* aes_key, block_t directory_block, uint32_t parent_directory_index, const char* name);
 
-// /**
-//  * @brief Create a hardlink.
-//  *
-//  * @param aes_key The AES key used for encryption/decryption.
-//  * @param parent_directory_block The block index where a struct CryptFS_Entry of type directory is located.
-//  * @param name The name of the hardlink.
-//  * @param entry_block The block index where a struct CryptFS_Entry to be linked physically is located.
-//  * @return Index where the hardlink entry is located in parent_directory on success, or BLOCK_ERROR otherwise.
-//  */
-// uint32_t entry_create_hardlink(unsigned char* aes_key, block_t parent_directory_block, const char* name, block_t directory_block, int directory_index);
-
+/**
+ * @brief Create a hardlink.
+ *
+ * @param aes_key The AES key used for encryption/decryption.
+ * @param directory_block Directory start_block or ROOT_DIR_ENTRY where the parent directory is located.
+ * @param parent_directory_index Index of the parent directory in the entry list.
+ * @param taret_link_block Directory block of the entry to link.
+ * @param target_link_index Index in the entry list of the entry to link.
+ * @param name The name of the directory to create.
+ * @return Index where the directory entry is located in parent_directory on success, or BLOCK_ERROR otherwise.
+ */
+uint32_t entry_create_hardlink(unsigned char* aes_key, block_t directory_block,
+     uint32_t parent_directory_index, const char* name, block_t target_link_block,
+         uint32_t target_link_index);
 // /**
 //  * @brief Create a symlink.
 //  *
 //  * @param aes_key The AES key used for encryption/decryption.
-//  * @param parent_directory_block The block index where a struct CryptFS_Entry of type directory is located.
+//  * @param parent_directory_block Directory start_block or ROOT_DIR_ENTRY where the parent directory is located.
 //  * @param name The name of the symlink.
 //  * @param symlink The string corresponding to the symlink's path.
 //  * @return Index where the symlink entry is located in parent_directory on success, or BLOCK_ERROR otherwise.
