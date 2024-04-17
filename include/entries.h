@@ -67,33 +67,35 @@ ssize_t entry_read_raw_data(unsigned char* aes_key, block_t directory_block, uin
  * @brief Delete an entry.
  *
  * @param aes_key The AES key used for encryption/decryption.
- * @param parent_directory_block The block index to struct CryptFS_Directory where is contained the parent directory entry of the wanted entry.
+ * @param directory_block The block index to struct CryptFS_Directory where is contained the parent directory entry of the wanted entry.
  * @param parent_directory_index Index of the parent directory entry in the actual directory.
  * @param entry_index Index of the entry in the parent directory.
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
-int entry_delete(unsigned char* aes_key, block_t parent_directory_block,
+int entry_delete(unsigned char* aes_key, block_t directory_block,
      uint32_t parent_directory_index, uint32_t entry_index);
 
 /**
  * @brief Create an empty file.
  *
  * @param aes_key The AES key used for encryption/decryption.
- * @param parent_directory_block The block index where a struct CryptFS_Entry of type directory is located.
+ * @param directory_block The block index where a struct CryptFS_Entry of type directory is located.
+ * @param parent_directory_index Index of the parent directory entry in the actual directory.
  * @param name The name of the file to create.
  * @return Index where the file entry is located in parent_directory on success, or BLOCK_ERROR otherwise.
  */
-uint32_t entry_create_empty_file(unsigned char* aes_key, block_t parent_directory_block, uint32_t parent_directory_index, const char* name);
+uint32_t entry_create_empty_file(unsigned char* aes_key, block_t directory_block, uint32_t parent_directory_index, const char* name);
 
-// /**
-//  * @brief Create a directory.
-//  *
-//  * @param aes_key The AES key used for encryption/decryption.
-//  * @param parent_directory_block The block index where a struct CryptFS_Entry of type directory is located.
-//  * @param name The name of the directory to create.
-//  * @return Index where the directory entry is located in parent_directory on success, or BLOCK_ERROR otherwise.
-//  */
-// uint32_t entry_create_directory(unsigned char* aes_key, block_t parent_directory_block, const char* name);
+/**
+ * @brief Create a directory.
+ *
+ * @param aes_key The AES key used for encryption/decryption.
+ * @param directory_block The block index where a struct CryptFS_Entry of type directory is located.
+ * @param parent_directory_index Index of the parent directory entry in the actual directory.
+ * @param name The name of the directory to create.
+ * @return Index where the directory entry is located in parent_directory on success, or BLOCK_ERROR otherwise.
+ */
+uint32_t entry_create_directory(unsigned char* aes_key, block_t directory_block, uint32_t parent_directory_index, const char* name);
 
 // /**
 //  * @brief Create a hardlink.

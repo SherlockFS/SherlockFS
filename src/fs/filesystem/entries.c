@@ -57,6 +57,7 @@ int __create_new_blocks(unsigned char* aes_key, size_t new_blocks_needed,
             goto err_create_new_block;
         if (entry->type == ENTRY_TYPE_DIRECTORY)
             write_blocks_with_encryption(aes_key, start, 1, init_dir);
+        actual_blocks_used++;
     }
     // Parcour the FAT to reach last block of this directory
     uint64_t end_block = entry->start_block;
@@ -569,10 +570,10 @@ int __entry_delete_routine(unsigned char* aes_key, struct CryptFS_Entry* parent_
             return BLOCK_ERROR;
 }
 
-int entry_delete(unsigned char* aes_key, block_t parent_directory_block,
+int entry_delete(unsigned char* aes_key, block_t directory_block,
      uint32_t parent_directory_index, uint32_t entry_index)
 {
-    if (parent_directory_block == ROOT_DIR_BLOCK)
+    if (directory_block == ROOT_DIR_BLOCK)
     {
         // Allocate struct for reading directory_block
         struct CryptFS_Entry *root_entry =
@@ -589,12 +590,12 @@ int entry_delete(unsigned char* aes_key, block_t parent_directory_block,
         {
             if (after_delete_size != 0)
                 dir_rearange_entries(aes_key, root_entry->start_block, after_delete_size);
-            entry_truncate(aes_key, parent_directory_block, parent_directory_index, root_entry->size - 1);
+            entry_truncate(aes_key, directory_block, parent_directory_index, root_entry->size - 1);
         }
         else
         {
             root_entry->size--;
-            write_blocks_with_encryption(aes_key, parent_directory_block, 1, root_entry);
+            write_blocks_with_encryption(aes_key, directory_block, 1, root_entry);
         }
 
         free(root_entry);
@@ -607,7 +608,7 @@ int entry_delete(unsigned char* aes_key, block_t parent_directory_block,
     else
     {
         // Find the real block and index
-        if (__search_entry_in_directory(aes_key, &parent_directory_block, &parent_directory_index))
+        if (__search_entry_in_directory(aes_key, &directory_block, &parent_directory_index))
             return BLOCK_ERROR;
 
         // allocate struct for reading directory_block
@@ -615,7 +616,7 @@ int entry_delete(unsigned char* aes_key, block_t parent_directory_block,
             xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
                             sizeof(struct CryptFS_Directory));
 
-        if (read_blocks_with_decryption(aes_key, parent_directory_block, 1, dir))
+        if (read_blocks_with_decryption(aes_key, directory_block, 1, dir))
             goto err_entry_delete;
         
         // Get the correct Directory Entry (where is stocked the entry to delete)
@@ -633,12 +634,12 @@ int entry_delete(unsigned char* aes_key, block_t parent_directory_block,
         {
             if (after_delete_size != 0)
                 dir_rearange_entries(aes_key, parent_dir_entry.start_block, after_delete_size);
-            entry_truncate(aes_key, parent_directory_block, parent_directory_index, parent_dir_entry.size - 1);
+            entry_truncate(aes_key, directory_block, parent_directory_index, parent_dir_entry.size - 1);
         }
         else
         {
             dir->entries[parent_directory_index].size--;
-            write_blocks_with_encryption(aes_key, parent_directory_block, 1, dir);
+            write_blocks_with_encryption(aes_key, directory_block, 1, dir);
         }
 
         free(dir);
@@ -654,8 +655,6 @@ int __entry_create_empty_file_routine(unsigned char* aes_key, struct CryptFS_Ent
      const char* name, block_t directory_block, uint32_t parent_directory_index)
 {
     uint32_t index = 0;
-    if (entry->type != ENTRY_TYPE_DIRECTORY)
-            return BLOCK_ERROR;
     
     // Find free index in Directory
     struct CryptFS_Directory *parent_dir =
@@ -724,10 +723,22 @@ uint32_t entry_create_empty_file(unsigned char* aes_key, block_t directory_block
             xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
                         sizeof(struct CryptFS_Entry));
 
+        read_blocks_with_decryption(aes_key, directory_block, 1, root_entry);
+        int initiated = 0; // if 0 = directory didn't initialized here, 1 if it init here
+        if (root_entry->size == 0)
+        {
+            entry_truncate(aes_key, directory_block, parent_directory_index, 1);
+            read_blocks_with_decryption(aes_key, directory_block, 1, root_entry);
+            root_entry->size--; // update size only at the end if succes of adding
+        }
         int res = __entry_create_empty_file_routine(aes_key, root_entry, name,
              directory_block, parent_directory_index);
-        if (res == -1)
+        if (res == BLOCK_ERROR)
+        {
+            if (initiated)
+                entry_truncate(aes_key, directory_block, parent_directory_index, 0);
             goto err_create_file_root;
+        }
         index = (uint32_t)res;
 
         // Update Entry
@@ -756,6 +767,9 @@ uint32_t entry_create_empty_file(unsigned char* aes_key, block_t directory_block
         // Get the parent_directory
         // Update Entry Directory
         struct CryptFS_Entry entry = dir->entries[parent_directory_index];
+
+        if (entry.type != ENTRY_TYPE_DIRECTORY)
+            goto err_create_file;
         int initiated = 0; // if 0 = directory didn't initialized here, 1 if it init here
         if (entry.size == 0)
         {
@@ -790,10 +804,157 @@ uint32_t entry_create_empty_file(unsigned char* aes_key, block_t directory_block
     }
 }
 
-// PB avec la lecture du nouveau BLOCK car truncate n'initialise pas de Struct dir
-// dans le bloc donc il n'est pas lu
+int __entry_create_dir_routine(unsigned char* aes_key, struct CryptFS_Entry* entry,
+     const char* name, block_t directory_block, uint32_t parent_directory_index)
+{
+    uint32_t index = 0;
+    if (entry->type != ENTRY_TYPE_DIRECTORY)
+            return BLOCK_ERROR;
+    
+    // Find free index in Directory
+    struct CryptFS_Directory *parent_dir =
+        xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                        sizeof(struct CryptFS_Directory));
+    
+    block_t s_block = entry->start_block;
+    read_blocks_with_decryption(aes_key, s_block, 1, parent_dir);
+    while (parent_dir->entries[index % NB_ENTRIES_PER_BLOCK].used != 0)
+    {
+        index++;
+        if (index % NB_ENTRIES_PER_BLOCK == 0)
+        {
 
-// soit le faire dans truncate (pense pas) soit l'autre option [ICI]
-// quoique assez logique vu que les directories doivent respecter cette struct
-// pas besoin pour les fichiers car on ecrit directement des buffer meme
-// sur les blocks encore vide
+            block_t tmp_block = read_fat_offset(aes_key, s_block);
+            if (tmp_block == (uint32_t) BLOCK_END)
+            {
+                entry_truncate(aes_key, directory_block, parent_directory_index, entry->size + 1);
+                tmp_block = read_fat_offset(aes_key, s_block);
+            }
+            s_block = tmp_block;
+            if (read_blocks_with_decryption(aes_key, s_block, 1, parent_dir))
+                goto err_create_file;
+        }
+    }
+    // Create File
+    time_t current_time = time(NULL);
+    struct CryptFS_Entry new_dir =
+    {
+        .used = 1,
+        .type = ENTRY_TYPE_DIRECTORY,
+        .start_block = 0,
+        .size = 0,
+        .uid = getuid(),
+        .gid = getgid(),
+        .mode = 777,
+        .atime = (uint32_t) current_time,
+        .mtime = (uint32_t) current_time,
+        .ctime = (uint32_t) current_time
+    };
+    // Name
+    strncpy(new_dir.name, name, ENTRY_NAME_MAX_LEN - 1);
+    new_dir.name[ENTRY_NAME_MAX_LEN - 1] = '\0';
+    parent_dir->entries[index % NB_ENTRIES_PER_BLOCK] = new_dir;
+
+    // Write the block
+    write_blocks_with_encryption(aes_key, s_block, 1, parent_dir);
+
+    free(parent_dir);
+    return index;
+
+    err_create_file:
+        free(parent_dir);
+        return BLOCK_ERROR;
+}
+
+uint32_t entry_create_directory(unsigned char* aes_key, block_t directory_block,
+     uint32_t parent_directory_index, const char* name)
+{
+    uint32_t index;
+
+    if (directory_block == ROOT_DIR_BLOCK)
+    {
+        // Allocate struct for reading directory_block
+        struct CryptFS_Entry *root_entry =
+            xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                        sizeof(struct CryptFS_Entry));
+
+        read_blocks_with_decryption(aes_key, directory_block, 1, root_entry);
+        int initiated = 0; // if 0 = directory didn't initialized here, 1 if it init here
+        if (root_entry->size == 0)
+        {
+            entry_truncate(aes_key, directory_block, parent_directory_index, 1);
+            read_blocks_with_decryption(aes_key, directory_block, 1, root_entry);
+            root_entry->size--; // update size only at the end if succes of adding
+        }
+        int res = __entry_create_dir_routine(aes_key, root_entry, name,
+             directory_block, parent_directory_index);
+        if (res == BLOCK_ERROR)
+        {
+            if (initiated)
+                entry_truncate(aes_key, directory_block, parent_directory_index, 0);
+            goto err_create_file_root;
+        }
+        index = (uint32_t)res;
+
+        // Update Entry
+        root_entry->size++;
+        write_blocks_with_encryption(aes_key, directory_block, 1, root_entry);
+
+        free(root_entry);
+        return index;
+
+        err_create_file_root:
+            free(root_entry);
+            return BLOCK_ERROR;
+    }
+    else
+    {
+        if (__search_entry_in_directory(aes_key, &directory_block, &parent_directory_index))
+            return BLOCK_ERROR;
+        // allocate struct for reading directory_block
+        struct CryptFS_Directory *dir =
+            xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                            sizeof(struct CryptFS_Directory));
+
+        if (read_blocks_with_decryption(aes_key, directory_block, 1, dir))
+            goto err_create_file;
+
+        // Get the parent_directory
+        // Update Entry Directory
+        struct CryptFS_Entry entry = dir->entries[parent_directory_index];
+
+        if (entry.type != ENTRY_TYPE_DIRECTORY)
+            goto err_create_file;
+        int initiated = 0; // if 0 = directory didn't initialized here, 1 if it init here
+        if (entry.size == 0)
+        {
+            entry_truncate(aes_key, directory_block, parent_directory_index, 1);
+            read_blocks_with_decryption(aes_key, directory_block, 1, dir);
+            entry = dir->entries[parent_directory_index];
+            entry.size--; // update size only at the end if succes of adding
+        }
+
+        // Routine
+        int res = __entry_create_dir_routine(aes_key, &entry, name,
+             directory_block, parent_directory_index);
+        if (res == BLOCK_ERROR)
+        {
+            if (initiated)
+                entry_truncate(aes_key, directory_block, parent_directory_index, 0);
+            goto err_create_file;
+        }
+
+        index = res;
+        // Update Directory size
+        entry.size++;
+        dir->entries[parent_directory_index] = entry;
+        write_blocks_with_encryption(aes_key, directory_block, 1, dir);
+
+        free(dir);
+        return index;
+
+        err_create_file:
+            free(dir);
+            return BLOCK_ERROR;
+    }
+}
