@@ -36,7 +36,7 @@ int entry_truncate(unsigned char* aes_key, block_t directory_block, uint32_t dir
  * @param count The size of the source buffer.
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
-int entry_write_buffer_from(unsigned char* aes_key, block_t directory_block, uint32_t directory_index, size_t start_from, void* buffer, size_t count);
+int entry_write_buffer_from(unsigned char* aes_key, block_t directory_block, uint32_t directory_index, size_t start_from, const void* buffer, size_t count);
 
 /**
  * @brief Write a buffer to an entry.
@@ -48,7 +48,7 @@ int entry_write_buffer_from(unsigned char* aes_key, block_t directory_block, uin
  * @param count The size of the source buffer.
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
-int entry_write_buffer(unsigned char* aes_key, block_t directory_block, uint32_t directory_index, void* buffer, size_t count);
+int entry_write_buffer(unsigned char* aes_key, block_t directory_block, uint32_t directory_index, const void* buffer, size_t count);
 
 /**
  * @brief Read raw data from an entry.
@@ -111,15 +111,17 @@ uint32_t entry_create_directory(unsigned char* aes_key, block_t directory_block,
 uint32_t entry_create_hardlink(unsigned char* aes_key, block_t directory_block,
      uint32_t parent_directory_index, const char* name, block_t target_link_block,
          uint32_t target_link_index);
-// /**
-//  * @brief Create a symlink.
-//  *
-//  * @param aes_key The AES key used for encryption/decryption.
-//  * @param parent_directory_block Directory start_block or ROOT_DIR_ENTRY where the parent directory is located.
-//  * @param name The name of the symlink.
-//  * @param symlink The string corresponding to the symlink's path.
-//  * @return Index where the symlink entry is located in parent_directory on success, or BLOCK_ERROR otherwise.
-//  */
-// uint32_t entry_create_symlink(unsigned char* aes_key, block_t parent_directory_block, const char* name, const char *symlink);
+/**
+ * @brief Create a symlink.
+ *
+ * @param aes_key The AES key used for encryption/decryption.
+ * @param directory_block Directory start_block or ROOT_DIR_ENTRY where the parent directory is located.
+ * @param parent_directory_index Index of the parent directory in the entry list.
+ * @param name The name of the symlink.
+ * @param symlink The string corresponding to the symlink's path.
+ * @return Index where the symlink entry is located in parent_directory on success, or BLOCK_ERROR otherwise.
+ */
+uint32_t entry_create_symlink(unsigned char* aes_key, block_t directory_block,
+     uint32_t parent_directory_index, const char* name, const char *symlink);
 
 #endif

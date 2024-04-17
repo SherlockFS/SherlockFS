@@ -1110,3 +1110,165 @@ Test(entry_create_hardlink, simple_hardlink, .timeout = 10,
     free(aes_key);
     free(shlkfs);
 }
+
+// TEST entry_create_symlink
+Test(entry_create_symlink, simple_symlink, .timeout = 10,
+     .init = cr_redirect_stdout)
+{
+    // Setting the device and block size for read/write operations
+    set_device_path(
+        "build/tests/entry_create_symlink.simple_symlink.test.shlkfs");
+
+    format_fs("build/tests/entry_create_symlink.simple_symlink.test.shlkfs",
+              "build/tests/entry_create_symlink.simple_symlink.public.pem",
+              "build/tests/entry_create_symlink.simple_symlink.private.pem",
+              NULL, NULL);
+
+    struct CryptFS *shlkfs =
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                        sizeof(struct CryptFS) + sizeof(struct CryptFS_FAT));
+
+    struct CryptFS_FAT *second_fat =
+        (struct CryptFS_FAT *)((char *)shlkfs + sizeof(struct CryptFS));
+
+    // Filling first FAT
+    memset(shlkfs->first_fat.entries, BLOCK_END,
+           NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
+    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+
+    // Reading the structure from the file
+    unsigned char *aes_key = extract_aes_key(
+        "build/tests/entry_create_symlink.simple_symlink.test.shlkfs",
+        "build/tests/entry_create_symlink.simple_symlink.private.pem");
+
+    write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
+                                 &shlkfs->first_fat);
+    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+
+    // Create a directory
+    int64_t dir_block = find_first_free_block_safe(aes_key);
+    struct CryptFS_Directory *dir =
+        xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                        sizeof(struct CryptFS_Directory));
+
+    // Update FAT
+    write_fat_offset(aes_key, dir_block, BLOCK_END);
+
+    // Create an entry
+    struct CryptFS_Entry new_dir = {
+        .used = 1,
+        .type = ENTRY_TYPE_DIRECTORY,
+        .start_block = 0,
+        .name = "TEST",
+        .size = 0,
+        .uid = 1000,
+        .gid = 1000,
+        .mode = 777,
+        .atime = 1,
+        .mtime = 0,
+        .ctime = 0
+    };
+    dir->entries[0]=new_dir;
+    write_blocks_with_encryption(aes_key, dir_block, 1, dir);
+
+    // adding symlink
+    char *path = "/usr/bin/shlkfs";
+    char *name = "Symlink_test";
+    uint32_t res = entry_create_symlink(aes_key, dir_block, 0, name, path);
+
+    // Update dir_block
+    read_blocks_with_decryption(aes_key, dir_block, 1, dir);
+
+    // Check TEST directory metadata
+    read_blocks_with_decryption(aes_key, dir_block, 1, dir);
+    struct CryptFS_Entry TEST_entry = dir->entries[0];
+    cr_assert_eq(TEST_entry.size, 1);
+
+    // Check Symlink
+    read_blocks_with_decryption(aes_key, TEST_entry.start_block, 1, dir);
+    struct CryptFS_Entry Symlink_entry = dir->entries[0];
+    cr_assert_eq(Symlink_entry.type, ENTRY_TYPE_SYMLINK);
+    cr_assert_str_eq(Symlink_entry.name, name);
+    cr_assert_neq(Symlink_entry.start_block, 0);
+    cr_assert_eq(Symlink_entry.size, strlen(path));
+    // buff
+    char *buff1 = malloc(strlen(path));
+    entry_read_raw_data(aes_key, TEST_entry.start_block, 0, 0, buff1, strlen(path));
+    cr_assert_eq(res, 0);
+
+    free(buff1);
+    free(dir);
+    free(aes_key);
+    free(shlkfs);
+}
+
+Test(entry_create_symlink, bad_path_ascii, .timeout = 10,
+     .init = cr_redirect_stdout)
+{
+    // Setting the device and block size for read/write operations
+    set_device_path(
+        "build/tests/entry_create_symlink.bad_path_ascii.test.shlkfs");
+
+    format_fs("build/tests/entry_create_symlink.bad_path_ascii.test.shlkfs",
+              "build/tests/entry_create_symlink.bad_path_ascii.public.pem",
+              "build/tests/entry_create_symlink.bad_path_ascii.private.pem",
+              NULL, NULL);
+
+    struct CryptFS *shlkfs =
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                        sizeof(struct CryptFS) + sizeof(struct CryptFS_FAT));
+
+    struct CryptFS_FAT *second_fat =
+        (struct CryptFS_FAT *)((char *)shlkfs + sizeof(struct CryptFS));
+
+    // Filling first FAT
+    memset(shlkfs->first_fat.entries, BLOCK_END,
+           NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
+    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+
+    // Reading the structure from the file
+    unsigned char *aes_key = extract_aes_key(
+        "build/tests/entry_create_symlink.bad_path_ascii.test.shlkfs",
+        "build/tests/entry_create_symlink.bad_path_ascii.private.pem");
+
+    write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
+                                 &shlkfs->first_fat);
+    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+
+    // Create a directory
+    int64_t dir_block = find_first_free_block_safe(aes_key);
+    struct CryptFS_Directory *dir =
+        xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                        sizeof(struct CryptFS_Directory));
+
+    // Update FAT
+    write_fat_offset(aes_key, dir_block, BLOCK_END);
+
+    // Create an entry
+    struct CryptFS_Entry new_dir = {
+        .used = 1,
+        .type = ENTRY_TYPE_DIRECTORY,
+        .start_block = 0,
+        .name = "TEST",
+        .size = 0,
+        .uid = 1000,
+        .gid = 1000,
+        .mode = 777,
+        .atime = 1,
+        .mtime = 0,
+        .ctime = 0
+    };
+    dir->entries[0]=new_dir;
+    write_blocks_with_encryption(aes_key, dir_block, 1, dir);
+
+    // adding symlink
+    char *path = "/usr/bin$*!你好@(#_++=/shlkfs";
+    char *name = "Symlink_test";
+    uint32_t res = entry_create_symlink(aes_key, dir_block, 0, name, path);
+
+    cr_assert_eq(res, BLOCK_ERROR);
+
+    free(dir);
+    free(aes_key);
+    free(shlkfs);
+}

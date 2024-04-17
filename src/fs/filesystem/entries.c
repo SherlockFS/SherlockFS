@@ -285,7 +285,8 @@ int entry_truncate(unsigned char* aes_key, block_t directory_block, uint32_t dir
 
 }
 
-int entry_write_buffer_from(unsigned char* aes_key, block_t directory_block, uint32_t directory_index, size_t start_from, void* buffer, size_t count)
+int entry_write_buffer_from(unsigned char* aes_key, block_t directory_block,
+     uint32_t directory_index, size_t start_from, const void* buffer, size_t count)
 {
     // Find the real block and index
     if (__search_entry_in_directory(aes_key, &directory_block, &directory_index))
@@ -380,7 +381,7 @@ int entry_write_buffer_from(unsigned char* aes_key, block_t directory_block, uin
         return BLOCK_ERROR;
 }
 
-int entry_write_buffer(unsigned char* aes_key, block_t directory_block, uint32_t directory_index, void* buffer, size_t count)
+int entry_write_buffer(unsigned char* aes_key, block_t directory_block, uint32_t directory_index, const void* buffer, size_t count)
 {
     return entry_write_buffer_from(aes_key, directory_block, directory_index, 0, buffer, count);
 }
@@ -994,7 +995,7 @@ int __entry_create_hardlink_routine(unsigned char* aes_key, struct CryptFS_Entry
     }
     // Create Hardlink
     time_t current_time = time(NULL);
-    struct CryptFS_Entry new_dir =
+    struct CryptFS_Entry new_hard =
     {
         .used = 1,
         .type = ENTRY_TYPE_HARDLINK,
@@ -1008,9 +1009,9 @@ int __entry_create_hardlink_routine(unsigned char* aes_key, struct CryptFS_Entry
         .ctime = (uint32_t) current_time
     };
     // Name
-    strncpy(new_dir.name, name, ENTRY_NAME_MAX_LEN - 1);
-    new_dir.name[ENTRY_NAME_MAX_LEN - 1] = '\0';
-    parent_dir->entries[index % NB_ENTRIES_PER_BLOCK] = new_dir;
+    strncpy(new_hard.name, name, ENTRY_NAME_MAX_LEN - 1);
+    new_hard.name[ENTRY_NAME_MAX_LEN - 1] = '\0';
+    parent_dir->entries[index % NB_ENTRIES_PER_BLOCK] = new_hard;
 
     // Write the block
     write_blocks_with_encryption(aes_key, s_block, 1, parent_dir);
@@ -1148,4 +1149,176 @@ uint32_t entry_create_hardlink(unsigned char* aes_key, block_t directory_block,
     err_create_file_init:
         free(target_link_dir);
         return BLOCK_ERROR;
+}
+
+int is_readable_ascii(const char *chaine) {
+    while (*chaine) {
+        if ((unsigned char)(*chaine) > 127) {
+            return -1;
+        }
+        chaine++;
+    }
+    return 0;
+}
+
+int __entry_create_symlink_routine(unsigned char* aes_key, struct CryptFS_Entry* entry,
+     const char* name, block_t directory_block, uint32_t parent_directory_index, const char *symlink)
+{
+    uint32_t index = 0;
+    
+    // Find free index in Directory
+    struct CryptFS_Directory *parent_dir =
+        xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                        sizeof(struct CryptFS_Directory));
+    
+    block_t s_block = entry->start_block;
+    read_blocks_with_decryption(aes_key, s_block, 1, parent_dir);
+    while (parent_dir->entries[index % NB_ENTRIES_PER_BLOCK].used != 0)
+    {
+        index++;
+        if (index % NB_ENTRIES_PER_BLOCK == 0)
+        {
+
+            block_t tmp_block = read_fat_offset(aes_key, s_block);
+            if (tmp_block == (uint32_t) BLOCK_END)
+            {
+                entry_truncate(aes_key, directory_block, parent_directory_index, entry->size + 1);
+                tmp_block = read_fat_offset(aes_key, s_block);
+            }
+            s_block = tmp_block;
+            if (read_blocks_with_decryption(aes_key, s_block, 1, parent_dir))
+                goto err_create_file;
+        }
+    }
+    // Create File
+    time_t current_time = time(NULL);
+    struct CryptFS_Entry new_sym =
+    {
+        .used = 1,
+        .type = ENTRY_TYPE_SYMLINK,
+        .start_block = 0,
+        .size = 0,
+        .uid = getuid(),
+        .gid = getgid(),
+        .mode = 777,
+        .atime = (uint32_t) current_time,
+        .mtime = (uint32_t) current_time,
+        .ctime = (uint32_t) current_time
+    };
+    // Name
+    strncpy(new_sym.name, name, ENTRY_NAME_MAX_LEN - 1);
+    new_sym.name[ENTRY_NAME_MAX_LEN - 1] = '\0';
+    parent_dir->entries[index % NB_ENTRIES_PER_BLOCK] = new_sym;
+
+    // Write the block
+    write_blocks_with_encryption(aes_key, s_block, 1, parent_dir);
+
+    // Write symblink in file
+    size_t sym_size = strlen(symlink);
+    if (symlink[sym_size - 1] == '\0')
+        sym_size--;
+    entry_write_buffer(aes_key, s_block, index % NB_ENTRIES_PER_BLOCK, symlink, sym_size);
+
+    free(parent_dir);
+    return index;
+
+    err_create_file:
+        free(parent_dir);
+        return BLOCK_ERROR;
+}
+
+uint32_t entry_create_symlink(unsigned char* aes_key, block_t directory_block,
+     uint32_t parent_directory_index, const char* name, const char *symlink)
+{
+    if (is_readable_ascii(symlink) || strlen(symlink) == 0)
+        return BLOCK_ERROR;
+    
+    uint32_t index;
+
+    if (directory_block == ROOT_DIR_BLOCK)
+    {
+        // Allocate struct for reading directory_block
+        struct CryptFS_Entry *root_entry =
+            xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                        sizeof(struct CryptFS_Entry));
+
+        read_blocks_with_decryption(aes_key, directory_block, 1, root_entry);
+        int initiated = 0; // if 0 = directory didn't initialized here, 1 if it init here
+        if (root_entry->size == 0)
+        {
+            entry_truncate(aes_key, directory_block, parent_directory_index, 1);
+            read_blocks_with_decryption(aes_key, directory_block, 1, root_entry);
+            root_entry->size--; // update size only at the end if succes of adding
+        }
+        int res = __entry_create_symlink_routine(aes_key, root_entry, name,
+             directory_block, parent_directory_index, symlink);
+        if (res == BLOCK_ERROR)
+        {
+            if (initiated)
+                entry_truncate(aes_key, directory_block, parent_directory_index, 0);
+            goto err_create_file_root;
+        }
+        index = (uint32_t)res;
+
+        // Update Entry
+        root_entry->size++;
+        write_blocks_with_encryption(aes_key, directory_block, 1, root_entry);
+
+        free(root_entry);
+        return index;
+
+        err_create_file_root:
+            free(root_entry);
+            return BLOCK_ERROR;
+    }
+    else
+    {
+        if (__search_entry_in_directory(aes_key, &directory_block, &parent_directory_index))
+            return BLOCK_ERROR;
+        // allocate struct for reading directory_block
+        struct CryptFS_Directory *dir =
+            xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                            sizeof(struct CryptFS_Directory));
+
+        if (read_blocks_with_decryption(aes_key, directory_block, 1, dir))
+            goto err_create_file;
+
+        // Get the parent_directory
+        // Update Entry Directory
+        struct CryptFS_Entry entry = dir->entries[parent_directory_index];
+
+        if (entry.type != ENTRY_TYPE_DIRECTORY)
+            goto err_create_file;
+        int initiated = 0; // if 0 = directory didn't initialized here, 1 if it init here
+        if (entry.size == 0)
+        {
+            entry_truncate(aes_key, directory_block, parent_directory_index, 1);
+            read_blocks_with_decryption(aes_key, directory_block, 1, dir);
+            entry = dir->entries[parent_directory_index];
+            entry.size--; // update size only at the end if succes of adding
+        }
+
+        // Routine
+        int res = __entry_create_symlink_routine(aes_key, &entry, name,
+             directory_block, parent_directory_index, symlink);
+        if (res == BLOCK_ERROR)
+        {
+            if (initiated)
+                entry_truncate(aes_key, directory_block, parent_directory_index, 0);
+            goto err_create_file;
+        }
+
+        index = res;
+        // Update Directory size
+        entry.size++;
+        dir->entries[parent_directory_index] = entry;
+        write_blocks_with_encryption(aes_key, directory_block, 1, dir);
+
+        free(dir);
+        return index;
+
+        err_create_file:
+            free(dir);
+            return BLOCK_ERROR;
+    }
 }
