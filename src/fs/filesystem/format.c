@@ -131,6 +131,9 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
     root_dir.used = 1;
     root_dir.type = ENTRY_TYPE_DIRECTORY;
     root_dir.start_block = ROOT_DIR_BLOCK + 1;
+    root_dir.uid = getuid();
+    root_dir.gid = getgid();
+    root_dir.mode = 777;
     strcpy(root_dir.name, "/");
 
     /// ------------------------------------------------------------
