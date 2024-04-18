@@ -9,6 +9,7 @@
 #include "fat.h"
 #include "cryptfs.h"
 #include "xalloc.h"
+#include "ascii.h"
 
 
 int __blocks_needed_for_file(size_t size)
@@ -32,7 +33,7 @@ int __blocks_needed_for_dir(size_t size)
 }
 
 /**
- * @brief Routine to allocate new blocks to an entry.
+ * @brief Allocate new blocks to an entry when truncate is needed.
  *
  * @param aes_key The AES key used for encryption/decryption.
  * @param new_blocks_needed Number of blocks to reach.
@@ -40,7 +41,7 @@ int __blocks_needed_for_dir(size_t size)
  * @param entry Actual CryptFS_Entry
  * @return 0 when success, -1 otherwise.
  */
-int __create_new_blocks(unsigned char* aes_key, size_t new_blocks_needed,
+static int __create_new_blocks(unsigned char* aes_key, size_t new_blocks_needed,
      size_t actual_blocks_used, struct CryptFS_Entry* entry)
 {
     struct CryptFS_Directory *init_dir =
@@ -88,14 +89,14 @@ int __create_new_blocks(unsigned char* aes_key, size_t new_blocks_needed,
 }
 
 /**
- * @brief Routine to free blocks of an entry.
+ * @brief Free blocks to an entry when truncate is needed.
  *
  * @param aes_key The AES key used for encryption/decryption.
  * @param new_blocks_needed Number of blocks to reach.
  * @param entry Pointer to a CryptFS_Entry.
  * @return 0 when success, -1 otherwise.
  */
-int __free_blocks(unsigned char* aes_key, size_t new_blocks_needed, struct CryptFS_Entry* entry)
+static int __free_blocks(unsigned char* aes_key, size_t new_blocks_needed, struct CryptFS_Entry* entry)
 {
     block_t end_block = entry->start_block;
     block_t free_block;
@@ -156,7 +157,7 @@ int __free_blocks(unsigned char* aes_key, size_t new_blocks_needed, struct Crypt
  * @param index Index of the wanted CryptFS_Entry in CryptFS_Directory List.
  * @return 0 when success, -1 otherwise.
  */
-int __search_entry_in_directory(unsigned char* aes_key, block_t* directory_block, uint32_t* index)
+static int __search_entry_in_directory(unsigned char* aes_key, block_t* directory_block, uint32_t* index)
 {
     if (*index > NB_ENTRIES_PER_BLOCK)
     {
@@ -174,14 +175,14 @@ int __search_entry_in_directory(unsigned char* aes_key, block_t* directory_block
 }
 
 /**
- * @brief Loop to truncate entry
+ * @brief Loop to truncate entry.
  *
  * @param aes_key The AES key used for encryption/decryption.
  * @param entry Pointer to CryptFS_Entry.
  * @param new_size Size to truncate the entry with.
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
-int __entry_truncate_treatment(unsigned char* aes_key, struct CryptFS_Entry* entry, size_t new_size)
+static int __entry_truncate_treatment(unsigned char* aes_key, struct CryptFS_Entry* entry, size_t new_size)
 {
     // Check if new_size is different
     if (new_size != entry->size)
@@ -470,7 +471,7 @@ ssize_t entry_read_raw_data(unsigned char* aes_key, block_t directory_block, uin
  * @param nb_blocks number of blocks to stock the entries
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
-int dir_rearange_entries(unsigned char* aes_key, block_t directory_block, size_t nb_blocks)
+static int __dir_rearange_entries(unsigned char* aes_key, block_t directory_block, size_t nb_blocks)
 {
     struct CryptFS_Directory *moving_dir_block =
             xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
@@ -535,7 +536,7 @@ int dir_rearange_entries(unsigned char* aes_key, block_t directory_block, size_t
  * @param new_size Size to truncate the entry with.
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
-int __entry_delete_routine(unsigned char* aes_key, struct CryptFS_Entry* parent_dir_entry,
+static int __entry_delete_routine(unsigned char* aes_key, struct CryptFS_Entry* parent_dir_entry,
      uint32_t entry_index)
 {
     block_t s_block = parent_dir_entry->start_block;
@@ -590,7 +591,7 @@ int entry_delete(unsigned char* aes_key, block_t directory_block,
         if (after_delete_size < __blocks_needed_for_dir(root_entry->size))
         {
             if (after_delete_size != 0)
-                dir_rearange_entries(aes_key, root_entry->start_block, after_delete_size);
+                __dir_rearange_entries(aes_key, root_entry->start_block, after_delete_size);
             entry_truncate(aes_key, directory_block, parent_directory_index, root_entry->size - 1);
         }
         else
@@ -634,7 +635,7 @@ int entry_delete(unsigned char* aes_key, block_t directory_block,
         if (after_delete_size < __blocks_needed_for_dir(parent_dir_entry.size))
         {
             if (after_delete_size != 0)
-                dir_rearange_entries(aes_key, parent_dir_entry.start_block, after_delete_size);
+                __dir_rearange_entries(aes_key, parent_dir_entry.start_block, after_delete_size);
             entry_truncate(aes_key, directory_block, parent_directory_index, parent_dir_entry.size - 1);
         }
         else
@@ -652,7 +653,17 @@ int entry_delete(unsigned char* aes_key, block_t directory_block,
         }
     }
 
-int __entry_create_empty_file_routine(unsigned char* aes_key, struct CryptFS_Entry* entry,
+/**
+ * @brief Routine called by entry_create_empty_file
+ *
+ * @param aes_key The AES key used for encryption/decryption.
+ * @param entry Pointer of the parent directory CryptFS_Entry. (Used to modify its metadata after adding entry)
+ * @param name Name of the empty file.
+ * @param directory_block The block number where starts a struct CryptFS_Directory.
+ * @param parent_directory_index Index of the entry in the current CryptFS_Directory.
+ * @return 0 when success, BLOCK_ERROR otherwise.
+ */
+static int __entry_create_empty_file_routine(unsigned char* aes_key, struct CryptFS_Entry* entry,
      const char* name, block_t directory_block, uint32_t parent_directory_index)
 {
     uint32_t index = 0;
@@ -805,7 +816,17 @@ uint32_t entry_create_empty_file(unsigned char* aes_key, block_t directory_block
     }
 }
 
-int __entry_create_dir_routine(unsigned char* aes_key, struct CryptFS_Entry* entry,
+/**
+ * @brief Routine called by entry_create_dir
+ *
+ * @param aes_key The AES key used for encryption/decryption.
+ * @param entry Pointer of the parent directory CryptFS_Entry. (Used to modify its metadata after adding entry)
+ * @param name Name of the future new directory.
+ * @param directory_block The block number where starts a struct CryptFS_Directory.
+ * @param parent_directory_index Index of the entry in the current CryptFS_Directory.
+ * @return 0 when success, BLOCK_ERROR otherwise.
+ */
+static int __entry_create_dir_routine(unsigned char* aes_key, struct CryptFS_Entry* entry,
      const char* name, block_t directory_block, uint32_t parent_directory_index)
 {
     uint32_t index = 0;
@@ -960,8 +981,18 @@ uint32_t entry_create_directory(unsigned char* aes_key, block_t directory_block,
     }
 }
 
-
-int __entry_create_hardlink_routine(unsigned char* aes_key, struct CryptFS_Entry* entry,
+/**
+ * @brief Routine called by entry_create_hardlink
+ *
+ * @param aes_key The AES key used for encryption/decryption.
+ * @param entry Pointer of the parent directory CryptFS_Entry. (Used to modify its metadata after adding entry)
+ * @param name Name of the future hardlink.
+ * @param directory_block The block number where starts a struct CryptFS_Directory.
+ * @param parent_directory_index Index of the entry in the current CryptFS_Directory.
+ * @param entry_to_link Entry to copy data from.
+ * @return 0 when success, BLOCK_ERROR otherwise.
+ */
+static int __entry_create_hardlink_routine(unsigned char* aes_key, struct CryptFS_Entry* entry,
      const char* name, block_t directory_block, uint32_t parent_directory_index,
          struct CryptFS_Entry entry_to_link)
 {
@@ -1151,17 +1182,19 @@ uint32_t entry_create_hardlink(unsigned char* aes_key, block_t directory_block,
         return BLOCK_ERROR;
 }
 
-int is_readable_ascii(const char *chaine) {
-    while (*chaine) {
-        if ((unsigned char)(*chaine) > 127) {
-            return -1;
-        }
-        chaine++;
-    }
-    return 0;
-}
 
-int __entry_create_symlink_routine(unsigned char* aes_key, struct CryptFS_Entry* entry,
+/**
+ * @brief Routine called by entry_create_symlink
+ *
+ * @param aes_key The AES key used for encryption/decryption.
+ * @param entry Pointer of the parent directory CryptFS_Entry. (Used to modify its metadata after adding entry)
+ * @param name Name of the future hardlink.
+ * @param directory_block The block number where starts a struct CryptFS_Directory.
+ * @param parent_directory_index Index of the entry in the current CryptFS_Directory.
+ * @param symlink Path to the linked entry.
+ * @return 0 when success, BLOCK_ERROR otherwise.
+ */
+static int __entry_create_symlink_routine(unsigned char* aes_key, struct CryptFS_Entry* entry,
      const char* name, block_t directory_block, uint32_t parent_directory_index, const char *symlink)
 {
     uint32_t index = 0;
@@ -1230,7 +1263,7 @@ int __entry_create_symlink_routine(unsigned char* aes_key, struct CryptFS_Entry*
 uint32_t entry_create_symlink(unsigned char* aes_key, block_t directory_block,
      uint32_t parent_directory_index, const char* name, const char *symlink)
 {
-    if (is_readable_ascii(symlink) || strlen(symlink) == 0)
+    if (!is_readable_ascii(symlink) || strlen(symlink) == 0)
         return BLOCK_ERROR;
     
     uint32_t index;
