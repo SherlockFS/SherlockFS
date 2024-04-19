@@ -181,11 +181,11 @@ struct CryptFS_Entry_ID
     ((CRYPTFS_BLOCK_SIZE_BYTES - sizeof(struct CryptFS_Entry_ID)) /            \
          sizeof(struct CryptFS_Entry))
 
- struct CryptFS_Directory
- {
+struct CryptFS_Directory
+{
     struct CryptFS_Entry_ID current_directory_entry; // Current CryptFS_Entry Directory identifier (.)
     struct CryptFS_Entry entries[NB_ENTRIES_PER_BLOCK];
- } __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
+} __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
 // -----------------------------------------------------------------------------
 // CRYPTFS FILE SYSTEM

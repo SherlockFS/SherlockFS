@@ -180,7 +180,7 @@ static int __search_entry_in_directory(unsigned char* aes_key, struct CryptFS_En
  *
  * @param aes_key The AES key used for encryption/decryption.
  * @param entry Pointer to CryptFS_Entry.
- * @param entry_id structure composed of the block number where starts a struct CryptFS_Directory and the index of the entry in this current CryptFS_Directory.
+ * @param entry_id Structure, composed of the block number where a struct CryptFS_Directory starts and the index of the entry within this current CryptFS_Directory, serves to uniquely identify an entry on the file system.
  * @param new_size Size to truncate the entry with.
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
@@ -580,7 +580,7 @@ int entry_delete(unsigned char* aes_key, struct CryptFS_Entry_ID parent_dir_entr
  * @param aes_key The AES key used for encryption/decryption.
  * @param entry Pointer of the parent directory CryptFS_Entry. (Used to modify its metadata after adding entry)
  * @param name Name of the empty file.
- * @param parent_dir_entry_id structure composed of the block number where starts a struct CryptFS_Directory and the index of the entry in this current CryptFS_Directory.
+ * @param parent_dir_entry_id Structure, composed of the block number where a struct CryptFS_Directory starts and the index of the entry within this current CryptFS_Directory, serves to uniquely identify an entry on the file system.
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
 static int __entry_create_empty_file_routine(unsigned char* aes_key, struct CryptFS_Entry* entry,
@@ -746,7 +746,7 @@ uint32_t entry_create_empty_file(unsigned char* aes_key, struct CryptFS_Entry_ID
  * @param aes_key The AES key used for encryption/decryption.
  * @param entry Pointer of the parent directory CryptFS_Entry. (Used to modify its metadata after adding entry)
  * @param name Name of the future new directory.
- * @param parent_dir_entry_id structure composed of the block number where starts a struct CryptFS_Directory and the index of the entry in this current CryptFS_Directory.
+ * @param parent_dir_entry_id Structure, composed of the block number where a struct CryptFS_Directory starts and the index of the entry within this current CryptFS_Directory, serves to uniquely identify an entry on the file system.
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
 static int __entry_create_dir_routine(unsigned char* aes_key, struct CryptFS_Entry* entry,
@@ -910,7 +910,7 @@ uint32_t entry_create_directory(unsigned char* aes_key, struct CryptFS_Entry_ID 
  * @param aes_key The AES key used for encryption/decryption.
  * @param entry Pointer of the parent directory CryptFS_Entry. (Used to modify its metadata after adding entry)
  * @param name Name of the future hardlink.
- * @param parent_dir_entry_id structure composed of the block number where starts a struct CryptFS_Directory and the index of the entry in this current CryptFS_Directory.
+ * @param parent_dir_entry_id Structure, composed of the block number where a struct CryptFS_Directory starts and the index of the entry within this current CryptFS_Directory, serves to uniquely identify an entry on the file system.
  * @param entry_to_link Entry to copy data from.
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
@@ -1110,7 +1110,7 @@ uint32_t entry_create_hardlink(unsigned char* aes_key, struct CryptFS_Entry_ID p
  * @param aes_key The AES key used for encryption/decryption.
  * @param entry Pointer of the parent directory CryptFS_Entry. (Used to modify its metadata after adding entry)
  * @param name Name of the future hardlink.
- * @param parent_dir_entry_id structure composed of the block number where starts a struct CryptFS_Directory and the index of the entry in this current CryptFS_Directory.
+ * @param parent_dir_entry_id Structure, composed of the block number where a struct CryptFS_Directory starts and the index of the entry within this current CryptFS_Directory, serves to uniquely identify an entry on the file system.
  * @param symlink Path to the linked entry.
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
