@@ -171,11 +171,19 @@ struct CryptFS_Entry
     uint32_t ctime; // Creation time
 } __attribute__((packed));
 
+struct CryptFS_Entry_ID
+{
+    block_t directory_block; // The block number to struct CryptFS_Directory.
+    uint32_t directory_index; // Index of the Directory entry in the directory.
+} __attribute__((packed));
+
 #define NB_ENTRIES_PER_BLOCK                                                   \
-    (CRYPTFS_BLOCK_SIZE_BYTES / sizeof(struct CryptFS_Entry))
+    ((CRYPTFS_BLOCK_SIZE_BYTES - sizeof(struct CryptFS_Entry_ID)) /            \
+         sizeof(struct CryptFS_Entry))
 
 struct CryptFS_Directory
 {
+    struct CryptFS_Entry_ID current_directory_entry; // Current CryptFS_Entry Directory identifier (.)
     struct CryptFS_Entry entries[NB_ENTRIES_PER_BLOCK];
 } __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 

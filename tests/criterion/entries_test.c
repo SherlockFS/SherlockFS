@@ -86,7 +86,8 @@ Test(entry_truncate, file_add_blocks, .timeout = 10,
     size_t resize_number = 25000;
 
     // Check if function ended properly
-    int result = entry_truncate(aes_key, dir_block, 0, resize_number);
+    struct CryptFS_Entry_ID entry_id = {dir_block, 0};
+    int result = entry_truncate(aes_key, entry_id, resize_number);
     cr_assert_eq(result, 0);
 
     cr_assert_eq(read_fat_offset(aes_key,
@@ -165,11 +166,12 @@ Test(entry_truncate, file_remove_blocks, .timeout = 10,
     write_fat_offset(aes_key, entry_block, BLOCK_END);
 
     // Adding blocks to the entry
-    entry_truncate(aes_key, dir_block, 0, 25000);
+    struct CryptFS_Entry_ID entry_id = {dir_block, 0};
+    entry_truncate(aes_key, entry_id, 25000);
 
     size_t resize_number = 4500;
 
-    int result = entry_truncate(aes_key, dir_block, 0, resize_number);
+    int result = entry_truncate(aes_key, entry_id, resize_number);
     cr_assert_eq(result, 0);
 
     cr_assert_eq(read_fat_offset(aes_key,
@@ -249,7 +251,8 @@ Test(entry_truncate, file_remove_blocks_till_empty, .timeout = 10,
 
     size_t resize_number = 0;
 
-    int result = entry_truncate(aes_key, dir_block, 0, resize_number);
+    struct CryptFS_Entry_ID entry_id = {dir_block, 0};
+    int result = entry_truncate(aes_key, entry_id, resize_number);
     cr_assert_eq(result, 0);
 
     read_blocks_with_decryption(aes_key, dir_block, 1, dir);
@@ -328,7 +331,8 @@ Test(entry_truncate, directory_add_blocks, .timeout = 10,
     size_t resize_number = 28;
 
     // Check if function ended properly
-    int result = entry_truncate(aes_key, dir_block, 0, resize_number);
+    struct CryptFS_Entry_ID entry_id = {dir_block, 0};
+    int result = entry_truncate(aes_key, entry_id, resize_number);
     cr_assert_eq(result, 0);
 
     cr_assert_eq(read_fat_offset(aes_key,
@@ -410,8 +414,9 @@ Test(entry_write_buffer_from, begining_add, .timeout = 10,
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, CRYPTFS_BLOCK_SIZE_BYTES);
 
     // TEST
+    struct CryptFS_Entry_ID entry_id = {dir_block, 0};
     char* added_string = "This is a Test";
-    int result = entry_write_buffer_from(aes_key, dir_block, 0, 
+    int result = entry_write_buffer_from(aes_key, entry_id, 
          0, added_string, strlen(added_string));
     cr_assert_eq(result, 0);
 
@@ -498,8 +503,9 @@ Test(entry_write_buffer_from, between_blocks_adding, .timeout = 10,
         xmalloc(1, CRYPTFS_BLOCK_SIZE_BYTES);
 
     // TEST
+    struct CryptFS_Entry_ID entry_id = {dir_block, 0};
     char* added_string = "This is a Test";
-    int result = entry_write_buffer_from(aes_key, dir_block, 0, 
+    int result = entry_write_buffer_from(aes_key, entry_id, 
          4090, added_string, strlen(added_string));
     cr_assert_eq(result, 0);
 
@@ -593,11 +599,12 @@ Test(entry_read_raw_data, reading_between_blocks, .timeout = 10,
     memset(buff_2, '6',5600);
 
     // Writing in file
-    entry_write_buffer_from(aes_key, dir_block, 0, 2000, buff, 5600);
+    struct CryptFS_Entry_ID entry_id = {dir_block, 0};
+    entry_write_buffer_from(aes_key, entry_id, 2000, buff, 5600);
     
     // Reset buff and TEST
     memset(buff, '\0', 5600);
-    cr_assert_eq(entry_read_raw_data(aes_key, dir_block, 0, 2000, buff, 5600), 5600);
+    cr_assert_eq(entry_read_raw_data(aes_key, entry_id, 2000, buff, 5600), 5600);
     cr_assert_eq(memcmp(buff, buff_2, 5600), 0);
 
     free(buff);
@@ -731,9 +738,11 @@ Test(entry_delete, file_and_directory, .timeout = 10,
     memset(buff, '6',8900);
 
     // Write bytes in file
-    entry_write_buffer_from(aes_key, dir_block, 0, 2000, buff, 8900);
+    struct CryptFS_Entry_ID first_file_entry_id = {dir_block, 0};
+    entry_write_buffer_from(aes_key, first_file_entry_id, 2000, buff, 8900);
     
-    cr_assert_eq(entry_delete(aes_key, dir_block, 1, 0), 0);
+    struct CryptFS_Entry_ID second_dir_entry_id = {dir_block, 1};
+    cr_assert_eq(entry_delete(aes_key, second_dir_entry_id, 0), 0);
 
     // check updated entry
     read_blocks_with_decryption(aes_key, new_directory_block, 1, dir);
@@ -742,7 +751,7 @@ Test(entry_delete, file_and_directory, .timeout = 10,
     cr_assert_eq(dir->entries[0].size, 0);
     cr_assert_eq(dir->entries[0].used, 0);
 
-    cr_assert_eq(entry_delete(aes_key, dir_block, 1, 1), -2);
+    cr_assert_eq(entry_delete(aes_key, second_dir_entry_id, 1), -2);
 
     free(buff);
     free(dir);
@@ -810,10 +819,11 @@ Test(entry_create_empty_file, in_one_block, .timeout = 10,
     dir->entries[0]=new_dir;
     write_blocks_with_encryption(aes_key, dir_block, 1, dir);
 
+    struct CryptFS_Entry_ID entry_id = {dir_block, 0};
     // adding Files
-    cr_assert_eq(entry_create_empty_file(aes_key, dir_block, 0, "Vacances"), 0);
-    cr_assert_eq(entry_create_empty_file(aes_key, dir_block, 0, "Vacances2"), 1);
-    cr_assert_eq(entry_create_empty_file(aes_key, dir_block, 0, "LALA"), 2);
+    cr_assert_eq(entry_create_empty_file(aes_key, entry_id, "Vacances"), 0);
+    cr_assert_eq(entry_create_empty_file(aes_key, entry_id, "Vacances2"), 1);
+    cr_assert_eq(entry_create_empty_file(aes_key, entry_id, "LALA"), 2);
 
     // Reading Parent Directory metadata
     read_blocks_with_decryption(aes_key, dir_block, 1, dir);
@@ -888,11 +898,12 @@ Test(entry_create_empty_file, in_multiple_blocks, .timeout = 10,
     dir->entries[0]=new_dir;
     write_blocks_with_encryption(aes_key, dir_block, 1, dir);
 
+    struct CryptFS_Entry_ID entry_id = {dir_block, 0};
     // adding Files to more than one block size directory
     size_t number_files = 26;
     for (size_t i = 0; i < number_files; i++)
     {
-        cr_assert_eq(entry_create_empty_file(aes_key, dir_block, 0, "TEST"), i);
+        cr_assert_eq(entry_create_empty_file(aes_key, entry_id, "TEST"), i);
     }
 
     // Reading Parent Directory metadata
@@ -976,15 +987,18 @@ Test(entry_create_directory, embedded_directories, .timeout = 10,
     dir->entries[0]=new_dir;
     write_blocks_with_encryption(aes_key, dir_block, 1, dir);
 
+    struct CryptFS_Entry_ID entry_id = {dir_block, 0};
+
     // adding Directory in Dossier Vacances
-    cr_assert_eq(entry_create_directory(aes_key, dir_block, 0, "Dossier Secret"), 0);
+    cr_assert_eq(entry_create_directory(aes_key, entry_id, "Dossier Secret"), 0);
     
     // Update Dossier Vacances metadata
     read_blocks_with_decryption(aes_key, dir_block, 1, dir);
     block_t start_dossier_vac_block = dir->entries[0].start_block;
 
+    struct CryptFS_Entry_ID vac_entry_id = {start_dossier_vac_block, 0};
     // adding directory in the Dossier Secret
-    cr_assert_eq(entry_create_directory(aes_key, start_dossier_vac_block, 0, "Treees Secret"), 0);
+    cr_assert_eq(entry_create_directory(aes_key, vac_entry_id, "Treees Secret"), 0);
 
     // Update Dossier Secret metadata
     read_blocks_with_decryption(aes_key, start_dossier_vac_block, 1, dir);
@@ -1068,20 +1082,22 @@ Test(entry_create_hardlink, simple_hardlink, .timeout = 10,
     dir->entries[0]=new_dir;
     write_blocks_with_encryption(aes_key, dir_block, 1, dir);
 
+    struct CryptFS_Entry_ID entry_id = {dir_block, 0};
     // adding Original File in TEST directory placed in dir_block[0]
-    entry_create_empty_file(aes_key, dir_block, 0, "Original");
+    entry_create_empty_file(aes_key, entry_id, "Original");
     // Update dir_block
     read_blocks_with_decryption(aes_key, dir_block, 1, dir);
     // Write into it
     size_t size = 17; // Eroor asan if > real size
     char *content = "Testing Hardlink";
-    entry_write_buffer(aes_key, dir->entries[0].start_block, 0, content, size);
+    struct CryptFS_Entry_ID file_entry_id = {dir->entries[0].start_block, 0};
+    entry_write_buffer(aes_key, file_entry_id, content, size);
 
     // Update dir_block
     read_blocks_with_decryption(aes_key, dir_block, 1, dir);
     // Creating Hardlink
-    uint32_t res = entry_create_hardlink(aes_key, dir_block, 0, "Hardlink_to_Original",
-         dir->entries[0].start_block, 0);
+    uint32_t res = entry_create_hardlink(aes_key, entry_id, "Hardlink_to_Original",
+         file_entry_id);
 
     // Check TEST directory metadata
     read_blocks_with_decryption(aes_key, dir_block, 1, dir);
@@ -1096,11 +1112,13 @@ Test(entry_create_hardlink, simple_hardlink, .timeout = 10,
     cr_assert_str_eq(Hardlink_entry.name, "Hardlink_to_Original");
     cr_assert_eq(Hardlink_entry.start_block, Original_entry.start_block);
     cr_assert_eq(Hardlink_entry.size, Original_entry.size);
+    struct CryptFS_Entry_ID file_original_entry_id = {TEST_entry.start_block, 0};
+    struct CryptFS_Entry_ID file_hard_entry_id = {TEST_entry.start_block, 1};
     // buff
     char *buff1 = malloc(size);
     char *buff2 = malloc(size);
-    entry_read_raw_data(aes_key, TEST_entry.start_block, 0, 0, buff1, size);
-    entry_read_raw_data(aes_key, TEST_entry.start_block, 1, 0, buff2, size);
+    entry_read_raw_data(aes_key, file_original_entry_id, 0, buff1, size);
+    entry_read_raw_data(aes_key, file_hard_entry_id, 0, buff2, size);
     cr_assert_str_eq(buff1, buff2);
     cr_assert_eq(res, 1);
 
@@ -1174,7 +1192,8 @@ Test(entry_create_symlink, simple_symlink, .timeout = 10,
     // adding symlink
     char *path = "/usr/bin/shlkfs";
     char *name = "Symlink_test";
-    uint32_t res = entry_create_symlink(aes_key, dir_block, 0, name, path);
+    struct CryptFS_Entry_ID entry_id = {dir_block, 0};
+    uint32_t res = entry_create_symlink(aes_key, entry_id, name, path);
 
     // Update dir_block
     read_blocks_with_decryption(aes_key, dir_block, 1, dir);
@@ -1191,9 +1210,10 @@ Test(entry_create_symlink, simple_symlink, .timeout = 10,
     cr_assert_str_eq(Symlink_entry.name, name);
     cr_assert_neq(Symlink_entry.start_block, 0);
     cr_assert_eq(Symlink_entry.size, strlen(path));
+    struct CryptFS_Entry_ID file_entry_id = {TEST_entry.start_block, 0};
     // buff
     char *buff1 = malloc(strlen(path));
-    entry_read_raw_data(aes_key, TEST_entry.start_block, 0, 0, buff1, strlen(path));
+    entry_read_raw_data(aes_key, file_entry_id, 0, buff1, strlen(path));
     cr_assert_eq(res, 0);
 
     free(buff1);
@@ -1264,7 +1284,8 @@ Test(entry_create_symlink, bad_path_ascii, .timeout = 10,
     // adding symlink
     char *path = "/usr/bin$*!你好@(#_++=/shlkfs";
     char *name = "Symlink_test";
-    uint32_t res = entry_create_symlink(aes_key, dir_block, 0, name, path);
+    struct CryptFS_Entry_ID entry_id = {dir_block, 0};
+    uint32_t res = entry_create_symlink(aes_key, entry_id, name, path);
 
     cr_assert_eq(res, BLOCK_ERROR);
 
