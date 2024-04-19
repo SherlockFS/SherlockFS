@@ -472,7 +472,7 @@ ssize_t entry_read_raw_data(unsigned char* aes_key, struct CryptFS_Entry_ID file
  * @brief Entry_delete routine (same for root or other)
  *
  * @param aes_key The AES key used for encryption/decryption.
- * @param parent_dir_entry Pointer to CryptFS_Entry.
+ * @param parent_dir_entry Pointer to the CryptFS_Entry of the parent directory.
  * @param new_size Size to truncate the entry with.
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
