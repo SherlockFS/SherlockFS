@@ -20,15 +20,16 @@ void set_device_path(const char *path)
     // Create file (if not created)
     FILE *tmp_file = fopen(path, "r+");
     if (!tmp_file)
-        error_exit("Impossible to open device file '%s': %s\n", EXIT_FAILURE,
+        error_exit("Impossible to open the device '%s': %s\n", EXIT_FAILURE,
                    path, strerror(errno));
 
     // Check file size
     fseek(tmp_file, 0, SEEK_END);
     size_t file_size = ftell(tmp_file);
     if (file_size < sizeof(struct CryptFS))
-        error_exit("The file '%s' is too small to be a SherlockFS device\n",
-                   EXIT_FAILURE, path);
+        error_exit(
+            "The device '%s' is too small to be a SherlockFS filesystem\n",
+            EXIT_FAILURE, path);
 
     fseek(tmp_file, 0, SEEK_SET);
     fclose(tmp_file);
