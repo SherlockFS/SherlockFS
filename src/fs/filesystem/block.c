@@ -27,7 +27,7 @@ void set_device_path(const char *path)
     fseek(tmp_file, 0, SEEK_END);
     size_t file_size = ftell(tmp_file);
     if (file_size < sizeof(struct CryptFS))
-        error_exit("The file '%s' is too small to be a SherlocFS device\n",
+        error_exit("The file '%s' is too small to be a SherlockFS device\n",
                    EXIT_FAILURE, path);
 
     fseek(tmp_file, 0, SEEK_SET);
