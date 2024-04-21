@@ -13,6 +13,9 @@ void cr_redirect_stdall(void);
 Test(shlkfs_deluser, not_existing, .exit_code = EXIT_FAILURE, .timeout = 10,
      .init = cr_redirect_stderr)
 {
+    system("dd if=/dev/zero "
+           "of=build/tests/shlkfs_deluser.not_existing.test.shlkfs bs=4096 "
+           "count=1000 > /dev/null");
     cryptfs_deluser("build/tests/shlkfs_deluser.not_existing.test.shlkfs",
                     "build/tests/shlkfs_deluser.not_existing.private.pem",
                     "build/tests/shlkfs_deluser.not_existing.public.pem");
@@ -21,15 +24,9 @@ Test(shlkfs_deluser, not_existing, .exit_code = EXIT_FAILURE, .timeout = 10,
 Test(shlkfs_deluser, not_formated, .exit_code = EXIT_FAILURE, .timeout = 10,
      .init = cr_redirect_stdall)
 {
-    // Create random file
-    FILE *file =
-        fopen("build/tests/shlkfs_deluser.not_formated.test.shlkfs", "w");
-    if (file == NULL)
-    {
-        perror("Impossible to create the file");
-        exit(0x706466);
-    }
-    fclose(file);
+    system("dd if=/dev/zero "
+           "of=build/tests/shlkfs_deluser.not_formated.test.shlkfs bs=4096 "
+           "count=1000 > /dev/null");
 
     // OpenSSL generate keypair and write it to a file
     EVP_PKEY *my_rsa = generate_rsa_keypair();
@@ -52,6 +49,9 @@ Test(shlkfs_deluser, not_formated, .exit_code = EXIT_FAILURE, .timeout = 10,
 
 Test(shlkfs_deluser, one_user, .timeout = 10, .init = cr_redirect_stdall)
 {
+    system("dd if=/dev/zero of=build/tests/shlkfs_deluser.one_user.test.shlkfs "
+           "bs=4096 count=1000 2> /dev/null");
+
     // Set the device (global variable) to the file (used by read/write_blocks)
     set_device_path("build/tests/shlkfs_deluser.one_user.test.shlkfs");
 
@@ -103,6 +103,10 @@ Test(shlkfs_deluser, one_user, .timeout = 10, .init = cr_redirect_stdall)
 Test(shlkfs_deluser, two_users_delete_other, .timeout = 10,
      .init = cr_redirect_stdall)
 {
+    system(
+        "dd if=/dev/zero of=build/tests/shlkfs_deluser.two_users.test.shlkfs "
+        "bs=4096 count=1000 2> /dev/null");
+
     // Set the device (global variable) to the file (used by read/write_blocks)
     set_device_path("build/tests/shlkfs_deluser.two_users.test.shlkfs");
 
@@ -160,6 +164,10 @@ Test(shlkfs_deluser, two_users_delete_other, .timeout = 10,
 Test(shlkfs_deluser, two_users_delete_me_yes, .timeout = 10,
      .init = cr_redirect_stdall)
 {
+    system("dd if=/dev/zero "
+           "of=build/tests/shlkfs_deluser.two_users_delete_me.test.shlkfs "
+           "bs=4096 count=1000 2> /dev/null");
+
     // Set the device (global variable) to the file (used by read/write_blocks)
     set_device_path(
         "build/tests/shlkfs_deluser.two_users_delete_me.test.shlkfs");
@@ -227,6 +235,10 @@ Test(shlkfs_deluser, two_users_delete_me_yes, .timeout = 10,
 Test(shlkfs_deluser, two_users_delete_me_no, .timeout = 10,
      .init = cr_redirect_stdall)
 {
+    system("dd if=/dev/zero "
+           "of=build/tests/shlkfs_deluser.two_users_delete_me_no.test.shlkfs "
+           "bs=4096 count=1000 2> /dev/null");
+
     // Set the device (global variable) to the file (used by read/write_blocks)
     set_device_path(
         "build/tests/shlkfs_deluser.two_users_delete_me_no.test.shlkfs");

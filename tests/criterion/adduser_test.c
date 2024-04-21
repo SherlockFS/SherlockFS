@@ -16,6 +16,11 @@ void cr_redirect_stdall(void)
 Test(shlkfs_adduser, not_existing, .exit_code = EXIT_FAILURE, .timeout = 10,
      .init = cr_redirect_stderr)
 {
+    // Execute command (not exiting function)
+    system("dd if=/dev/zero "
+           "of=build/tests/shlkfs_adduser.not_existing.test.shlkfs bs=4096 "
+           "count=1000 2> /dev/null");
+
     cryptfs_adduser("build/tests/shlkfs_adduser.not_existing.test.shlkfs",
                     "build/tests/shlkfs_adduser.not_existing.public.pem",
                     "build/tests/shlkfs_adduser.not_existing.private.pem");
@@ -24,15 +29,9 @@ Test(shlkfs_adduser, not_existing, .exit_code = EXIT_FAILURE, .timeout = 10,
 Test(shlkfs_adduser, not_formated, .exit_code = EXIT_FAILURE, .timeout = 10,
      .init = cr_redirect_stdall)
 {
-    // Create random file
-    FILE *file =
-        fopen("build/tests/shlkfs_adduser.not_formated.test.shlkfs", "w");
-    if (file == NULL)
-    {
-        perror("Impossible to create the file");
-        exit(EXIT_FAILURE + 1);
-    }
-    fclose(file);
+    system("dd if=/dev/zero "
+           "of=build/tests/shlkfs_adduser.not_formated.test.shlkfs bs=4096 "
+           "count=1000 2> /dev/null");
 
     // OpenSSL generate keypair and write it to a file
     EVP_PKEY *my_rsa = generate_rsa_keypair();
@@ -55,6 +54,9 @@ Test(shlkfs_adduser, not_formated, .exit_code = EXIT_FAILURE, .timeout = 10,
 
 Test(shlkfs_adduser, formated, .timeout = 10, .init = cr_redirect_stdout)
 {
+    system("dd if=/dev/zero of=build/tests/shlkfs_adduser.formated.test.shlkfs "
+           "bs=4096 count=1000 2> /dev/null");
+
     // Set the device (global variable) to the file (used by read/write_blocks)
     set_device_path("build/tests/shlkfs_adduser.formated.test.shlkfs");
 
@@ -107,6 +109,10 @@ Test(shlkfs_adduser, formated, .timeout = 10, .init = cr_redirect_stdout)
 
 Test(shlkfs_adduser, already_exists, .timeout = 10, .init = cr_redirect_stdall)
 {
+    system("dd if=/dev/zero "
+           "of=build/tests/shlkfs_adduser.already_exists.test.shlkfs bs=4096 "
+           "count=1000 2> /dev/null");
+
     // Set the device (global variable) to the file (used by read/write_blocks)
     set_device_path("build/tests/shlkfs_adduser.already_exists.test.shlkfs");
 

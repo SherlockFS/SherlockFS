@@ -52,13 +52,13 @@
             "preLaunchTask": "make shlkfs_formater"
         },
         {
-            "name": "mount",
+            "name": "shlkfs_mount",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/mount",
+            "program": "${workspaceFolder}/build/shlkfs_mount",
             "args": [
-                "${input:mountDevice}",
-                "${input:mountPath}"
+                "${input:mountPath}",
+                "${input:mountDevice}"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build",
@@ -72,7 +72,7 @@
                     "ignoreFailures": true
                 },
             ],
-            "preLaunchTask": "make mount"
+            "preLaunchTask": "make shlkfs_mount"
         },
         {
             "name": "shlkfs_adduser",

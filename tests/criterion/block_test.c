@@ -11,6 +11,9 @@
 
 Test(block, read_write, .init = cr_redirect_stdout, .timeout = 10)
 {
+    system("dd if=/dev/zero of=build/tests/block_read_write.test.shlkfs "
+           "bs=4096 count=1000 2> /dev/null");
+
     set_device_path("build/tests/block_read_write.test.shlkfs");
 
     format_fs("build/tests/block_read_write.test.shlkfs",
@@ -39,6 +42,10 @@ Test(block, read_write, .init = cr_redirect_stdout, .timeout = 10)
 Test(block, read_write_with_encryption_decryption, .init = cr_redirect_stdout,
      .timeout = 10)
 {
+    system("dd if=/dev/zero "
+           "of=build/tests/block_read_write_with_encryption.test.shlkfs "
+           "bs=4096 count=1000 2> /dev/null");
+
     set_device_path("build/tests/block_read_write_with_encryption.test.shlkfs");
 
     format_fs("build/tests/block_read_write_with_encryption.test.shlkfs",

@@ -13,6 +13,10 @@
 Test(find_first_free_block, out_of_band_available, .timeout = 10,
      .init = cr_redirect_stdout)
 {
+    system("dd if=/dev/zero "
+           "of=build/tests/find_first_free_block.not_found.test.shlkfs "
+           "bs=4096 count=1000 2> /dev/null");
+
     set_device_path("build/tests/find_first_free_block.not_found.test.shlkfs");
 
     format_fs("build/tests/find_first_free_block.not_found.test.shlkfs",
@@ -44,6 +48,10 @@ Test(find_first_free_block, out_of_band_available, .timeout = 10,
 Test(find_first_free_block, on_first_fat, .timeout = 10,
      .init = cr_redirect_stdout)
 {
+    system("dd if=/dev/zero "
+           "of=build/tests/find_first_free_block.on_first_fat.test.shlkfs "
+           "bs=4096 count=1000 2> /dev/null");
+
     set_device_path(
         "build/tests/find_first_free_block.on_first_fat.test.shlkfs");
 
@@ -87,6 +95,10 @@ Test(find_first_free_block, on_first_fat, .timeout = 10,
 Test(find_first_free_block, on_second_fat, .timeout = 10,
      .init = cr_redirect_stdout)
 {
+    system("dd if=/dev/zero "
+           "of=build/tests/find_first_free_block.on_second_fat.test.shlkfs "
+           "bs=4096 count=1000 2> /dev/null");
+
     // Setting the device and block size for read/write operations
     set_device_path(
         "build/tests/find_first_free_block.on_second_fat.test.shlkfs");
@@ -141,6 +153,10 @@ Test(find_first_free_block, on_second_fat, .timeout = 10,
 Test(find_first_free_block_safe, not_found, .timeout = 10,
      .init = cr_redirect_stdout)
 {
+    system("dd if=/dev/zero "
+           "of=build/tests/find_first_free_block_safe.not_found.test.shlkfs "
+           "bs=4096 count=1000 2> /dev/null");
+
     set_device_path(
         "build/tests/find_first_free_block_safe.not_found.test.shlkfs");
 
@@ -180,6 +196,9 @@ Test(find_first_free_block_safe, not_found, .timeout = 10,
 Test(create_fat, two_fat_overflow_then_add_one_fat, .init = cr_redirect_stdout,
      .timeout = 10)
 {
+    system("dd if=/dev/zero of=build/tests/create_fat.second_fat.test.shlkfs "
+           "bs=4096 count=1000 2> /dev/null");
+
     // Setting the device and block size for read/write operations
     set_device_path("build/tests/create_fat.second_fat.test.shlkfs");
 
@@ -221,6 +240,9 @@ Test(create_fat, two_fat_overflow_then_add_one_fat, .init = cr_redirect_stdout,
 
 Test(create_fat, third_fat, .init = cr_redirect_stdout, .timeout = 10)
 {
+    system("dd if=/dev/zero of=build/tests/create_fat.third_fat.test.shlkfs "
+           "bs=4096 count=1000 2> /dev/null");
+
     struct CryptFS *shlkfs =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS));
 

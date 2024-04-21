@@ -29,7 +29,6 @@ struct CryptFS_Header
     uint64_t magic; // CRYPTFS_MAGIC
     uint8_t version; // CRYPTFS_VERSION
     uint32_t blocksize; // in bytes
-    uint64_t device_size; // in bytes
     uint64_t last_fat_block; // Last FAT block index
 } __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 

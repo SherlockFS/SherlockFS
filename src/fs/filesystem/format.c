@@ -127,14 +127,13 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
     /// ------------------------------------------------------------
 
     // Add an entry at ROOT_DIR_BLOCK for the root directory
-    struct CryptFS_Entry root_dir = { 0 };
-    root_dir.used = 1;
-    root_dir.type = ENTRY_TYPE_DIRECTORY;
-    root_dir.start_block = ROOT_DIR_BLOCK + 1;
-    root_dir.uid = getuid();
-    root_dir.gid = getgid();
-    root_dir.mode = 777;
-    strcpy(root_dir.name, "/");
+    shlkfs->root_directory.used = 1;
+    shlkfs->root_directory.type = ENTRY_TYPE_DIRECTORY;
+    shlkfs->root_directory.start_block = ROOT_DIR_BLOCK + 1;
+    shlkfs->root_directory.uid = getuid();
+    shlkfs->root_directory.gid = getgid();
+    shlkfs->root_directory.mode = 777;
+    strcpy(shlkfs->root_directory.name, "");
 
     /// ------------------------------------------------------------
     /// Encrypting FAT and ROOT DIRECTORY with AES

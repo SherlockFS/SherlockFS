@@ -51,7 +51,10 @@
         "filesystem": "c",
         "stdint.h": "c",
         "cstdint": "c",
-        "deluser.h": "c"
+        "deluser.h": "c",
+        "chrono": "c",
+        "typeindex": "c",
+        "typeinfo": "c"
     },
     "C_Cpp.default.compilerPath": "/usr/bin/gcc"
 }

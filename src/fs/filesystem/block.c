@@ -18,10 +18,10 @@ void set_device_path(const char *path)
     DEVICE_PATH = path;
 
     // Create file (if not created)
-    FILE *tmp_file = fopen(path, "w+");
+    FILE *tmp_file = fopen(path, "r+");
     if (!tmp_file)
-        error_exit("Impossible to create device file '%s'\n", EXIT_FAILURE,
-                   path);
+        error_exit("Impossible to open device file '%s': %s\n", EXIT_FAILURE,
+                   path, strerror(errno));
 
     fclose(tmp_file);
 }
