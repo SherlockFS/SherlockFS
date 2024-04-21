@@ -1,57 +1,47 @@
-#include <stdio.h>
-
+#include "mount.h"
 #include "cryptfs.h"
 #include "crypto.h"
 #include "print.h"
 #include "xalloc.h"
+#include "readfs.h"
+#include "format.h"
+#include "fat.h"
+#include "stdlib.h"
+
 
 int main(int argc, char *argv[])
 {
-    if (argc != 3)
+    int ret;
+
+    if (argc < 3)
     {
-        printf("Usage: %s <device> <mountpoint>\n", argv[0]);
+        printf("Usage: %s <mountpoint> <device>\n", argv[0]);
         return EXIT_FAILURE;
     }
-    const char *device_path = argv[1], *mount_path = argv[2];
+    const char *device_path = argv[argc-1], *mount_path = argv[argc-2];
+
     (void)mount_path;
 
-    // Load the RSA keypair from the user's home directory
-    char *passphrase = NULL;
-    EVP_PKEY *rsa_key = load_rsa_keypair_from_home(&passphrase);
 
-    // Read the header of the device
-    FILE *device_file = fopen(device_path, "r");
-    if (!device_file)
-        error_exit("Impossible to open the device file\n", EXIT_FAILURE);
 
-    struct CryptFS_Header header = { 0 };
-    if (fread(&header, sizeof(struct CryptFS_Header), 1, device_file) != 1)
-        error_exit("Impossible to read the header\n", EXIT_FAILURE);
-
-    fclose(device_file);
-
+    printf("DEVICE PATH IS %s\n", device_path);
     // Set the file system global variables
     set_device_path(device_path);
 
-    // Read the keys storage from the device
-    struct CryptFS_KeySlot *keys_storage =
-        xcalloc(NB_ENCRYPTION_KEYS, CRYPTFS_BLOCK_SIZE_BYTES);
+//     Get the RSA keys home paths (public and private).
+    char *public_path = NULL;
+    char *private_key_path = NULL;
+    get_rsa_keys_home_paths(&public_path, &private_key_path);
 
-    read_blocks(KEYS_STORAGE_BLOCK, NB_ENCRYPTION_KEYS, keys_storage);
-
-    // Searching for a legitimate key
-    int8_t matching_rsa_index = find_rsa_matching_key(rsa_key, keys_storage);
-    if (matching_rsa_index == -1)
-    {
-        print_error("You are not allowed to access this encrypted device\n");
-        error_exit("No matching RSA key found\n", EXIT_FAILURE);
-    }
-
-    // Free the memory
-    EVP_PKEY_free(rsa_key);
-    free(keys_storage);
-    free(passphrase);
+    // Extract the aes_key
+    unsigned char *aes_key = extract_aes_key(device_path, private_key_path);
 
     // mount the decrypted data using the key
-    return 0;
+    // Remove the device argument for fuse
+    argv[argc--] = NULL;
+
+    // Start FUSE
+    ret = start_fuse(aes_key, argc, argv);
+    free(aes_key);
+    return ret;
 }

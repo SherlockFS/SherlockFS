@@ -15,6 +15,9 @@ LDFLAGS = -lm -lcrypto
 SRC = $(shell find $(FS_CORE_DIR) -name '*.c')
 OBJ = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(SRC:.c=.o))
 
+SRC_FUSE = $(shell find $(FUSE_CORE_DIR) -name '*.c')
+OBJ_FUSE = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(SRC_FUSE:.c=.o))
+
 TESTS_SRC = $(shell find $(TESTS_DIR) -name '*.c')
 TESTS_OBJ = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(TESTS_SRC:.c=.o))
 
@@ -58,8 +61,8 @@ $(BUILD_DIR)/shlkfs_adduser: $(ADDUSER_OBJ) $(OBJ)
 $(BUILD_DIR)/shlkfs_deluser: $(DELUSER_OBJ) $(OBJ)
 	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/shlkfs_deluser $^ $(LDFLAGS)
 
-$(BUILD_DIR)/shlkfs_mount: $(MOUNT_OBJ) $(OBJ)
-	@$(CC) $(CFLAGS) $^ -o $(BUILD_DIR)/shlkfs_mount $(LDFLAGS)
+$(BUILD_DIR)/shlkfs_mount: $(MOUNT_OBJ) $(OBJ_FUSE) $(OBJ)
+	@$(CC) $(CFLAGS) $^ `pkg-config fuse --cflags --libs`  -o $(BUILD_DIR)/shlkfs_mount $(LDFLAGS) -lfuse
 
 $(BUILD_DIR)/%.o: $(PROJECT_DIR)/%.c
 	@mkdir -p $(dir $@)
