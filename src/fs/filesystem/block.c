@@ -23,6 +23,14 @@ void set_device_path(const char *path)
         error_exit("Impossible to open device file '%s': %s\n", EXIT_FAILURE,
                    path, strerror(errno));
 
+    // Check file size
+    fseek(tmp_file, 0, SEEK_END);
+    size_t file_size = ftell(tmp_file);
+    if (file_size < sizeof(struct CryptFS))
+        error_exit("The file '%s' is too small to be a SherlocFS device\n",
+                   EXIT_FAILURE, path);
+
+    fseek(tmp_file, 0, SEEK_SET);
     fclose(tmp_file);
 }
 

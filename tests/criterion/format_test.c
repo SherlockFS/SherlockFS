@@ -10,6 +10,8 @@
 #include "writefs.h"
 #include "xalloc.h"
 
+void cr_redirect_stdall(void);
+
 Test(is_already_formatted, not_existing, .timeout = 10)
 {
     cr_assert(!is_already_formatted("tests/not_existing.blank"));
@@ -215,4 +217,18 @@ Test(is_already_formatted, formated_check_content, .init = cr_redirect_stdout,
         perror("Impossible to delete the file");
         exit(EXIT_FAILURE);
     }
+}
+
+Test(format, too_small, .init = cr_redirect_stdall, .timeout = 10,
+     .exit_code = 1)
+{
+    system("dd if=/dev/zero of=build/tests/too_small.test.shlkfs bs=4096 "
+           "count=42 2> /dev/null");
+
+    // Set the device (global variable) to the file (used by read/write_blocks)
+    set_device_path("build/tests/too_small.test.shlkfs");
+
+    format_fs("build/tests/too_small.test.shlkfs",
+              "build/tests/too_small.test.pub.pem",
+              "build/tests/too_small.test.private.pem", NULL, NULL);
 }
