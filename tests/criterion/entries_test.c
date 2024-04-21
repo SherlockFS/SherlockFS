@@ -15,7 +15,9 @@
 // Test entry_truncate
 Test(entry_truncate, file_add_blocks, .timeout = 10, .init = cr_redirect_stdout)
 {
-    system("dd if=/dev/zero of=build/tests/entry_truncate.file_add_blocks.test.shlkfs bs=4096 count=1000 2> /dev/null");
+    system("dd if=/dev/zero "
+           "of=build/tests/entry_truncate.file_add_blocks.test.shlkfs bs=4096 "
+           "count=1000 2> /dev/null");
 
     // Setting the device and block size for read/write operations
     set_device_path("build/tests/entry_truncate.file_add_blocks.test.shlkfs");
@@ -97,7 +99,9 @@ Test(entry_truncate, file_add_blocks, .timeout = 10, .init = cr_redirect_stdout)
 Test(entry_truncate, file_remove_blocks, .timeout = 10,
      .init = cr_redirect_stdout)
 {
-    system("dd if=/dev/zero of=build/tests/entry_truncate.file_remove_blocks.test.shlkfs bs=4096 count=1000 2> /dev/null");
+    system("dd if=/dev/zero "
+           "of=build/tests/entry_truncate.file_remove_blocks.test.shlkfs "
+           "bs=4096 count=1000 2> /dev/null");
 
     // Setting the device and block size for read/write operations
     set_device_path(
@@ -182,7 +186,10 @@ Test(entry_truncate, file_remove_blocks, .timeout = 10,
 Test(entry_truncate, file_remove_blocks_till_empty, .timeout = 10,
      .init = cr_redirect_stdout)
 {
-    system("dd if=/dev/zero of=build/tests/entry_truncate.file_remove_blocks_to_empty.test.shlkfs bs=4096 count=1000 2> /dev/null");
+    system(
+        "dd if=/dev/zero "
+        "of=build/tests/entry_truncate.file_remove_blocks_to_empty.test.shlkfs "
+        "bs=4096 count=1000 2> /dev/null");
 
     // Setting the device and block size for read/write operations
     set_device_path(
@@ -261,7 +268,9 @@ Test(entry_truncate, file_remove_blocks_till_empty, .timeout = 10,
 Test(entry_truncate, directory_add_blocks, .timeout = 10,
      .init = cr_redirect_stdout)
 {
-    system("dd if=/dev/zero of=build/tests/entry_truncate.directory_add_blocks.test.shlkfs bs=4096 count=1000 2> /dev/null");
+    system("dd if=/dev/zero "
+           "of=build/tests/entry_truncate.directory_add_blocks.test.shlkfs "
+           "bs=4096 count=1000 2> /dev/null");
 
     // Setting the device and block size for read/write operations
     set_device_path(
@@ -345,7 +354,9 @@ Test(entry_truncate, directory_add_blocks, .timeout = 10,
 Test(entry_write_buffer_from, begining_add, .timeout = 10,
      .init = cr_redirect_stdout)
 {
-    system("dd if=/dev/zero of=build/tests/entry_write_buffer_from.begining_add.test.shlkfs bs=4096 count=1000 2> /dev/null");
+    system("dd if=/dev/zero "
+           "of=build/tests/entry_write_buffer_from.begining_add.test.shlkfs "
+           "bs=4096 count=1000 2> /dev/null");
 
     // Setting the device and block size for read/write operations
     set_device_path(
@@ -429,7 +440,10 @@ Test(entry_write_buffer_from, begining_add, .timeout = 10,
 Test(entry_write_buffer_from, between_blocks_adding, .timeout = 10,
      .init = cr_redirect_stdout)
 {
-    system("dd if=/dev/zero of=build/tests/entry_write_buffer_from.between_blocks_adding.test.shlkfs bs=4096 count=1000 2> /dev/null");
+    system("dd if=/dev/zero "
+           "of=build/tests/"
+           "entry_write_buffer_from.between_blocks_adding.test.shlkfs bs=4096 "
+           "count=1000 2> /dev/null");
 
     // Setting the device and block size for read/write operations
     set_device_path(
@@ -526,7 +540,10 @@ Test(entry_write_buffer_from, between_blocks_adding, .timeout = 10,
 Test(entry_read_raw_data, reading_between_blocks, .timeout = 10,
      .init = cr_redirect_stdout)
 {
-    system("dd if=/dev/zero of=build/tests/entry_write_buffer_from.reading_between_blocks.test.shlkfs bs=4096 count=1000 2> /dev/null");
+    system("dd if=/dev/zero "
+           "of=build/tests/"
+           "entry_write_buffer_from.reading_between_blocks.test.shlkfs bs=4096 "
+           "count=1000 2> /dev/null");
 
     // Setting the device and block size for read/write operations
     set_device_path(
@@ -619,7 +636,9 @@ Test(entry_read_raw_data, reading_between_blocks, .timeout = 10,
 Test(entry_delete, file_and_directory, .timeout = 10,
      .init = cr_redirect_stdout)
 {
-    system("dd if=/dev/zero of=build/tests/entry_delete.file_and_directory.test.shlkfs bs=4096 count=1000 2> /dev/null");
+    system("dd if=/dev/zero "
+           "of=build/tests/entry_delete.file_and_directory.test.shlkfs bs=4096 "
+           "count=1000 2> /dev/null");
 
     // Setting the device and block size for read/write operations
     set_device_path("build/tests/entry_delete.file_and_directory.test.shlkfs");
@@ -755,7 +774,9 @@ Test(entry_delete, file_and_directory, .timeout = 10,
 Test(entry_create_empty_file, in_one_block, .timeout = 10,
      .init = cr_redirect_stdout)
 {
-    system("dd if=/dev/zero of=build/tests/entry_create_empty_file.in_one_block.test.shlkfs bs=4096 count=1000 2> /dev/null");
+    system("dd if=/dev/zero "
+           "of=build/tests/entry_create_empty_file.in_one_block.test.shlkfs "
+           "bs=4096 count=1000 2> /dev/null");
 
     // Setting the device and block size for read/write operations
     set_device_path(
@@ -833,7 +854,10 @@ Test(entry_create_empty_file, in_one_block, .timeout = 10,
 Test(entry_create_empty_file, in_multiple_blocks, .timeout = 10,
      .init = cr_redirect_stdout)
 {
-    system("dd if=/dev/zero of=build/tests/entry_create_empty_file.in_multiple_blocks.test.shlkfs bs=4096 count=1000 2> /dev/null");
+    system(
+        "dd if=/dev/zero "
+        "of=build/tests/entry_create_empty_file.in_multiple_blocks.test.shlkfs "
+        "bs=4096 count=1000 2> /dev/null");
 
     // Setting the device and block size for read/write operations
     set_device_path(
@@ -923,7 +947,10 @@ Test(entry_create_empty_file, in_multiple_blocks, .timeout = 10,
 Test(entry_create_directory, embedded_directories, .timeout = 10,
      .init = cr_redirect_stdout)
 {
-    system("dd if=/dev/zero of=build/tests/entry_create_directory.embedded_directories.test.shlkfs bs=4096 count=1000 2> /dev/null");
+    system("dd if=/dev/zero "
+           "of=build/tests/"
+           "entry_create_directory.embedded_directories.test.shlkfs bs=4096 "
+           "count=1000 2> /dev/null");
 
     // Setting the device and block size for read/write operations
     set_device_path(
@@ -1020,7 +1047,9 @@ Test(entry_create_directory, embedded_directories, .timeout = 10,
 Test(entry_create_hardlink, simple_hardlink, .timeout = 10,
      .init = cr_redirect_stdout)
 {
-    system("dd if=/dev/zero of=build/tests/entry_create_hardlink.simple_hardlink.test.shlkfs bs=4096 count=1000 2> /dev/null");
+    system("dd if=/dev/zero "
+           "of=build/tests/entry_create_hardlink.simple_hardlink.test.shlkfs "
+           "bs=4096 count=1000 2> /dev/null");
 
     // Setting the device and block size for read/write operations
     set_device_path(
@@ -1127,7 +1156,9 @@ Test(entry_create_hardlink, simple_hardlink, .timeout = 10,
 Test(entry_create_symlink, simple_symlink, .timeout = 10,
      .init = cr_redirect_stdout)
 {
-    system("dd if=/dev/zero of=build/tests/entry_create_symlink.simple_symlink.test.shlkfs bs=4096 count=1000 2> /dev/null");
+    system("dd if=/dev/zero "
+           "of=build/tests/entry_create_symlink.simple_symlink.test.shlkfs "
+           "bs=4096 count=1000 2> /dev/null");
 
     // Setting the device and block size for read/write operations
     set_device_path(
@@ -1218,7 +1249,9 @@ Test(entry_create_symlink, simple_symlink, .timeout = 10,
 Test(entry_create_symlink, bad_path_ascii, .timeout = 10,
      .init = cr_redirect_stdout)
 {
-    system("dd if=/dev/zero of=build/tests/entry_create_symlink.bad_path_ascii.test.shlkfs bs=4096 count=1000 2> /dev/null");
+    system("dd if=/dev/zero "
+           "of=build/tests/entry_create_symlink.bad_path_ascii.test.shlkfs "
+           "bs=4096 count=1000 2> /dev/null");
 
     // Setting the device and block size for read/write operations
     set_device_path(
