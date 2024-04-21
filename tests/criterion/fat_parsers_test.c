@@ -17,8 +17,8 @@ Test(find_first_free_block, out_of_band_available, .timeout = 10,
 
     format_fs("build/tests/find_first_free_block.not_found.test.shlkfs",
               "build/tests/find_first_free_block.not_found.public.pem",
-              "build/tests/find_first_free_block.not_found.private.pem",
-              NULL, NULL);
+              "build/tests/find_first_free_block.not_found.private.pem", NULL,
+              NULL);
 
     struct CryptFS_FAT first_fat = { 0 };
     for (unsigned i = 0; i < NB_FAT_ENTRIES_PER_BLOCK; i++)
@@ -37,8 +37,7 @@ Test(find_first_free_block, out_of_band_available, .timeout = 10,
     free(ase_key);
 
     // Removing the file after the test
-    if (remove("build/tests/find_first_free_block.not_found.test.shlkfs") !=
-    0)
+    if (remove("build/tests/find_first_free_block.not_found.test.shlkfs") != 0)
         cr_assert_fail("Could not remove the file");
 }
 
@@ -139,8 +138,8 @@ Test(find_first_free_block, on_second_fat, .timeout = 10,
     free(shlkfs);
 }
 
-Test(find_first_free_block_safe, not_found, .timeout = 10, 
-    .init = cr_redirect_stdout)
+Test(find_first_free_block_safe, not_found, .timeout = 10,
+     .init = cr_redirect_stdout)
 {
     set_device_path(
         "build/tests/find_first_free_block_safe.not_found.test.shlkfs");
@@ -178,8 +177,7 @@ Test(find_first_free_block_safe, not_found, .timeout = 10,
     free(ase_key);
 }
 
-Test(create_fat, two_fat_overflow_then_add_one_fat, .init =
-cr_redirect_stdout,
+Test(create_fat, two_fat_overflow_then_add_one_fat, .init = cr_redirect_stdout,
      .timeout = 10)
 {
     // Setting the device and block size for read/write operations
@@ -206,12 +204,10 @@ cr_redirect_stdout,
     fat_full_2.next_fat_table = BLOCK_END;
 
     write_blocks_with_encryption(ase_key, FIRST_FAT_BLOCK, 1, &fat_full_1);
-    write_blocks_with_encryption(ase_key, ROOT_DIR_BLOCK + 2, 1,
-    &fat_full_2);
+    write_blocks_with_encryption(ase_key, ROOT_DIR_BLOCK + 2, 1, &fat_full_2);
 
     int64_t result = find_first_free_block(ase_key);
-    cr_assert_eq(result, -2 * NB_FAT_ENTRIES_PER_BLOCK, "result = %ld",
-    result);
+    cr_assert_eq(result, -2 * NB_FAT_ENTRIES_PER_BLOCK, "result = %ld", result);
 
     result = create_fat(ase_key);
 

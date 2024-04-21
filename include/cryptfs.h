@@ -178,12 +178,13 @@ struct CryptFS_Entry_ID
 } __attribute__((packed));
 
 #define NB_ENTRIES_PER_BLOCK                                                   \
-    ((CRYPTFS_BLOCK_SIZE_BYTES - sizeof(struct CryptFS_Entry_ID)) /            \
-         sizeof(struct CryptFS_Entry))
+    ((CRYPTFS_BLOCK_SIZE_BYTES - sizeof(struct CryptFS_Entry_ID))              \
+     / sizeof(struct CryptFS_Entry))
 
 struct CryptFS_Directory
 {
-    struct CryptFS_Entry_ID current_directory_entry; // Current CryptFS_Entry Directory identifier (.)
+    struct CryptFS_Entry_ID current_directory_entry; // Current CryptFS_Entry
+                                                     // Directory identifier (.)
     struct CryptFS_Entry entries[NB_ENTRIES_PER_BLOCK];
 } __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
@@ -201,6 +202,6 @@ struct CryptFS
     struct CryptFS_KeySlot keys_storage[NB_ENCRYPTION_KEYS]; // BLOCK 1-64: Keys
     struct CryptFS_FAT first_fat; // BLOCK 65: First FAT
     struct CryptFS_Entry root_directory; // BLOCK 66: Root directory
-} __attribute__((aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
+} __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
 #endif /* CRYPT_FS_H */

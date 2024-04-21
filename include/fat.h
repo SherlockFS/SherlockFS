@@ -16,8 +16,8 @@
 sblock_t find_first_free_block(const unsigned char *aes_key);
 
 /**
- * @brief Find the first safe free block in the FAT table, the difference with 
- * "find_first_free_block" is that it only return a positive block index as it 
+ * @brief Find the first safe free block in the FAT table, the difference with
+ * "find_first_free_block" is that it only return a positive block index as it
  * initialize another FAT in case of out of range.
  *
  * @param aes_key The AES key to use for in place decryption of the FAT tables.

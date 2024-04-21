@@ -3,9 +3,9 @@
 
 #define STATIC_ASSERT(X)                                                       \
     ({                                                                         \
-        extern int __attribute__(                                              \
-            (error("assertion failure at compilation: '" #X "' not true")))    \
-            compile_time_check();                                              \
+        extern int __attribute__((                                             \
+            error("assertion failure at compilation: '" #X "' not true")))     \
+        compile_time_check();                                                  \
         ((X) ? 0 : compile_time_check()), 0;                                   \
     })
 

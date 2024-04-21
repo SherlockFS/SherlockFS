@@ -7,8 +7,22 @@ on:
     branches: [main, dev]
 
 jobs:
+  check_formatting:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v2
+    
+      - name: Installation de `clang-format`
+        run: |
+          sudo apt update
+          sudo apt install clang-format -y
+      - name: Vérification du formatage des fichiers sources avec `clang-format`
+        run: |
+          bash ./.github/scripts/check_formatting.sh
+
   test_suite:
     runs-on: ubuntu-22.04
+    needs: [check_formatting]
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v2
