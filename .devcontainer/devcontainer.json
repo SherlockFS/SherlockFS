@@ -1,0 +1,4 @@
+{
+  "name": "SherlockFS, conteneur de développement",
+  "build": { "dockerfile": "Dockerfile" }
+}
