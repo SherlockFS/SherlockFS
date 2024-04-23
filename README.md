@@ -69,7 +69,7 @@ SherlockFS v1 - Mounting a SherlockFS file system
 
 `shlkfs_mount` permet de monter un système de fichiers formaté en SherlockFS. Il prend plusieurs paramètres :
 
-- `-k` ou `--key` : Le chemin vers la clé privée à utiliser pour le montage. Cette clé doit correspondre à la clé utilisée lors du formatage du périphérique. Si cette option n'est pas spécifiée, `shlkfs_mount` cherchera à utiliser la clé privée stockée dans `~/.sherlockfs/`.
+- `-k` ou `--key` : Le chemin vers la clé privée à utiliser pour le montage. Cette clé doit correspondre à une clé enregistrée sur le périphérique. Si cette option n'est pas spécifiée, `shlkfs_mount` cherchera à utiliser la clé privée stockée dans `~/.sherlockfs/`.
 - `-v` ou `--verbose` : Active le mode verbeux, qui affiche des informations supplémentaires pendant toute la durée de vie du système de fichiers monté
 - `<DEVICE>` : Le chemin vers le périphérique à monter. Ce périphérique doit être formaté avec SherlockFS.
 - `[FUSE OPTIONS]` : Des options supplémentaires pour FUSE, si nécessaire.
