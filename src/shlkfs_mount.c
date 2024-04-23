@@ -24,47 +24,19 @@ static struct fuse_operations ops = {
     .open = cryptfs_open,
     .read = cryptfs_read,
 };
-#define K_PARAM_POS 1
-#define K_VALUE_POS (K_PARAM_POS + 1)
-#define IS_USING_K_ARG(argc, argv)                                             \
-    (argc >= K_VALUE_POS && strcmp(argv[K_PARAM_POS], "-k") == 0)
 
-int main(int argc, char *argv[])
+// Parser grammar
+#define IS_USING_K_ARG(argv)                                                   \
+    ((strcmp(*(argv), "-k") == 0 || strcmp(*(argv), "--key") == 0)             \
+     && *(argv + 1) != NULL)
+#define IS_USING_V_ARG(argv)                                                   \
+    (strcmp(*(argv), "-v") == 0 || strcmp(*(argv), "--verbose") == 0)
+
+#define IS_USING_SHLK_ARG(argv) (IS_USING_K_ARG(argv) || IS_USING_V_ARG(argv))
+
+static void __register_aes_key_ps(const char *device_path,
+                                  const char *private_key_path)
 {
-    if (argc < 3)
-    {
-        printf("SherlockFS v%d - Mounting SherlockFS file system\n",
-               CRYPTFS_VERSION);
-        printf("Usage: %s [-k <PRIVATE KEY PATH>] <DEVICE> [FUSE "
-               "OPTIONS] MOUNTPOINT\n",
-               argv[0]);
-        return EXIT_FAILURE;
-    }
-    const char *device_path = argv[1];
-
-    // Set the file system global variables
-    set_device_path(device_path);
-
-    print_info("Checking if the device is a SherlockFS device...\n");
-    if (!is_already_formatted(device_path))
-    {
-        error_exit(
-            "The device '%s' is not formatted. Please format it first.\n",
-            EXIT_FAILURE, device_path);
-    }
-
-    // Get the RSA private key from the arguments (if provided)
-    char *private_key_path = NULL;
-    if (IS_USING_K_ARG(argc, argv))
-    {
-        private_key_path = argv[4];
-    }
-    else
-    {
-        // Get the RSA keys home paths (public and private).
-        get_rsa_keys_home_paths(NULL, &private_key_path);
-    }
-
     char *passphrase = NULL;
 
     // Check if my private key is encrypted
@@ -76,36 +48,84 @@ int main(int argc, char *argv[])
     unsigned char *aes_key =
         extract_aes_key(device_path, private_key_path, passphrase);
 
-    print_info("Mounting SherlockFS file system...\n");
-
     // Register the master key
     fpi_set_master_key(aes_key);
 
-    // argv(0) -> new_argv[0]
-    // argv(<mountpoint>) -> new_argv[1]
-
-    // if '-k' option is provided, skip it and the private key path
-    char **new_argv = xcalloc(argc, sizeof(char *));
-    new_argv[0] = argv[0];
-    if (IS_USING_K_ARG(argc, argv))
-    {
-        for (int i = 4; i < argc; i++) // pgrm, -k, pkey, device, mountpoint
-            new_argv[i - 4 + 1] = argv[i];
-        argc -= 3; // sub -k, pkey, device
-    }
-    else
-    {
-        for (int i = 2; i < argc; i++)
-            new_argv[i - 2 + 1] = argv[i]; // pgrm, device, mountpoint
-        argc -= 1; // sub device
-    }
-
-    // Start FUSE
     free(aes_key);
     if (passphrase != NULL)
         free(passphrase);
+}
+
+int main(int argc, char *argv[])
+{
+    if (argc < 3)
+    {
+        printf("SherlockFS v%d - Mounting a SherlockFS file system\n",
+               CRYPTFS_VERSION);
+        printf("Usage: %s [-k|--key <PRIVATE KEY PATH>] [-v|--verbose] "
+               "<DEVICE> [FUSE "
+               "OPTIONS] <MOUNTPOINT>\n",
+               argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    // Private RSA key path
+    char *private_key_path = NULL;
+
+    // Saving program name
+    char **new_argv = xcalloc(argc, sizeof(char *));
+    new_argv[0] = argv[0];
+    argv++; // skip the program name
+    argc--; // sub the program name
+    while (*argv && IS_USING_SHLK_ARG(argv))
+    {
+        // if '-k' option is provided, use this RSA to decrypt master key
+        if (IS_USING_K_ARG(argv))
+        {
+            private_key_path = argv[1];
+            argv += 2; // skip '-k' and private key path
+            argc -= 2; // sub '-k' and private key path
+        }
+        // if '-v' or '--debug' option is provided, set the verbosity level
+        else if (IS_USING_V_ARG(argv))
+        {
+            set_verbosity_level(PRINT_LEVEL_DEBUG);
+            argv += 1; // skip '-v' or '--debug'
+            argc -= 1; // sub '-v' or '--debug'
+        }
+    }
+
+    // Copy the rest of the arguments
+    for (int i = 1; i < argc; i++)
+        new_argv[i] = argv[i];
+
+    const char *device_path = argv[0];
+
+    // Set the file system global variables
+    set_device_path(device_path);
+
+    print_info("Checking if the device '%s' is a SherlockFS device...\n",
+               device_path);
+    if (!is_already_formatted(device_path))
+    {
+        error_exit(
+            "The device '%s' is not formatted. Please format it first.\n",
+            EXIT_FAILURE, device_path);
+    }
+
+    // If the private key path is not provided, get it from the RSA keys home
+    if (private_key_path == NULL)
+        get_rsa_keys_home_paths(NULL, &private_key_path);
+
+    __register_aes_key_ps(device_path, private_key_path);
 
     int ret = fuse_main(argc, new_argv, &ops, NULL);
-    print_info("Exiting SherlockFS process...\n");
+    if (ret == 0)
+        print_success("SherlockFS instance exited successfully.\n");
+    else
+        print_error("SherlockFS instance exited with an error: '%d'\n",
+                    strerror(ret));
+
+    free(new_argv);
     return ret;
 }

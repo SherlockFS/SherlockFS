@@ -57,8 +57,10 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/shlkfs_mount",
             "args": [
+                "-v",
                 "${input:mountDevice}",
-                "${input:mountPath}"
+                "${input:mountFuseOptions}",
+                "${input:mountPoint}"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build",
@@ -117,10 +119,16 @@
             "default": "test.shlkfs"
         },
         {
-            "id": "mountPath",
+            "id": "mountPoint",
             "description": "Point de montage",
             "type": "promptString",
             "default": "mnt"
+        },
+        {
+            "id": "mountFuseOptions",
+            "description": "Options de montage FUSE",
+            "type": "promptString",
+            "default": "-f"
         },
         {
             "id": "publicKey",
