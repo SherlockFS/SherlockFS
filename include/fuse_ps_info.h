@@ -8,6 +8,8 @@
 #include <block.h>
 #include <stdbool.h>
 
+#include "cryptfs.h"
+
 // ------------------- File descriptor management -------------------
 
 /**
@@ -74,7 +76,7 @@ void fpi_set_master_key(unsigned char *key);
  *
  * @return The AES key.
  */
-const char *fpi_get_master_key();
+const unsigned char *fpi_get_master_key();
 
 /**
  * @brief Zeroes the decoded key in memory.

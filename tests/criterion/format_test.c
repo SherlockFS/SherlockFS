@@ -166,9 +166,9 @@ Test(is_already_formatted, formated_check_content, .init = cr_redirect_stdout,
     for (size_t i = 1; i < NB_ENCRYPTION_KEYS; i++)
         cr_assert_eq(keyslots[i].occupied, 0);
 
-    unsigned char *aes_key =
-        extract_aes_key("build/tests/formated_check_content.test.shlkfs",
-                        "build/tests/formated_check_content.test.private.pem");
+    unsigned char *aes_key = extract_aes_key(
+        "build/tests/formated_check_content.test.shlkfs",
+        "build/tests/formated_check_content.test.private.pem", NULL);
 
     cr_assert_neq(aes_key, NULL);
 

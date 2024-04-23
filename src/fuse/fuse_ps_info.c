@@ -118,7 +118,7 @@ void fpi_set_master_key(unsigned char *key)
     memset(key, 0, AES_KEY_SIZE_BYTES);
 }
 
-const char *fpi_get_master_key()
+const unsigned char *fpi_get_master_key()
 {
     for (int i = 0; i < AES_KEY_SIZE_BYTES; i++)
         info.decoded_key[i] = info.master_key[i]

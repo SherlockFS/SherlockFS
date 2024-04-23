@@ -57,8 +57,8 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/shlkfs_mount",
             "args": [
-                "${input:mountPath}",
-                "${input:mountDevice}"
+                "${input:mountDevice}",
+                "${input:mountPath}"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build",
@@ -69,6 +69,11 @@
                 {
                     "description": "Activer l'impression en mode Pretty pour gdb",
                     "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Activer le suivi du processus parent",
+                    "text": "set follow-fork-mode not-child",
                     "ignoreFailures": true
                 },
             ],

@@ -8,7 +8,7 @@ include $(PROJECT_DIR)/global.mk
 
 FSANITIZE = -fsanitize=address
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror -Iinclude -g -std=gnu99 -D_ISOC11_SOURCE
+CFLAGS = -Wall -Wextra -Werror -Iinclude -g -std=gnu99 -D_ISOC11_SOURCE -D_FILE_OFFSET_BITS=64
 CFLAGS += -DINTERNAL_ERROR_NO_BACKTRACE
 LDFLAGS = -lm -lcrypto
 

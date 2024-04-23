@@ -42,7 +42,7 @@ Test(entry_truncate, file_add_blocks, .timeout = 10, .init = cr_redirect_stdout)
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
         "build/tests/entry_truncate.file_add_blocks.test.shlkfs",
-        "build/tests/entry_truncate.file_add_blocks.private.pem");
+        "build/tests/entry_truncate.file_add_blocks.private.pem", NULL);
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
@@ -127,7 +127,7 @@ Test(entry_truncate, file_remove_blocks, .timeout = 10,
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
         "build/tests/entry_truncate.file_remove_blocks.test.shlkfs",
-        "build/tests/entry_truncate.file_remove_blocks.private.pem");
+        "build/tests/entry_truncate.file_remove_blocks.private.pem", NULL);
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
@@ -216,7 +216,8 @@ Test(entry_truncate, file_remove_blocks_till_empty, .timeout = 10,
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
         "build/tests/entry_truncate.file_remove_blocks_to_empty.test.shlkfs",
-        "build/tests/entry_truncate.file_remove_blocks_to_empty.private.pem");
+        "build/tests/entry_truncate.file_remove_blocks_to_empty.private.pem",
+        NULL);
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
@@ -296,7 +297,7 @@ Test(entry_truncate, directory_add_blocks, .timeout = 10,
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
         "build/tests/entry_truncate.directory_add_blocks.test.shlkfs",
-        "build/tests/entry_truncate.directory_add_blocks.private.pem");
+        "build/tests/entry_truncate.directory_add_blocks.private.pem", NULL);
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
@@ -382,7 +383,7 @@ Test(entry_write_buffer_from, begining_add, .timeout = 10,
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
         "build/tests/entry_write_buffer_from.begining_add.test.shlkfs",
-        "build/tests/entry_write_buffer_from.begining_add.private.pem");
+        "build/tests/entry_write_buffer_from.begining_add.private.pem", NULL);
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
@@ -472,7 +473,8 @@ Test(entry_write_buffer_from, between_blocks_adding, .timeout = 10,
     unsigned char *aes_key = extract_aes_key(
         "build/tests/entry_write_buffer_from.between_blocks_adding.test.shlkfs",
         "build/tests/"
-        "entry_write_buffer_from.between_blocks_adding.private.pem");
+        "entry_write_buffer_from.between_blocks_adding.private.pem",
+        NULL);
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
@@ -575,7 +577,8 @@ Test(entry_read_raw_data, reading_between_blocks, .timeout = 10,
         "build/tests/"
         "entry_write_buffer_from.reading_between_blocks.test.shlkfs",
         "build/tests/"
-        "entry_write_buffer_from.reading_between_blocks.private.pem");
+        "entry_write_buffer_from.reading_between_blocks.private.pem",
+        NULL);
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
@@ -663,7 +666,7 @@ Test(entry_delete, file_and_directory, .timeout = 10,
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
         "build/tests/entry_delete.file_and_directory.test.shlkfs",
-        "build/tests/entry_delete.file_and_directory.private.pem");
+        "build/tests/entry_delete.file_and_directory.private.pem", NULL);
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
@@ -802,7 +805,7 @@ Test(entry_create_empty_file, in_one_block, .timeout = 10,
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
         "build/tests/entry_create_empty_file.in_one_block.test.shlkfs",
-        "build/tests/entry_create_empty_file.in_one_block.private.pem");
+        "build/tests/entry_create_empty_file.in_one_block.private.pem", NULL);
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
@@ -884,7 +887,8 @@ Test(entry_create_empty_file, in_multiple_blocks, .timeout = 10,
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
         "build/tests/entry_create_empty_file.in_multiple_blocks.test.shlkfs",
-        "build/tests/entry_create_empty_file.in_multiple_blocks.private.pem");
+        "build/tests/entry_create_empty_file.in_multiple_blocks.private.pem",
+        NULL);
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
@@ -977,7 +981,8 @@ Test(entry_create_directory, embedded_directories, .timeout = 10,
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
         "build/tests/entry_create_directory.embedded_directories.test.shlkfs",
-        "build/tests/entry_create_directory.embedded_directories.private.pem");
+        "build/tests/entry_create_directory.embedded_directories.private.pem",
+        NULL);
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
@@ -1075,7 +1080,7 @@ Test(entry_create_hardlink, simple_hardlink, .timeout = 10,
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
         "build/tests/entry_create_hardlink.simple_hardlink.test.shlkfs",
-        "build/tests/entry_create_hardlink.simple_hardlink.private.pem");
+        "build/tests/entry_create_hardlink.simple_hardlink.private.pem", NULL);
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
@@ -1184,7 +1189,7 @@ Test(entry_create_symlink, simple_symlink, .timeout = 10,
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
         "build/tests/entry_create_symlink.simple_symlink.test.shlkfs",
-        "build/tests/entry_create_symlink.simple_symlink.private.pem");
+        "build/tests/entry_create_symlink.simple_symlink.private.pem", NULL);
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
@@ -1277,7 +1282,7 @@ Test(entry_create_symlink, bad_path_ascii, .timeout = 10,
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
         "build/tests/entry_create_symlink.bad_path_ascii.test.shlkfs",
-        "build/tests/entry_create_symlink.bad_path_ascii.private.pem");
+        "build/tests/entry_create_symlink.bad_path_ascii.private.pem", NULL);
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);

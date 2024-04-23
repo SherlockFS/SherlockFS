@@ -50,7 +50,7 @@ int __blocks_needed_for_dir(size_t size)
  * CryptFS_Directory.
  * @return 0 when success, -1 otherwise.
  */
-static int __create_new_blocks(unsigned char *aes_key, size_t new_blocks_needed,
+static int __create_new_blocks(const unsigned char *aes_key, size_t new_blocks_needed,
                                size_t actual_blocks_used,
                                struct CryptFS_Entry *entry,
                                struct CryptFS_Entry_ID entry_id)
@@ -107,7 +107,7 @@ err_create_new_block:
  * @param entry Pointer to a CryptFS_Entry.
  * @return 0 when success, -1 otherwise.
  */
-static int __free_blocks(unsigned char *aes_key, size_t new_blocks_needed,
+static int __free_blocks(const unsigned char *aes_key, size_t new_blocks_needed,
                          struct CryptFS_Entry *entry)
 {
     block_t end_block = entry->start_block;
@@ -160,37 +160,6 @@ static int __free_blocks(unsigned char *aes_key, size_t new_blocks_needed,
 }
 
 /**
- * @brief Search for the directory block where the index is pointing to.
- * @example If index = 26, the function will update the numbers like so:
- * directory_block = FAT[directory] and index = 3.
- *
- * @param aes_key The AES key used for encryption/decryption.
- * @param parent_dir_entry_id structure composed of the block number where
- * starts a struct CryptFS_Directory and the index of the entry in this current
- * CryptFS_Directory.
- * @return 0 when success, -1 otherwise.
- */
-static int __search_entry_in_directory(unsigned char *aes_key,
-                                       struct CryptFS_Entry_ID *entry_id)
-{
-    if (entry_id->directory_index > NB_ENTRIES_PER_BLOCK)
-    {
-        int count = entry_id->directory_index / NB_ENTRIES_PER_BLOCK;
-        entry_id->directory_index =
-            entry_id->directory_index % NB_ENTRIES_PER_BLOCK;
-        while (count > 1 && read_fat_offset(aes_key, entry_id->directory_block))
-        {
-            entry_id->directory_block =
-                read_fat_offset(aes_key, entry_id->directory_block);
-            count--;
-        }
-        if (count > 1)
-            return -1;
-    }
-    return 0;
-}
-
-/**
  * @brief Loop to truncate entry.
  *
  * @param aes_key The AES key used for encryption/decryption.
@@ -201,7 +170,7 @@ static int __search_entry_in_directory(unsigned char *aes_key,
  * @param new_size Size to truncate the entry with.
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
-static int __entry_truncate_treatment(unsigned char *aes_key,
+static int __entry_truncate_treatment(const unsigned char *aes_key,
                                       struct CryptFS_Entry *entry,
                                       struct CryptFS_Entry_ID entry_id,
                                       size_t new_size)
@@ -246,7 +215,33 @@ static int __entry_truncate_treatment(unsigned char *aes_key,
     return 0;
 }
 
-int entry_truncate(unsigned char *aes_key, struct CryptFS_Entry_ID entry_id,
+struct CryptFS_Entry_ID search_entry(const char *path){
+    // TODO
+    (void)path;
+    return (struct CryptFS_Entry_ID){0, 0};
+}
+
+int goto_entry_in_directory(const unsigned char *aes_key,
+                           struct CryptFS_Entry_ID *entry_id)
+{
+    if (entry_id->directory_index > NB_ENTRIES_PER_BLOCK)
+    {
+        int count = entry_id->directory_index / NB_ENTRIES_PER_BLOCK;
+        entry_id->directory_index =
+            entry_id->directory_index % NB_ENTRIES_PER_BLOCK;
+        while (count > 1 && read_fat_offset(aes_key, entry_id->directory_block))
+        {
+            entry_id->directory_block =
+                read_fat_offset(aes_key, entry_id->directory_block);
+            count--;
+        }
+        if (count > 1)
+            return -1;
+    }
+    return 0;
+}
+
+int entry_truncate(const unsigned char *aes_key, struct CryptFS_Entry_ID entry_id,
                    size_t new_size)
 {
     if (entry_id.directory_block == ROOT_DIR_BLOCK)
@@ -278,7 +273,7 @@ int entry_truncate(unsigned char *aes_key, struct CryptFS_Entry_ID entry_id,
     }
     else
     {
-        if (__search_entry_in_directory(aes_key, &entry_id))
+        if (goto_entry_in_directory(aes_key, &entry_id))
             return BLOCK_ERROR;
 
         // allocate struct for reading directory_block
@@ -312,12 +307,12 @@ int entry_truncate(unsigned char *aes_key, struct CryptFS_Entry_ID entry_id,
     // Do nothing if new_size is equal to entry.size
 }
 
-int entry_write_buffer_from(unsigned char *aes_key,
+int entry_write_buffer_from(const unsigned char *aes_key,
                             struct CryptFS_Entry_ID file_entry_id,
                             size_t start_from, const void *buffer, size_t count)
 {
     // Find the real block and index
-    if (__search_entry_in_directory(aes_key, &file_entry_id))
+    if (goto_entry_in_directory(aes_key, &file_entry_id))
         return BLOCK_ERROR;
 
     // allocate struct for reading directory_block
@@ -413,21 +408,21 @@ err_write_buffer_entry_2:
     return BLOCK_ERROR;
 }
 
-int entry_write_buffer(unsigned char *aes_key,
+int entry_write_buffer(const unsigned char *aes_key,
                        struct CryptFS_Entry_ID file_entry_id,
                        const void *buffer, size_t count)
 {
     return entry_write_buffer_from(aes_key, file_entry_id, 0, buffer, count);
 }
 
-ssize_t entry_read_raw_data(unsigned char *aes_key,
+ssize_t entry_read_raw_data(const unsigned char *aes_key,
                             struct CryptFS_Entry_ID file_entry_id,
                             size_t start_from, void *buf, size_t count)
 {
     ssize_t result = 0;
 
     // Find the real block and index
-    if (__search_entry_in_directory(aes_key, &file_entry_id))
+    if (goto_entry_in_directory(aes_key, &file_entry_id))
         return BLOCK_ERROR;
 
     // allocate struct for reading directory_block
@@ -507,13 +502,13 @@ err_read_entry:
  * @param new_size Size to truncate the entry with.
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
-static int __entry_delete_routine(unsigned char *aes_key,
+static int __entry_delete_routine(const unsigned char *aes_key,
                                   struct CryptFS_Entry *parent_dir_entry,
                                   uint32_t entry_index)
 {
     block_t s_block = parent_dir_entry->start_block;
     struct CryptFS_Entry_ID entry_id = { s_block, entry_index };
-    __search_entry_in_directory(aes_key, &entry_id);
+    goto_entry_in_directory(aes_key, &entry_id);
 
     struct CryptFS_Directory *parent_dir = xaligned_alloc(
         CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_Directory));
@@ -545,7 +540,7 @@ err_entry_delete:
     return BLOCK_ERROR;
 }
 
-int entry_delete(unsigned char *aes_key,
+int entry_delete(const unsigned char *aes_key,
                  struct CryptFS_Entry_ID parent_dir_entry_id,
                  uint32_t entry_index)
 {
@@ -574,7 +569,7 @@ int entry_delete(unsigned char *aes_key,
     else
     {
         // Find the real block and index
-        if (__search_entry_in_directory(aes_key, &parent_dir_entry_id))
+        if (goto_entry_in_directory(aes_key, &parent_dir_entry_id))
             return BLOCK_ERROR;
 
         // allocate struct for reading directory_block
@@ -624,7 +619,7 @@ int entry_delete(unsigned char *aes_key,
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
 static int
-__entry_create_empty_file_routine(unsigned char *aes_key,
+__entry_create_empty_file_routine(const unsigned char *aes_key,
                                   struct CryptFS_Entry *entry, const char *name,
                                   struct CryptFS_Entry_ID parent_dir_entry_id)
 {
@@ -680,7 +675,7 @@ err_create_file:
     return BLOCK_ERROR;
 }
 
-uint32_t entry_create_empty_file(unsigned char *aes_key,
+uint32_t entry_create_empty_file(const unsigned char *aes_key,
                                  struct CryptFS_Entry_ID parent_dir_entry_id,
                                  const char *name)
 {
@@ -731,7 +726,7 @@ uint32_t entry_create_empty_file(unsigned char *aes_key,
     }
     else
     {
-        if (__search_entry_in_directory(aes_key, &parent_dir_entry_id))
+        if (goto_entry_in_directory(aes_key, &parent_dir_entry_id))
             return BLOCK_ERROR;
         // allocate struct for reading directory_block
         struct CryptFS_Directory *dir = xaligned_alloc(
@@ -800,7 +795,7 @@ uint32_t entry_create_empty_file(unsigned char *aes_key,
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
 static int
-__entry_create_dir_routine(unsigned char *aes_key, struct CryptFS_Entry *entry,
+__entry_create_dir_routine(const unsigned char *aes_key, struct CryptFS_Entry *entry,
                            const char *name,
                            struct CryptFS_Entry_ID parent_dir_entry_id)
 {
@@ -858,7 +853,7 @@ err_create_file:
     return BLOCK_ERROR;
 }
 
-uint32_t entry_create_directory(unsigned char *aes_key,
+uint32_t entry_create_directory(const unsigned char *aes_key,
                                 struct CryptFS_Entry_ID parent_dir_entry_id,
                                 const char *name)
 {
@@ -906,7 +901,7 @@ uint32_t entry_create_directory(unsigned char *aes_key,
     }
     else
     {
-        if (__search_entry_in_directory(aes_key, &parent_dir_entry_id))
+        if (goto_entry_in_directory(aes_key, &parent_dir_entry_id))
             return BLOCK_ERROR;
         // allocate struct for reading directory_block
         struct CryptFS_Directory *dir = xaligned_alloc(
@@ -975,7 +970,7 @@ uint32_t entry_create_directory(unsigned char *aes_key,
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
 static int
-__entry_create_hardlink_routine(unsigned char *aes_key,
+__entry_create_hardlink_routine(const unsigned char *aes_key,
                                 struct CryptFS_Entry *entry, const char *name,
                                 struct CryptFS_Entry_ID parent_dir_entry_id,
                                 struct CryptFS_Entry entry_to_link)
@@ -1034,14 +1029,14 @@ err_create_file:
     return BLOCK_ERROR;
 }
 
-uint32_t entry_create_hardlink(unsigned char *aes_key,
+uint32_t entry_create_hardlink(const unsigned char *aes_key,
                                struct CryptFS_Entry_ID parent_dir_entry_id,
                                const char *name,
                                struct CryptFS_Entry_ID target_entry_id)
 {
     uint32_t index;
     // Exctract entry to Link
-    if (__search_entry_in_directory(aes_key, &target_entry_id))
+    if (goto_entry_in_directory(aes_key, &target_entry_id))
         return BLOCK_ERROR;
 
     // allocate struct for reading target_link_block
@@ -1103,7 +1098,7 @@ uint32_t entry_create_hardlink(unsigned char *aes_key,
     }
     else
     {
-        if (__search_entry_in_directory(aes_key, &parent_dir_entry_id))
+        if (goto_entry_in_directory(aes_key, &parent_dir_entry_id))
             return BLOCK_ERROR;
 
         // allocate struct for reading directory_block
@@ -1185,7 +1180,7 @@ err_create_file_init:
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
 static int __entry_create_symlink_routine(
-    unsigned char *aes_key, struct CryptFS_Entry *entry, const char *name,
+    const unsigned char *aes_key, struct CryptFS_Entry *entry, const char *name,
     struct CryptFS_Entry_ID parent_dir_entry_id, const char *symlink)
 {
     uint32_t index = 0;
@@ -1248,7 +1243,7 @@ err_create_file:
     return BLOCK_ERROR;
 }
 
-uint32_t entry_create_symlink(unsigned char *aes_key,
+uint32_t entry_create_symlink(const unsigned char *aes_key,
                               struct CryptFS_Entry_ID parent_dir_entry_id,
                               const char *name, const char *symlink)
 {
@@ -1299,7 +1294,7 @@ uint32_t entry_create_symlink(unsigned char *aes_key,
     }
     else
     {
-        if (__search_entry_in_directory(aes_key, &parent_dir_entry_id))
+        if (goto_entry_in_directory(aes_key, &parent_dir_entry_id))
             return BLOCK_ERROR;
         // allocate struct for reading directory_block
         struct CryptFS_Directory *dir = xaligned_alloc(

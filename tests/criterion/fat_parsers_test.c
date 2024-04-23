@@ -31,7 +31,7 @@ Test(find_first_free_block, out_of_band_available, .timeout = 10,
 
     unsigned char *ase_key = extract_aes_key(
         "build/tests/find_first_free_block.not_found.test.shlkfs",
-        "build/tests/find_first_free_block.not_found.private.pem");
+        "build/tests/find_first_free_block.not_found.private.pem", NULL);
 
     write_blocks_with_encryption(ase_key, FIRST_FAT_BLOCK, 1, &first_fat);
 
@@ -67,7 +67,7 @@ Test(find_first_free_block, on_first_fat, .timeout = 10,
 
     unsigned char *ase_key = extract_aes_key(
         "build/tests/find_first_free_block.on_first_fat.test.shlkfs",
-        "build/tests/find_first_free_block.on_first_fat.private.pem");
+        "build/tests/find_first_free_block.on_first_fat.private.pem", NULL);
 
     size_t index = 42;
     cr_assert(index < NB_FAT_ENTRIES_PER_BLOCK);
@@ -132,7 +132,7 @@ Test(find_first_free_block, on_second_fat, .timeout = 10,
     // Reading the structure from the file
     unsigned char *ase_key = extract_aes_key(
         "build/tests/find_first_free_block.on_second_fat.test.shlkfs",
-        "build/tests/find_first_free_block.on_second_fat.private.pem");
+        "build/tests/find_first_free_block.on_second_fat.private.pem", NULL);
 
     write_blocks_with_encryption(ase_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
@@ -172,7 +172,7 @@ Test(find_first_free_block_safe, not_found, .timeout = 10,
 
     unsigned char *ase_key = extract_aes_key(
         "build/tests/find_first_free_block_safe.not_found.test.shlkfs",
-        "build/tests/find_first_free_block_safe.not_found.private.pem");
+        "build/tests/find_first_free_block_safe.not_found.private.pem", NULL);
 
     if (write_blocks_with_encryption(ase_key, FIRST_FAT_BLOCK, 1, &first_fat)
         != 0)
@@ -209,7 +209,7 @@ Test(create_fat, two_fat_overflow_then_add_one_fat, .init = cr_redirect_stdout,
     // Reading the structure from the file
     unsigned char *ase_key =
         extract_aes_key("build/tests/create_fat.second_fat.test.shlkfs",
-                        "build/tests/create_fat.second_fat.private.pem");
+                        "build/tests/create_fat.second_fat.private.pem", NULL);
 
     int second_fat_index = create_fat(ase_key);
     cr_assert_eq(second_fat_index, ROOT_DIR_BLOCK + 2);
@@ -261,7 +261,7 @@ Test(create_fat, third_fat, .init = cr_redirect_stdout, .timeout = 10)
     // Reading the structure from the file
     unsigned char *ase_key =
         extract_aes_key("build/tests/create_fat.third_fat.test.shlkfs",
-                        "build/tests/create_fat.third_fat.private.pem");
+                        "build/tests/create_fat.third_fat.private.pem", NULL);
     int64_t result1 = create_fat(ase_key);
     int64_t result2 = create_fat(ase_key);
 

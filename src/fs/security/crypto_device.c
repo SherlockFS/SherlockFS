@@ -1,3 +1,4 @@
+#include <linux/limits.h>
 #include <openssl/core_names.h>
 #include <openssl/evp.h>
 #include <openssl/pem.h>
@@ -123,12 +124,13 @@ EVP_PKEY *load_rsa_keypair_from_home(char **passphrase)
 
 // TODO: Add a test for this function
 unsigned char *extract_aes_key(const char *device_path,
-                               const char *private_key_path)
+                               const char *private_key_path, char *passphrase)
+
 {
     struct CryptFS *shlkfs = read_cryptfs_headers(device_path);
 
     EVP_PKEY *rsa_keypair =
-        load_rsa_keypair_from_disk(NULL, private_key_path, NULL);
+        load_rsa_keypair_from_disk(NULL, private_key_path, passphrase);
 
     if (rsa_keypair == NULL)
         error_exit("Impossible to load the RSA keypair\n", EXIT_FAILURE);

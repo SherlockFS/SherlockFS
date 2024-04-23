@@ -24,7 +24,7 @@
 #include "writefs.h"
 #include "xalloc.h"
 
-int parcours_fat_print(unsigned char *aes_key, block_t directory_block,
+int parcours_fat_print(const unsigned char *aes_key, block_t directory_block,
                        uint32_t directory_index)
 {
     printf("START:");
