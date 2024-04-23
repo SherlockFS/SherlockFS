@@ -24,7 +24,7 @@ static struct fuse_operations ops = {
     .open = cryptfs_open,
     .read = cryptfs_read,
 };
-#define K_PARAM_POS 3
+#define K_PARAM_POS 1
 #define K_VALUE_POS (K_PARAM_POS + 1)
 #define IS_USING_K_ARG(argc, argv)                                             \
     (argc >= K_VALUE_POS && strcmp(argv[K_PARAM_POS], "-k") == 0)
@@ -35,13 +35,12 @@ int main(int argc, char *argv[])
     {
         printf("SherlockFS v%d - Mounting SherlockFS file system\n",
                CRYPTFS_VERSION);
-        printf("Usage: %s <device> <mountpoint> [-k private key path] [FUSE "
-               "options...]\n",
+        printf("Usage: %s [-k <PRIVATE KEY PATH>] <DEVICE> [FUSE "
+               "OPTIONS] MOUNTPOINT\n",
                argv[0]);
         return EXIT_FAILURE;
     }
     const char *device_path = argv[1];
-    char *mount_path = argv[2];
 
     // Set the file system global variables
     set_device_path(device_path);
@@ -82,27 +81,23 @@ int main(int argc, char *argv[])
     // Register the master key
     fpi_set_master_key(aes_key);
 
-    char **new_argv = xmalloc(argc, sizeof(char *));
-
     // argv(0) -> new_argv[0]
     // argv(<mountpoint>) -> new_argv[1]
-    new_argv[0] = argv[0];
-    new_argv[1] = mount_path;
 
     // if '-k' option is provided, skip it and the private key path
+    char **new_argv = xcalloc(argc, sizeof(char *));
+    new_argv[0] = argv[0];
     if (IS_USING_K_ARG(argc, argv))
     {
-        for (int i = K_PARAM_POS + 2; i < argc; i++)
-            new_argv[i - 2] = argv[i];
-        argc -= 2; // sub -k and <private key path>
+        for (int i = 4; i < argc; i++) // pgrm, -k, pkey, device, mountpoint
+            new_argv[i - 4 + 1] = argv[i];
+        argc -= 3; // sub -k, pkey, device
     }
-
     else
     {
-        for (int i = K_PARAM_POS; i < argc; i++)
-            new_argv[i - 1] = argv[i]; // new_argv[K_PARAM_POS - 1] == first
-                                       // available argv slot
-        argc -= 1; // sub <device>
+        for (int i = 2; i < argc; i++)
+            new_argv[i - 2 + 1] = argv[i]; // pgrm, device, mountpoint
+        argc -= 1; // sub device
     }
 
     // Start FUSE
@@ -111,8 +106,6 @@ int main(int argc, char *argv[])
         free(passphrase);
 
     int ret = fuse_main(argc, new_argv, &ops, NULL);
-    free(new_argv);
-
     print_info("Exiting SherlockFS process...\n");
     return ret;
 }

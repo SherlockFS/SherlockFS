@@ -89,8 +89,8 @@ void ffi_release_fd(struct fs_file_info *file)
 
 struct fs_ps_info
 {
-    unsigned char master_key[AES_KEY_SIZE_BYTES]; // AES master key
-    unsigned char xor_key[AES_KEY_SIZE_BYTES]; // XOR key
+    unsigned char master_key[AES_KEY_SIZE_BYTES]; // XORed AES master key
+    unsigned char xor_key[AES_KEY_SIZE_BYTES]; // master key XOR key
     unsigned char decoded_key[AES_KEY_SIZE_BYTES]; // Decoded key (must be
                                                    // zeroed after use)
     block_t current_directory_block; // Current directory block number
