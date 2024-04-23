@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     {
         printf("SherlockFS v%d - Mounting a SherlockFS file system\n",
                CRYPTFS_VERSION);
-        printf("Usage: %s [-k|--key <PRIVATE KEY PATH>] [-v|--verbose] "
+        printf("\tUsage: %s [-k|--key <PRIVATE KEY PATH>] [-v|--verbose] "
                "<DEVICE> [FUSE "
                "OPTIONS] <MOUNTPOINT>\n",
                argv[0]);

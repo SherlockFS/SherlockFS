@@ -19,10 +19,9 @@ SherlockFS est un système de fichiers chiffré, s'inspirant des principes de FA
 Actuellement, SherlockFS propose deux outils principaux :
 
 1. `shlkfs_formater` : Utilisé pour initialiser un périphérique avec le système de fichiers SherlockFS.
-2. `shlkfs_adduser` : Permet d'ajouter un nouvel utilisateur (via sa clé publique) en utilisant les accès d'un utilisateur existant (sa clé privée).
-3. `shlkfs_deluser` : Permet de supprimer un utilisateur du système de fichiers.
-
-Un quatrième outil, `shlkfs_mount`, est prévu pour une intégration future après la finalisation de l'implémentation FUSE.
+2. `shlkfs_mount` : Permet de monter un système de fichiers formaté en SherlockFS.
+3. `shlkfs_adduser` : Permet d'ajouter un nouvel utilisateur (via sa clé publique) en utilisant les accès d'un utilisateur existant (sa clé privée).
+4. `shlkfs_deluser` : Permet de supprimer un utilisateur du système de fichiers.
 
 ## Prérequis
 
@@ -34,6 +33,7 @@ Pour compiler les programmes :
 
 - `make` : Compile tous les programmes.
 - `make shlkfs_formater` : Compile uniquement le programme `shlkfs_formater`.
+- `make shlkfs_mount` : Compile uniquement le programme `shlkfs_mount`.
 - `make shlkfs_adduser` : Compile uniquement le programme `shlkfs_adduser`.
 - `make shlkfs_deluser` : Compile uniquement le programme `shlkfs_deluser`.
 - `make check`: Compile tous les programmes et exécute les tests unitaires.
@@ -57,6 +57,25 @@ SherlockFS v1 - Format a device
 `shlkfs_formater` permet d'initialiser un périphérique avec le système de fichiers SherlockFS. Il prend en paramètre le chemin vers le périphérique à formater. Le périphérique peut être vide mais doit être non monté. Si le périphérique est déjà formaté avec SherlockFS, il vous sera demandé si vous souhaitez le reformater.
 
 Une fois le formatage effectué, les clés publiques et privées utisées lors du formatage seront sauvegardées dans le dossier `~/.sherlockfs` (`public.pem` et `private.pem`). Ces clés sont nécessaires pour monter le périphérique et ajouter de nouveaux utilisateurs au système de fichiers. **Il est donc important de les conserver en lieu sûr et de ne pas les perdre.**
+
+### `shlkfs_mount`
+
+```shell
+# ./build/shlkfs_mount
+
+SherlockFS v1 - Mounting a SherlockFS file system
+        Usage: ./build/shlkfs_mount [-k|--key <PRIVATE KEY PATH>] [-v|--verbose] <DEVICE> [FUSE OPTIONS] <MOUNTPOINT>
+```
+
+`shlkfs_mount` permet de monter un système de fichiers formaté en SherlockFS. Il prend plusieurs paramètres :
+
+- `-k` ou `--key` : Le chemin vers la clé privée à utiliser pour le montage. Cette clé doit correspondre à la clé utilisée lors du formatage du périphérique. Si cette option n'est pas spécifiée, `shlkfs_mount` cherchera à utiliser la clé privée stockée dans `~/.sherlockfs/`.
+- `-v` ou `--verbose` : Active le mode verbeux, qui affiche des informations supplémentaires pendant toute la durée de vie du système de fichiers monté
+- `<DEVICE>` : Le chemin vers le périphérique à monter. Ce périphérique doit être formaté avec SherlockFS.
+- `[FUSE OPTIONS]` : Des options supplémentaires pour FUSE, si nécessaire.
+- `<MOUNTPOINT>` : Le point de montage où le système de fichiers doit être monté.
+
+Une fois le système de fichiers monté, vous pouvez interagir avec lui comme avec n'importe quel autre système de fichiers sur votre machine. Assurez-vous de disposer de la clé privée correspondante avant de tenter de monter le système de fichiers. Si vous perdez cette clé, vous ne pourrez pas accéder aux données sur le système de fichiers SherlockFS.
 
 ### `shlkfs_adduser`
 
