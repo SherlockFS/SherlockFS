@@ -54,21 +54,23 @@ EVP_PKEY *load_rsa_keypair_from_disk(const char *public_key_path,
 {
     EVP_PKEY *rsa_keypair = NULL;
 
-    FILE *public_key_file = fopen(public_key_path, "r");
-    FILE *private_key_file = fopen(private_key_path, "r");
-
-    if (public_key_file)
+    if (public_key_path)
     {
-        if (PEM_read_PUBKEY(public_key_file, &rsa_keypair, NULL, NULL) == NULL)
+        FILE *public_key_file = fopen(public_key_path, "r");
+        if (!public_key_file
+            || PEM_read_PUBKEY(public_key_file, &rsa_keypair, NULL, NULL)
+                == NULL)
             return NULL;
         fclose(public_key_file);
     }
 
-    if (private_key_file)
+    if (private_key_path)
     {
-        if (PEM_read_PrivateKey(private_key_file, &rsa_keypair, NULL,
-                                passphrase)
-            == NULL)
+        FILE *private_key_file = fopen(private_key_path, "r");
+        if (!private_key_file
+            || PEM_read_PrivateKey(private_key_file, &rsa_keypair, NULL,
+                                   passphrase)
+                == NULL)
             return NULL;
         fclose(private_key_file);
     }
