@@ -100,6 +100,8 @@ struct CryptFS_FAT
 
 enum BLOCK_TYPE
 {
+    BLOCK_IS_DIRECTORY = -5, // Block is a directory
+    BLOCK_NOT_DIRECTORY= - 4, // Block is not a directory
     BLOCK_FAT_OOB = -3, // FAT index is out of band
     BLOCK_ERROR = -2, // Error related to blocks. (Never written on the device)
     BLOCK_END = -1, // End of entity.
@@ -162,6 +164,7 @@ struct CryptFS_Entry
     uint64_t start_block; // First block of the entry
     char name[ENTRY_NAME_MAX_LEN]; // Name of the entry
     uint64_t size; // in number of entries for directories, in bytes for others
+    uint32_t nlink; // TODO: Number of hardlinks
     uint32_t uid; // User ID
     uint32_t gid; // Group ID
     uint32_t mode; // Permissions (Unix-like)
@@ -190,17 +193,19 @@ struct CryptFS_Directory
 // -----------------------------------------------------------------------------
 // CRYPTFS FILE SYSTEM
 // -----------------------------------------------------------------------------
-#define HEADER_BLOCK 0
-#define KEYS_STORAGE_BLOCK (HEADER_BLOCK + 1)
-#define FIRST_FAT_BLOCK (KEYS_STORAGE_BLOCK + NB_ENCRYPTION_KEYS)
-#define ROOT_DIR_BLOCK (FIRST_FAT_BLOCK + 1)
+#define HEADER_BLOCK 0 // struct CryptFS_Header
+#define KEYS_STORAGE_BLOCK (HEADER_BLOCK + 1) // struct CryptFS_KeySlot
+#define FIRST_FAT_BLOCK (KEYS_STORAGE_BLOCK + NB_ENCRYPTION_KEYS) // struct CryptFS_FAT
+#define ROOT_ENTRY_BLOCK (FIRST_FAT_BLOCK + 1) // struct CryptFS_Entry
+#define ROOT_DIR_BLOCK (ROOT_ENTRY_BLOCK + 1) // struct CryptFS_Directory
 
 struct CryptFS
 {
     struct CryptFS_Header header; // BLOCK 0: Header
     struct CryptFS_KeySlot keys_storage[NB_ENCRYPTION_KEYS]; // BLOCK 1-64: Keys
     struct CryptFS_FAT first_fat; // BLOCK 65: First FAT
-    struct CryptFS_Entry root_directory; // BLOCK 66: Root directory
+    struct CryptFS_Entry root_entry; // BLOCK 66: Root directory entry
+    // struct CryptFS_Directory root_directory; // BLOCK 67: Root directory directory
 } __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
 #endif /* CRYPT_FS_H */

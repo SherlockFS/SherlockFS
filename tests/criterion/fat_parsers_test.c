@@ -118,12 +118,12 @@ Test(find_first_free_block, on_second_fat, .timeout = 10,
     // Filling first FAT
     memset(shlkfs->first_fat.entries, BLOCK_END,
            NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
-    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+    shlkfs->first_fat.next_fat_table = ROOT_ENTRY_BLOCK + 2;
 
     // Filling second FAT
     memset(second_fat->entries, BLOCK_END,
            NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
-    shlkfs->header.last_fat_block = ROOT_DIR_BLOCK + 2;
+    shlkfs->header.last_fat_block = ROOT_ENTRY_BLOCK + 2;
     second_fat->next_fat_table = BLOCK_END;
 
     size_t index = 42;
@@ -136,7 +136,7 @@ Test(find_first_free_block, on_second_fat, .timeout = 10,
 
     write_blocks_with_encryption(ase_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
-    write_blocks_with_encryption(ase_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+    write_blocks_with_encryption(ase_key, ROOT_ENTRY_BLOCK + 2, 1, second_fat);
 
     int64_t result = find_first_free_block(ase_key);
     cr_assert_eq(result, NB_FAT_ENTRIES_PER_BLOCK + index, "result = %ld",
@@ -212,7 +212,7 @@ Test(create_fat, two_fat_overflow_then_add_one_fat, .init = cr_redirect_stdout,
                         "build/tests/create_fat.second_fat.private.pem", NULL);
 
     int second_fat_index = create_fat(ase_key);
-    cr_assert_eq(second_fat_index, ROOT_DIR_BLOCK + 2);
+    cr_assert_eq(second_fat_index, ROOT_ENTRY_BLOCK + 2);
 
     struct CryptFS_FAT fat_full_1 = { 0 };
     memset(&fat_full_1, BLOCK_END, sizeof(fat_full_1));
@@ -223,7 +223,7 @@ Test(create_fat, two_fat_overflow_then_add_one_fat, .init = cr_redirect_stdout,
     fat_full_2.next_fat_table = BLOCK_END;
 
     write_blocks_with_encryption(ase_key, FIRST_FAT_BLOCK, 1, &fat_full_1);
-    write_blocks_with_encryption(ase_key, ROOT_DIR_BLOCK + 2, 1, &fat_full_2);
+    write_blocks_with_encryption(ase_key, ROOT_ENTRY_BLOCK + 2, 1, &fat_full_2);
 
     int64_t result = find_first_free_block(ase_key);
     cr_assert_eq(result, -2 * NB_FAT_ENTRIES_PER_BLOCK, "result = %ld", result);
@@ -265,8 +265,8 @@ Test(create_fat, third_fat, .init = cr_redirect_stdout, .timeout = 10)
     int64_t result1 = create_fat(ase_key);
     int64_t result2 = create_fat(ase_key);
 
-    cr_assert_eq(result1, ROOT_DIR_BLOCK + 2, "result1 = %ld", result1);
-    cr_assert_eq(result2, ROOT_DIR_BLOCK + 3, "result2 = %ld", result2);
+    cr_assert_eq(result1, ROOT_ENTRY_BLOCK + 2, "result1 = %ld", result1);
+    cr_assert_eq(result2, ROOT_ENTRY_BLOCK + 3, "result2 = %ld", result2);
 
     // Deleting the file
     if (remove("build/tests/create_fat.third_fat.test.shlkfs") != 0)

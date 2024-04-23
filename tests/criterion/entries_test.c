@@ -37,7 +37,7 @@ Test(entry_truncate, file_add_blocks, .timeout = 10, .init = cr_redirect_stdout)
     // Filling first FAT
     memset(shlkfs->first_fat.entries, BLOCK_END,
            NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
-    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+    shlkfs->first_fat.next_fat_table = ROOT_ENTRY_BLOCK + 2;
 
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
@@ -46,7 +46,7 @@ Test(entry_truncate, file_add_blocks, .timeout = 10, .init = cr_redirect_stdout)
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
-    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+    write_blocks_with_encryption(aes_key, ROOT_ENTRY_BLOCK + 2, 1, second_fat);
 
     // Create a directory
     int64_t dir_block = find_first_free_block_safe(aes_key);
@@ -122,7 +122,7 @@ Test(entry_truncate, file_remove_blocks, .timeout = 10,
     // Filling first FAT
     memset(shlkfs->first_fat.entries, BLOCK_END,
            NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
-    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+    shlkfs->first_fat.next_fat_table = ROOT_ENTRY_BLOCK + 2;
 
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
@@ -131,7 +131,7 @@ Test(entry_truncate, file_remove_blocks, .timeout = 10,
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
-    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+    write_blocks_with_encryption(aes_key, ROOT_ENTRY_BLOCK + 2, 1, second_fat);
 
     // Create a directory
     int64_t dir_block = find_first_free_block_safe(aes_key);
@@ -211,7 +211,7 @@ Test(entry_truncate, file_remove_blocks_till_empty, .timeout = 10,
     // Filling first FAT
     memset(shlkfs->first_fat.entries, BLOCK_END,
            NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
-    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+    shlkfs->first_fat.next_fat_table = ROOT_ENTRY_BLOCK + 2;
 
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
@@ -221,7 +221,7 @@ Test(entry_truncate, file_remove_blocks_till_empty, .timeout = 10,
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
-    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+    write_blocks_with_encryption(aes_key, ROOT_ENTRY_BLOCK + 2, 1, second_fat);
 
     // Create a directory
     int64_t dir_block = find_first_free_block_safe(aes_key);
@@ -292,7 +292,7 @@ Test(entry_truncate, directory_add_blocks, .timeout = 10,
     // Filling first FAT
     memset(shlkfs->first_fat.entries, BLOCK_END,
            NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
-    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+    shlkfs->first_fat.next_fat_table = ROOT_ENTRY_BLOCK + 2;
 
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
@@ -301,7 +301,7 @@ Test(entry_truncate, directory_add_blocks, .timeout = 10,
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
-    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+    write_blocks_with_encryption(aes_key, ROOT_ENTRY_BLOCK + 2, 1, second_fat);
 
     // Create a directory
     int64_t dir_block = find_first_free_block_safe(aes_key);
@@ -378,7 +378,7 @@ Test(entry_write_buffer_from, begining_add, .timeout = 10,
     // Filling first FAT
     memset(shlkfs->first_fat.entries, BLOCK_END,
            NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
-    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+    shlkfs->first_fat.next_fat_table = ROOT_ENTRY_BLOCK + 2;
 
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
@@ -387,7 +387,7 @@ Test(entry_write_buffer_from, begining_add, .timeout = 10,
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
-    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+    write_blocks_with_encryption(aes_key, ROOT_ENTRY_BLOCK + 2, 1, second_fat);
 
     // Create a directory
     int64_t dir_block = find_first_free_block_safe(aes_key);
@@ -467,7 +467,7 @@ Test(entry_write_buffer_from, between_blocks_adding, .timeout = 10,
     // Filling first FAT
     memset(shlkfs->first_fat.entries, BLOCK_END,
            NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
-    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+    shlkfs->first_fat.next_fat_table = ROOT_ENTRY_BLOCK + 2;
 
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
@@ -478,7 +478,7 @@ Test(entry_write_buffer_from, between_blocks_adding, .timeout = 10,
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
-    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+    write_blocks_with_encryption(aes_key, ROOT_ENTRY_BLOCK + 2, 1, second_fat);
 
     // Create a directory
     int64_t dir_block = find_first_free_block_safe(aes_key);
@@ -570,7 +570,7 @@ Test(entry_read_raw_data, reading_between_blocks, .timeout = 10,
     // Filling first FAT
     memset(shlkfs->first_fat.entries, BLOCK_END,
            NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
-    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+    shlkfs->first_fat.next_fat_table = ROOT_ENTRY_BLOCK + 2;
 
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
@@ -582,7 +582,7 @@ Test(entry_read_raw_data, reading_between_blocks, .timeout = 10,
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
-    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+    write_blocks_with_encryption(aes_key, ROOT_ENTRY_BLOCK + 2, 1, second_fat);
 
     // Create a directory
     int64_t dir_block = find_first_free_block_safe(aes_key);
@@ -661,7 +661,7 @@ Test(entry_delete, file_and_directory, .timeout = 10,
     // Filling first FAT
     memset(shlkfs->first_fat.entries, BLOCK_END,
            NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
-    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+    shlkfs->first_fat.next_fat_table = ROOT_ENTRY_BLOCK + 2;
 
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
@@ -670,7 +670,7 @@ Test(entry_delete, file_and_directory, .timeout = 10,
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
-    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+    write_blocks_with_encryption(aes_key, ROOT_ENTRY_BLOCK + 2, 1, second_fat);
 
     // Create a directory
     int64_t dir_block = find_first_free_block_safe(aes_key);
@@ -800,7 +800,7 @@ Test(entry_create_empty_file, in_one_block, .timeout = 10,
     // Filling first FAT
     memset(shlkfs->first_fat.entries, BLOCK_END,
            NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
-    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+    shlkfs->first_fat.next_fat_table = ROOT_ENTRY_BLOCK + 2;
 
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
@@ -809,7 +809,7 @@ Test(entry_create_empty_file, in_one_block, .timeout = 10,
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
-    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+    write_blocks_with_encryption(aes_key, ROOT_ENTRY_BLOCK + 2, 1, second_fat);
 
     // Create a directory
     int64_t dir_block = find_first_free_block_safe(aes_key);
@@ -882,7 +882,7 @@ Test(entry_create_empty_file, in_multiple_blocks, .timeout = 10,
     // Filling first FAT
     memset(shlkfs->first_fat.entries, BLOCK_END,
            NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
-    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+    shlkfs->first_fat.next_fat_table = ROOT_ENTRY_BLOCK + 2;
 
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
@@ -892,7 +892,7 @@ Test(entry_create_empty_file, in_multiple_blocks, .timeout = 10,
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
-    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+    write_blocks_with_encryption(aes_key, ROOT_ENTRY_BLOCK + 2, 1, second_fat);
 
     // Create a directory
     int64_t dir_block = find_first_free_block_safe(aes_key);
@@ -976,7 +976,7 @@ Test(entry_create_directory, embedded_directories, .timeout = 10,
     // Filling first FAT
     memset(shlkfs->first_fat.entries, BLOCK_END,
            NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
-    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+    shlkfs->first_fat.next_fat_table = ROOT_ENTRY_BLOCK + 2;
 
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
@@ -986,7 +986,7 @@ Test(entry_create_directory, embedded_directories, .timeout = 10,
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
-    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+    write_blocks_with_encryption(aes_key, ROOT_ENTRY_BLOCK + 2, 1, second_fat);
 
     // Create a directory
     int64_t dir_block = find_first_free_block_safe(aes_key);
@@ -1075,7 +1075,7 @@ Test(entry_create_hardlink, simple_hardlink, .timeout = 10,
     // Filling first FAT
     memset(shlkfs->first_fat.entries, BLOCK_END,
            NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
-    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+    shlkfs->first_fat.next_fat_table = ROOT_ENTRY_BLOCK + 2;
 
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
@@ -1084,7 +1084,7 @@ Test(entry_create_hardlink, simple_hardlink, .timeout = 10,
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
-    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+    write_blocks_with_encryption(aes_key, ROOT_ENTRY_BLOCK + 2, 1, second_fat);
 
     // Create a directory
     int64_t dir_block = find_first_free_block_safe(aes_key);
@@ -1184,7 +1184,7 @@ Test(entry_create_symlink, simple_symlink, .timeout = 10,
     // Filling first FAT
     memset(shlkfs->first_fat.entries, BLOCK_END,
            NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
-    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+    shlkfs->first_fat.next_fat_table = ROOT_ENTRY_BLOCK + 2;
 
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
@@ -1193,7 +1193,7 @@ Test(entry_create_symlink, simple_symlink, .timeout = 10,
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
-    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+    write_blocks_with_encryption(aes_key, ROOT_ENTRY_BLOCK + 2, 1, second_fat);
 
     // Create a directory
     int64_t dir_block = find_first_free_block_safe(aes_key);
@@ -1277,7 +1277,7 @@ Test(entry_create_symlink, bad_path_ascii, .timeout = 10,
     // Filling first FAT
     memset(shlkfs->first_fat.entries, BLOCK_END,
            NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
-    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+    shlkfs->first_fat.next_fat_table = ROOT_ENTRY_BLOCK + 2;
 
     // Reading the structure from the file
     unsigned char *aes_key = extract_aes_key(
@@ -1286,7 +1286,7 @@ Test(entry_create_symlink, bad_path_ascii, .timeout = 10,
 
     write_blocks_with_encryption(aes_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
-    write_blocks_with_encryption(aes_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+    write_blocks_with_encryption(aes_key, ROOT_ENTRY_BLOCK + 2, 1, second_fat);
 
     // Create a directory
     int64_t dir_block = find_first_free_block_safe(aes_key);

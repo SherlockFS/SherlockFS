@@ -119,21 +119,22 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
     /// ------------------------------------------------------------
 
     shlkfs->first_fat.next_fat_table = BLOCK_END;
-    for (size_t i = 0; i <= ROOT_DIR_BLOCK + 1; i++)
+    for (size_t i = 0; i <= ROOT_DIR_BLOCK; i++)
         shlkfs->first_fat.entries[i].next_block = BLOCK_END;
 
     /// ------------------------------------------------------------
     /// BLOCK 3 : ROOT DIRECTORY
     /// ------------------------------------------------------------
 
-    // Add an entry at ROOT_DIR_BLOCK for the root directory
-    shlkfs->root_directory.used = 1;
-    shlkfs->root_directory.type = ENTRY_TYPE_DIRECTORY;
-    shlkfs->root_directory.start_block = ROOT_DIR_BLOCK + 1;
-    shlkfs->root_directory.uid = getuid();
-    shlkfs->root_directory.gid = getgid();
-    shlkfs->root_directory.mode = 777;
-    strcpy(shlkfs->root_directory.name, "");
+    // Add an entry at ROOT_ENTRY_BLOCK for the root directory
+    shlkfs->root_entry.used = 1;
+    shlkfs->root_entry.type = ENTRY_TYPE_DIRECTORY;
+    shlkfs->root_entry.start_block = ROOT_DIR_BLOCK;
+    shlkfs->root_entry.uid = getuid();
+    shlkfs->root_entry.gid = getgid();
+    shlkfs->root_entry.mode = 777;
+    shlkfs->root_entry.nlink = 1;
+    strcpy(shlkfs->root_entry.name, "");
 
     /// ------------------------------------------------------------
     /// Encrypting FAT and ROOT DIRECTORY with AES
@@ -147,10 +148,10 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
 
     size_t encrypted_entry_size;
     unsigned char *encrypted_root_dir =
-        aes_encrypt_data(aes_key, &shlkfs->root_directory,
+        aes_encrypt_data(aes_key, &shlkfs->root_entry,
                          CRYPTFS_BLOCK_SIZE_BYTES, &encrypted_entry_size);
-    memset(&shlkfs->root_directory, 0, CRYPTFS_BLOCK_SIZE_BYTES);
-    memcpy(&shlkfs->root_directory, encrypted_root_dir, encrypted_entry_size);
+    memset(&shlkfs->root_entry, 0, CRYPTFS_BLOCK_SIZE_BYTES);
+    memcpy(&shlkfs->root_entry, encrypted_root_dir, encrypted_entry_size);
 
     free(aes_key);
     EVP_PKEY_free(rsa_key);

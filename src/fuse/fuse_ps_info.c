@@ -101,7 +101,7 @@ static struct fs_ps_info info = {
     .master_key = { 0 },
     .xor_key = { 0 },
     .decoded_key = { 0 },
-    .current_directory_block = ROOT_DIR_BLOCK,
+    .current_directory_block = ROOT_ENTRY_BLOCK,
 };
 
 void fpi_set_master_key(unsigned char *key)

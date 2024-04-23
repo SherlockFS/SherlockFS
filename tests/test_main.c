@@ -72,7 +72,7 @@ int main(void)
     // Filling first FAT
     memset(shlkfs->first_fat.entries, BLOCK_END,
            NB_FAT_ENTRIES_PER_BLOCK * sizeof(struct CryptFS_FAT_Entry));
-    shlkfs->first_fat.next_fat_table = ROOT_DIR_BLOCK + 2;
+    shlkfs->first_fat.next_fat_table = ROOT_ENTRY_BLOCK + 2;
 
     // Reading the structure from the file
     unsigned char *ase_key =
@@ -81,7 +81,7 @@ int main(void)
 
     write_blocks_with_encryption(ase_key, FIRST_FAT_BLOCK, 1,
                                  &shlkfs->first_fat);
-    write_blocks_with_encryption(ase_key, ROOT_DIR_BLOCK + 2, 1, second_fat);
+    write_blocks_with_encryption(ase_key, ROOT_ENTRY_BLOCK + 2, 1, second_fat);
 
     // Create a directory
     int64_t dir_block = find_first_free_block_safe(ase_key);
