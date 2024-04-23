@@ -60,6 +60,8 @@ void ffi_release_fd(struct fs_file_info *file)
         return;
     }
 
+    errno = 0;
+
     // If the file descriptor to release is the only file descriptor
     if (!fd_list->next)
     {
@@ -68,7 +70,6 @@ void ffi_release_fd(struct fs_file_info *file)
         return;
     }
 
-    errno = 0;
     for (struct fs_file_info *current = fd_list; current->next;
          current = current->next)
     {
