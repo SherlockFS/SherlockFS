@@ -2118,3 +2118,129 @@ Test(create_file_by_path, in_directory_file, .init = cr_redirect_stdall,
     free(entry_id_test_file);
     free(entry_id_test_directory);
 }
+
+// create_directory_by_path
+Test(create_directory_by_path, root, .init = cr_redirect_stdall, .timeout = 10)
+{
+    system("dd if=/dev/zero "
+           "of=build/create_directory_by_path.root.test.shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path("build/create_directory_by_path.root.test.shlkfs");
+
+    format_fs("build/create_directory_by_path.root.test.shlkfs",
+              "build/create_directory_by_path.root.public.pem",
+              "build/create_directory_by_path.root.private.pem", NULL, NULL);
+
+    fpi_register_master_key_from_path(
+        "build/create_directory_by_path.root.test.shlkfs",
+        "build/create_directory_by_path.root.private.pem");
+
+    // Create directory and remember its entry ID
+    struct CryptFS_Entry_ID *entry_id =
+        create_directory_by_path(fpi_get_master_key(), "/test_directory");
+
+    cr_assert_neq(entry_id, ENTRY_NO_SUCH);
+
+    // Get directory entry ID
+    struct CryptFS_Entry_ID *entry_id_test_directory =
+        get_entry_by_path(fpi_get_master_key(), "/test_directory");
+
+    // Check if the entry ID is correct
+    cr_assert_neq(entry_id_test_directory, ENTRY_NO_SUCH);
+    cr_assert_eq(entry_id_test_directory->directory_block,
+                 entry_id->directory_block);
+    cr_assert_eq(entry_id_test_directory->directory_index,
+                 entry_id->directory_index);
+
+    free(entry_id);
+    free(entry_id_test_directory);
+}
+
+Test(create_directory_by_path, root_already_exists, .init = cr_redirect_stdall,
+     .timeout = 10)
+{
+    system("dd if=/dev/zero "
+           "of=build/create_directory_by_path.root_already_exists.test.shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path(
+        "build/create_directory_by_path.root_already_exists.test.shlkfs");
+
+    format_fs("build/create_directory_by_path.root_already_exists.test.shlkfs",
+              "build/create_directory_by_path.root_already_exists.public.pem",
+              "build/create_directory_by_path.root_already_exists.private.pem",
+              NULL, NULL);
+
+    fpi_register_master_key_from_path(
+        "build/create_directory_by_path.root_already_exists.test.shlkfs",
+        "build/create_directory_by_path.root_already_exists.private.pem");
+
+    // Create directory and remember its entry ID
+    struct CryptFS_Entry_ID *entry_id =
+        create_directory_by_path(fpi_get_master_key(), "/test_directory");
+
+    cr_assert_neq(entry_id, ENTRY_NO_SUCH);
+
+    // Create directory again
+    struct CryptFS_Entry_ID *entry_id_test_directory =
+        create_directory_by_path(fpi_get_master_key(), "/test_directory");
+
+    // Check if the entry ID is correct
+    cr_assert_eq(entry_id_test_directory, ENTRY_EXISTS);
+
+    free(entry_id);
+}
+
+Test(create_directory_by_path, in_directory_directory,
+     .init = cr_redirect_stdall, .timeout = 10)
+{
+    system(
+        "dd if=/dev/zero "
+        "of=build/create_directory_by_path.in_directory_directory.test.shlkfs "
+        "bs=4096 count=100");
+
+    set_device_path(
+        "build/create_directory_by_path.in_directory_directory.test.shlkfs");
+
+    format_fs(
+        "build/create_directory_by_path.in_directory_directory.test.shlkfs",
+        "build/create_directory_by_path.in_directory_directory.public.pem",
+        "build/create_directory_by_path.in_directory_directory.private.pem",
+        NULL, NULL);
+
+    fpi_register_master_key_from_path(
+        "build/create_directory_by_path.in_directory_directory.test.shlkfs",
+        "build/create_directory_by_path.in_directory_directory.private.pem");
+
+    struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
+                                                           ROOT_ENTRY_BLOCK,
+                                                       .directory_index = 0 };
+
+    entry_create_directory(fpi_get_master_key(), root_dirctory_entry_id,
+                           "test_directory");
+
+    struct CryptFS_Entry_ID *entry_id_test_directory =
+        get_entry_by_path(fpi_get_master_key(), "/test_directory/");
+
+    struct CryptFS_Entry_ID *entry_id = create_directory_by_path(
+        fpi_get_master_key(), "/test_directory/test_directory2");
+    struct CryptFS_Entry_ID *entry_id_test_directory2 = get_entry_by_path(
+        fpi_get_master_key(), "/test_directory/test_directory2");
+
+    cr_assert_neq(entry_id, ENTRY_NO_SUCH);
+    cr_assert_neq(entry_id, ENTRY_EXISTS);
+    cr_assert_neq(entry_id_test_directory2, ENTRY_NO_SUCH);
+
+    cr_assert_eq(
+        entry_id_test_directory2->directory_block, entry_id->directory_block,
+        "entry_id_test_directory2->directory_block: %ld, "
+        "entry_id->directory_block: %ld",
+        entry_id_test_directory2->directory_block, entry_id->directory_block);
+    cr_assert_eq(entry_id_test_directory2->directory_index,
+                 entry_id->directory_index);
+
+    free(entry_id);
+    free(entry_id_test_directory2);
+    free(entry_id_test_directory);
+}

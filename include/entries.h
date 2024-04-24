@@ -39,6 +39,18 @@ struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
                                      const char *path);
 
 /**
+ * @brief Create a directory by its path.
+ *
+ * @param aes_key The AES key used for encryption/decryption.
+ * @param path The path to the directory. The directory must be at the end of
+ * the path and must not exist.
+ *
+ * @return The entry unique identifier of the created directory.
+ */
+struct CryptFS_Entry_ID *create_directory_by_path(const unsigned char *aes_key,
+                                                  const char *path);
+
+/**
  * @brief Create a file by its path.
  *
  * @param aes_key The AES key used for encryption/decryption.

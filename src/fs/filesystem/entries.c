@@ -431,6 +431,50 @@ struct CryptFS_Entry_ID *create_file_by_path(const unsigned char *aes_key,
     return NULL;
 }
 
+struct CryptFS_Entry_ID *create_directory_by_path(const unsigned char *aes_key,
+                                                  const char *path)
+{
+    // Create the empty directory at the parent directory level
+    struct CryptFS_Entry_ID *parent_dir_entry_id = NULL;
+    char *base_name = NULL;
+
+    switch (
+        __create_entry_by_path(aes_key, path, &parent_dir_entry_id, &base_name))
+    {
+    case BLOCK_ERROR:
+        return (void *)BLOCK_ERROR;
+    case ENTRY_NO_SUCH:
+        return (void *)ENTRY_NO_SUCH;
+    case ENTRY_EXISTS:
+        return (void *)ENTRY_EXISTS;
+    default:
+        // Create the empty directory (and remember its index in the parent
+        // directory)
+        uint32_t entry_index_in_dir =
+            entry_create_directory(aes_key, *parent_dir_entry_id, base_name);
+
+        // Get the parent directory entry.start_block (struct CryptFS_Directory)
+        struct CryptFS_Entry *parent_dir_entry =
+            get_entry_from_id(aes_key, *parent_dir_entry_id);
+        block_t parent_dir_entry_dir = parent_dir_entry->start_block;
+        free(parent_dir_entry);
+
+        // Fill the returned structure
+        // (parent_dir_entry_dir, entry_index_in_dir)
+        struct CryptFS_Entry_ID *new_dir_entry_id = xaligned_alloc(
+            CRYPTFS_BLOCK_SIZE_BYTES, 1, CRYPTFS_BLOCK_SIZE_BYTES);
+        new_dir_entry_id->directory_block = parent_dir_entry_dir;
+        new_dir_entry_id->directory_index = entry_index_in_dir;
+
+        free(base_name);
+        free(parent_dir_entry_id);
+
+        return new_dir_entry_id;
+    }
+    // Never reached, but el compilator is happy
+    return NULL;
+}
+
 int goto_entry_in_directory(const unsigned char *aes_key,
                             struct CryptFS_Entry_ID *entry_id)
 {
