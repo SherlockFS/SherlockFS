@@ -29,27 +29,29 @@
 int main(void)
 {
     system("dd if=/dev/zero "
-           "of=create_hardlink_by_path.root.test.shlkfs "
+           "of=delete_entry_by_path.root.test.shlkfs "
            "bs=4096 count=100");
 
-    set_device_path("create_hardlink_by_path.root.test.shlkfs");
+        set_device_path("delete_entry_by_path.root.test.shlkfs");
 
-    format_fs("create_hardlink_by_path.root.test.shlkfs",
-              "create_hardlink_by_path.root.public.pem",
-              "create_hardlink_by_path.root.private.pem", NULL, NULL);
+        format_fs("delete_entry_by_path.root.test.shlkfs",
+                  "delete_entry_by_path.root.public.pem",
+                  "delete_entry_by_path.root.private.pem", NULL, NULL);
 
-    fpi_register_master_key_from_path(
-        "create_hardlink_by_path.root.test.shlkfs",
-        "create_hardlink_by_path.root.private.pem");
+        fpi_register_master_key_from_path(
+            "delete_entry_by_path.root.test.shlkfs",
+            "delete_entry_by_path.root.private.pem");
 
-    struct CryptFS_Entry_ID *entry_id =
-        create_file_by_path(fpi_get_master_key(), "/test_hardlink_target");
+        free(create_file_by_path(fpi_get_master_key(), "/test_file"));
 
-    // Create hardlink and remember its entry ID
-    struct CryptFS_Entry_ID *hardlink_entry_id = create_hardlink_by_path(
-        fpi_get_master_key(), "/test_hardlink", "/test_hardlink_target");
+        // Delete entry
+        assert(delete_entry_by_path(fpi_get_master_key(), "/test_file") == 0);
 
-    (void)entry_id;
-    (void)hardlink_entry_id;
-    return 0;
+        // Get entry ID
+        struct CryptFS_Entry_ID *entry_id_test_file =
+            get_entry_by_path(fpi_get_master_key(), "/test_file");
+
+        // Check if the entry ID is correct
+        assert(entry_id_test_file == (void *)ENTRY_NO_SUCH);
+        return 0;
 }

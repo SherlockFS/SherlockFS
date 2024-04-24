@@ -2506,3 +2506,111 @@ Test(create_hardlink_by_path, in_directory_hardlink, .init = cr_redirect_stdall,
     free(entry_id_test_hardlink);
     free(entry_id_test_directory);
 }
+
+// delete_entry_by_path
+Test(delete_entry_by_path, root, .init = cr_redirect_stdall, .timeout = 10)
+{
+    system("dd if=/dev/zero "
+           "of=build/delete_entry_by_path.root.test.shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path("build/delete_entry_by_path.root.test.shlkfs");
+
+    format_fs("build/delete_entry_by_path.root.test.shlkfs",
+              "build/delete_entry_by_path.root.public.pem",
+              "build/delete_entry_by_path.root.private.pem", NULL, NULL);
+
+    fpi_register_master_key_from_path(
+        "build/delete_entry_by_path.root.test.shlkfs",
+        "build/delete_entry_by_path.root.private.pem");
+
+    free(create_file_by_path(fpi_get_master_key(), "/test_file"));
+
+    // Delete entry
+    cr_assert_eq(delete_entry_by_path(fpi_get_master_key(), "/test_file"), 0);
+
+    // Get entry ID
+    struct CryptFS_Entry_ID *entry_id_test_file =
+        get_entry_by_path(fpi_get_master_key(), "/test_file");
+
+    // Check if the entry ID is correct
+    cr_assert_eq(entry_id_test_file, ENTRY_NO_SUCH);
+}
+
+Test(delete_entry_by_path, root_not_exists, .init = cr_redirect_stdall,
+     .timeout = 10)
+{
+    system("dd if=/dev/zero "
+           "of=build/delete_entry_by_path.root_not_exists.test.shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path("build/delete_entry_by_path.root_not_exists.test.shlkfs");
+
+    format_fs("build/delete_entry_by_path.root_not_exists.test.shlkfs",
+              "build/delete_entry_by_path.root_not_exists.public.pem",
+              "build/delete_entry_by_path.root_not_exists.private.pem", NULL,
+              NULL);
+
+    fpi_register_master_key_from_path(
+        "build/delete_entry_by_path.root_not_exists.test.shlkfs",
+        "build/delete_entry_by_path.root_not_exists.private.pem");
+
+    // Delete entry
+    cr_assert_eq(delete_entry_by_path(fpi_get_master_key(), "/test_file"),
+                 ENTRY_NO_SUCH);
+
+    // Get entry ID
+    struct CryptFS_Entry_ID *entry_id_test_file =
+        get_entry_by_path(fpi_get_master_key(), "/test_file");
+
+    // Check if the entry ID is correct
+    cr_assert_eq(entry_id_test_file, ENTRY_NO_SUCH);
+}
+
+Test(delete_entry_by_path, in_directory_file, .init = cr_redirect_stdall,
+     .timeout = 10)
+{
+    system("dd if=/dev/zero "
+           "of=build/delete_entry_by_path.in_directory_file.test.shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path("build/delete_entry_by_path.in_directory_file.test.shlkfs");
+
+    format_fs("build/delete_entry_by_path.in_directory_file.test.shlkfs",
+              "build/delete_entry_by_path.in_directory_file.public.pem",
+              "build/delete_entry_by_path.in_directory_file.private.pem", NULL,
+              NULL);
+
+    fpi_register_master_key_from_path(
+        "build/delete_entry_by_path.in_directory_file.test.shlkfs",
+        "build/delete_entry_by_path.in_directory_file.private.pem");
+
+    struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
+                                                           ROOT_ENTRY_BLOCK,
+                                                       .directory_index = 0 };
+
+    entry_create_directory(fpi_get_master_key(), root_dirctory_entry_id,
+                           "test_directory");
+
+    struct CryptFS_Entry_ID *entry_id_test_directory =
+        get_entry_by_path(fpi_get_master_key(), "/test_directory/");
+
+    struct CryptFS_Entry_ID *entry_id =
+        create_file_by_path(fpi_get_master_key(), "/test_directory/test_file");
+
+    // Delete entry
+    cr_assert_eq(delete_entry_by_path(fpi_get_master_key(),
+                                      "/test_directory/"
+                                      "test_file"),
+                 0);
+
+    // Get entry ID
+    struct CryptFS_Entry_ID *entry_id_test_file =
+        get_entry_by_path(fpi_get_master_key(), "/test_directory/test_file");
+
+    // Check if the entry ID is correct
+    cr_assert_eq(entry_id_test_file, ENTRY_NO_SUCH);
+
+    free(entry_id);
+    free(entry_id_test_directory);
+}

@@ -31,9 +31,7 @@ struct CryptFS_Entry* get_entry_from_id(const unsigned char *aes_key,struct Cryp
  * @param aes_key The AES key used for encryption/decryption.
  * @param path The path to the entry.
  * @return A entry unique identifier.
- * BLOCK_ERROR if an error occurred.
- * ENTRY_NO_SUCH if the path contains a entry in the middle that is not a
- * directory.
+ * enum SHLKFS_ERROR if an error occurred.
  */
 struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
                                      const char *path);
@@ -46,6 +44,7 @@ struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
  * the path and must not exist.
  *
  * @return The entry unique identifier of the created directory.
+ * enum SHLKFS_ERROR if an error occurred.
  */
 struct CryptFS_Entry_ID *create_directory_by_path(const unsigned char *aes_key,
                                                   const char *path);
@@ -59,6 +58,7 @@ struct CryptFS_Entry_ID *create_directory_by_path(const unsigned char *aes_key,
  * @param symlink The string corresponding to the symlink's path.
  *
  * @return The entry unique identifier of the created symlink.
+ * enum SHLKFS_ERROR if an error occurred.
  */
 struct CryptFS_Entry_ID *create_symlink_by_path(const unsigned char *aes_key,
                                                 const char *path,
@@ -74,6 +74,7 @@ struct CryptFS_Entry_ID *create_symlink_by_path(const unsigned char *aes_key,
  * @param target_path The path to the target of the hardlink.
  *
  * @return The entry unique identifier of the created hardlink.
+ * enum SHLKFS_ERROR if an error occurred.
  */
 struct CryptFS_Entry_ID *create_hardlink_by_path(const unsigned char *aes_key,
                                                  const char *path,
@@ -87,13 +88,19 @@ struct CryptFS_Entry_ID *create_hardlink_by_path(const unsigned char *aes_key,
  * must not exist.
  *
  * @return The entry unique identifier of the created file.
- * BLOCK_ERROR if an error occurred.
- * ENTRY_NO_SUCH if the path contains a entry in the middle that is not a
- * directory.
- * BLOCK_ENTRY_ALREADY_EXISTS if the file already exists.
+ * enum SHLKFS_ERROR if an error occurred.
  */
 struct CryptFS_Entry_ID *create_file_by_path(const unsigned char *aes_key,
                                              const char *path);
+
+/**
+ * @brief Delete an entry by its path.
+ *
+ * @param aes_key The AES key used for encryption/decryption.
+ * @param path The path to the entry to delete.
+ * @return int 0 when success, enum SHLKFS_ERROR otherwise.
+ */
+int delete_entry_by_path(const unsigned char *aes_key, const char *path);
 
 /**
  * @brief Search for the directory block where the index is pointing to.

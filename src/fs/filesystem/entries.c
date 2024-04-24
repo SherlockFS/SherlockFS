@@ -554,7 +554,6 @@ struct CryptFS_Entry_ID *create_hardlink_by_path(const unsigned char *aes_key,
         // If the target entry does not exist, return an error
         if (hardlink_entry_id == (void *)ENTRY_NO_SUCH)
         {
-            free(hardlink_entry_id);
             free(base_name);
             free(parent_dir_entry_id);
             return (void *)ENTRY_NO_SUCH;
@@ -588,6 +587,44 @@ struct CryptFS_Entry_ID *create_hardlink_by_path(const unsigned char *aes_key,
 
     // Never reached, but el compilator is happy
     return NULL;
+}
+
+int delete_entry_by_path(const unsigned char *aes_key, const char *path)
+{
+    // Get the entry ID of the entry to delete
+    struct CryptFS_Entry_ID *entry_id = get_entry_by_path(aes_key, path);
+
+    // If the entry does not exist, return an error
+    if (entry_id == (void *)ENTRY_NO_SUCH)
+        return ENTRY_NO_SUCH;
+
+    // FIXME: Not optimal, but it works
+    char parent_path[PATH_MAX] = { 0 };
+    strncpy(parent_path, path, strlen(path));
+    char *parent_dir = dirname(parent_path);
+
+    // Get the parent directory entry ID
+    struct CryptFS_Entry_ID *parent_dir_entry_id =
+        get_entry_by_path(aes_key, parent_dir);
+
+    // If there is an error here, this is fatal!
+    if ((int64_t)parent_dir_entry_id < 0)
+    {
+        free(entry_id);
+        return BLOCK_ERROR;
+    }
+
+    if (entry_delete(aes_key, *parent_dir_entry_id, entry_id->directory_index)
+        != 0)
+    {
+        free(entry_id);
+        free(parent_dir_entry_id);
+        return BLOCK_ERROR;
+    }
+
+    free(entry_id);
+    free(parent_dir_entry_id);
+    return 0;
 }
 
 int goto_entry_in_directory(const unsigned char *aes_key,
@@ -885,6 +922,7 @@ static int __entry_delete_routine(const unsigned char *aes_key,
         goto err_entry_delete;
 
     // FIXME: Overflow in case of entry_index > NB_ENTRIES_PER_BLOCK?
+    // @clarelsalassa
     struct CryptFS_Entry entry = parent_dir->entries[entry_index];
 
     // Check if Directory is empty or if entry exist
@@ -919,6 +957,11 @@ int entry_delete(const unsigned char *aes_key,
         // Allocate struct for reading directory_block
         struct CryptFS_Entry *root_entry = xaligned_alloc(
             CRYPTFS_BLOCK_SIZE_BYTES, 1, CRYPTFS_BLOCK_SIZE_BYTES);
+
+        // Read the root Entry (corner case)
+        if (read_blocks_with_decryption(
+                aes_key, parent_dir_entry_id.directory_block, 1, root_entry))
+            goto err_entry_delete_root;
 
         // Put routine
         if (__entry_delete_routine(aes_key, root_entry, entry_index))
