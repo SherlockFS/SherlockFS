@@ -25,6 +25,8 @@ struct fs_file_info
     int fd; // File descriptor of the files
     struct CryptFS_Entry_ID uid; // SherlockFS unique entry identifier
     size_t seek_offset; // Current seek offset
+    bool is_readable_mode; // Whether the file is open for reading
+    bool is_writable_mode; // Whether the file is open for writing
     struct fs_file_info *next; // Pointer to the next file info node (SherlockFS
                                // internal use, not FUSE)
 };

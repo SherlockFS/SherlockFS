@@ -1,11 +1,13 @@
 #include "format.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include "block.h"
@@ -127,19 +129,25 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
     /// ------------------------------------------------------------
 
     // Add an entry at ROOT_ENTRY_BLOCK for the root directory
+    uint32_t creation_time = time(NULL);
+
     shlkfs->root_entry.used = 1;
     shlkfs->root_entry.type = ENTRY_TYPE_DIRECTORY;
     shlkfs->root_entry.start_block = ROOT_DIR_BLOCK;
     shlkfs->root_entry.uid = getuid();
     shlkfs->root_entry.gid = getgid();
     shlkfs->root_entry.mode = 0777;
+    shlkfs->root_entry.ctime = creation_time;
+    shlkfs->root_entry.mtime = creation_time;
+    shlkfs->root_entry.atime = creation_time;
     shlkfs->root_entry.nlink = 1;
     strcpy(shlkfs->root_entry.name, "");
 
     /// ------------------------------------------------------------
     /// BLOCK 4 : ROOT DIRECTORY DIRECTORY
     /// ------------------------------------------------------------
-    shlkfs->root_directory.current_directory_entry.directory_block = ROOT_ENTRY_BLOCK;
+    shlkfs->root_directory.current_directory_entry.directory_block =
+        ROOT_ENTRY_BLOCK;
     shlkfs->root_directory.current_directory_entry.directory_index = 0;
 
     /// ------------------------------------------------------------
@@ -154,8 +162,8 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
 
     size_t encrypted_entry_size;
     unsigned char *encrypted_root_dir =
-        aes_encrypt_data(aes_key, &shlkfs->root_entry,
-                         CRYPTFS_BLOCK_SIZE_BYTES, &encrypted_entry_size);
+        aes_encrypt_data(aes_key, &shlkfs->root_entry, CRYPTFS_BLOCK_SIZE_BYTES,
+                         &encrypted_entry_size);
     memset(&shlkfs->root_entry, 0, CRYPTFS_BLOCK_SIZE_BYTES);
     memcpy(&shlkfs->root_entry, encrypted_root_dir, encrypted_entry_size);
 

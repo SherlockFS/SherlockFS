@@ -1,5 +1,10 @@
 {
   "name": "SherlockFS, conteneur de développement",
   "build": { "dockerfile": "Dockerfile" },
-  "runArgs": ["--privileged"]
+  "runArgs": ["--privileged"],
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-vscode.cpptools"]
+    }
+  }
 }

@@ -1,5 +1,6 @@
 #include "entries.h"
 
+#include <libgen.h>
 #include <linux/limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -277,7 +278,7 @@ struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
         {
             free(entry);
             free(entry_id);
-            return (void *)BLOCK_NOT_SUCH_ENTRY;
+            return (void *)ENTRY_NO_SUCH;
         }
 
         // Goto struct CryptFS_Directory
@@ -307,11 +308,11 @@ struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
         {
             free(entry);
             free(entry_id);
-            return (void *)BLOCK_NOT_SUCH_ENTRY;
+            return (void *)ENTRY_NO_SUCH;
         }
 
         dir_name = strtok(NULL, "/");
-    
+
         // Change to directory beginning if found_entry is a directory and
         if (found_entry->type == ENTRY_TYPE_DIRECTORY && dir_name != NULL)
             entry_id->directory_index = 0;
@@ -321,6 +322,113 @@ struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
     }
 
     return entry_id;
+}
+
+/**
+ * @brief Helper function for all create_*_by_path functions.
+ * The main purpose of this function is :
+ * - Check if the entry already exists.
+ * - Get the parent directory entry ID. (where the new entry will be created)
+ * - Get the parent directory CryptFS_Directory block.
+ * (parent directory entry -> start_block)
+ * - Get the base name of the entry to create. (the name of the file or
+ * whatever)
+ *
+ * @param aes_key The AES key used for encryption/decryption.
+ * @param path The path of the entry to create.
+ * @param parent_dir_entry_id Parent directory of the future entry entry ID.
+ * (returned)
+ * @param parent_dir_entry_dir Already calculated block of the parent directory
+ * struct CryptFS_Directory.
+ * (returned)
+ * @param base_name Name of the entry to create.
+ * (returned)
+ */
+static int __create_entry_by_path(const unsigned char *aes_key,
+                                  const char *path,
+                                  struct CryptFS_Entry_ID **parent_dir_entry_id,
+                                  block_t *parent_dir_entry_dir,
+                                  char **base_name)
+{
+    // Check if file already exists
+    struct CryptFS_Entry_ID *entry_id = get_entry_by_path(aes_key, path);
+    if (entry_id != (void *)ENTRY_NO_SUCH)
+    {
+        free(entry_id);
+        return ENTRY_EXISTS;
+    }
+
+    // Get the parent directory path using dirname()
+    char path_copy[PATH_MAX] = { 0 };
+    strncpy(path_copy, path, strlen(path));
+    char *dir_name = dirname(path_copy);
+
+    // Get the parent directory entry ID
+    *parent_dir_entry_id = get_entry_by_path(aes_key, dir_name);
+
+    switch ((uint64_t)parent_dir_entry_id)
+    {
+    case BLOCK_ERROR:
+        free(*parent_dir_entry_id);
+        free(entry_id);
+        return BLOCK_ERROR;
+    case ENTRY_NO_SUCH:
+        free(*parent_dir_entry_id);
+        free(entry_id);
+        return ENTRY_NO_SUCH;
+    default:
+        // Get the basename of the path
+        strncpy(path_copy, path, strlen(path));
+        *base_name = xcalloc(NAME_MAX + 1, 1);
+        char *base_name_tmp = basename(path_copy);
+        strncpy(*base_name, base_name_tmp, strlen(base_name_tmp));
+
+        // Get the parent directory entry.start_block
+        struct CryptFS_Entry *parent_dir_entry =
+            get_entry_from_id(aes_key, **parent_dir_entry_id);
+        *parent_dir_entry_dir = parent_dir_entry->start_block;
+        free(parent_dir_entry);
+    }
+
+    return 0;
+}
+
+struct CryptFS_Entry_ID *create_file_by_path(const unsigned char *aes_key,
+                                             const char *path)
+{
+    // Create the empty file at the parent directory level
+    struct CryptFS_Entry_ID *parent_dir_entry_id = NULL;
+    block_t parent_dir_entry_dir = 0;
+    char *base_name = NULL;
+
+    switch (__create_entry_by_path(aes_key, path, &parent_dir_entry_id,
+                                   &parent_dir_entry_dir, &base_name))
+    {
+    case BLOCK_ERROR:
+        return (void *)BLOCK_ERROR;
+    case ENTRY_NO_SUCH:
+        return (void *)ENTRY_NO_SUCH;
+    case ENTRY_EXISTS:
+        return (void *)ENTRY_EXISTS;
+    default:
+        // Create the empty file
+        uint32_t entry_index_in_dir =
+            entry_create_empty_file(aes_key, *parent_dir_entry_id, base_name);
+
+        struct CryptFS_Entry_ID *new_file_entry_id = xaligned_alloc(
+            CRYPTFS_BLOCK_SIZE_BYTES, 1, CRYPTFS_BLOCK_SIZE_BYTES);
+
+        new_file_entry_id->directory_block = parent_dir_entry_dir;
+        new_file_entry_id->directory_index = entry_index_in_dir;
+
+        free(base_name);
+        free(parent_dir_entry_id);
+
+        return new_file_entry_id;
+    }
+
+    // Never reached, but el compilator is happy
+    return NULL;
 }
 
 int goto_entry_in_directory(const unsigned char *aes_key,

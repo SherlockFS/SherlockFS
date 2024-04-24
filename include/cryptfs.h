@@ -98,11 +98,16 @@ struct CryptFS_FAT
     ((CRYPTFS_BLOCK_SIZE_BYTES - sizeof(uint64_t))                             \
      / sizeof(struct CryptFS_FAT_Entry))
 
+enum SHLKFS_ERRORS
+{
+    ENTRY_EXISTS = -5, // The entry already exists
+    ENTRY_NO_SUCH = -4, // Entry not found / not existing
+    FAT_INDEX_OOB = -3, // FAT index is out of FAT bounds
+    BLOCK_ERROR = -2, // Error related to blocks. (e.g. read/write error)
+};
+
 enum BLOCK_TYPE
 {
-    BLOCK_NOT_SUCH_ENTRY = -4, // Entry not found
-    BLOCK_FAT_OOB = -3, // FAT index is out of band
-    BLOCK_ERROR = -2, // Error related to blocks. (Never written on the device)
     BLOCK_END = -1, // End of entity.
     BLOCK_FREE = 0, // The block is free.
 };

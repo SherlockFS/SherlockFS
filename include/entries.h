@@ -32,11 +32,27 @@ struct CryptFS_Entry* get_entry_from_id(const unsigned char *aes_key,struct Cryp
  * @param path The path to the entry.
  * @return A entry unique identifier.
  * BLOCK_ERROR if an error occurred.
- * BLOCK_NOT_SUCH_ENTRY if the path contains a entry in the middle that is not a
+ * ENTRY_NO_SUCH if the path contains a entry in the middle that is not a
  * directory.
  */
 struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
                                      const char *path);
+
+/**
+ * @brief Create a file by its path.
+ *
+ * @param aes_key The AES key used for encryption/decryption.
+ * @param path The path to the file. The file must be at the end of the path and
+ * must not exist.
+ *
+ * @return The entry unique identifier of the created file.
+ * BLOCK_ERROR if an error occurred.
+ * ENTRY_NO_SUCH if the path contains a entry in the middle that is not a
+ * directory.
+ * BLOCK_ENTRY_ALREADY_EXISTS if the file already exists.
+ */
+struct CryptFS_Entry_ID *create_file_by_path(const unsigned char *aes_key,
+                                             const char *path);
 
 /**
  * @brief Search for the directory block where the index is pointing to.

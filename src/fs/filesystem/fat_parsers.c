@@ -14,7 +14,7 @@ sblock_t find_first_free_block(const unsigned char *aes_key)
         {
         case BLOCK_FREE:
             return i;
-        case BLOCK_FAT_OOB:
+        case FAT_INDEX_OOB:
             return -i;
         case BLOCK_ERROR:
             return BLOCK_ERROR;
@@ -144,7 +144,7 @@ int write_fat_offset(const unsigned char *aes_key, uint64_t offset,
     {
         current_fat_block = first_fat.next_fat_table;
         if (first_fat.next_fat_table == (uint64_t)BLOCK_END)
-            return BLOCK_FAT_OOB;
+            return FAT_INDEX_OOB;
         if (read_blocks_with_decryption(aes_key, first_fat.next_fat_table, 1,
                                         &first_fat)
             == BLOCK_ERROR)
@@ -172,7 +172,7 @@ uint32_t read_fat_offset(const unsigned char *aes_key, uint64_t offset)
     for (uint64_t i = 0; i < concerned_fat; i++)
     {
         if (tmp_fat.next_fat_table == (uint64_t)BLOCK_END)
-            return BLOCK_FAT_OOB;
+            return FAT_INDEX_OOB;
 
         if (read_blocks_with_decryption(aes_key, tmp_fat.next_fat_table, 1,
                                         &tmp_fat)

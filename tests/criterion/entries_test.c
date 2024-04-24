@@ -1373,7 +1373,7 @@ Test(get_entry_by_path, not_existing, .init = cr_redirect_stdall, .timeout = 10)
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), "/not_existing");
 
-    cr_assert_eq(entry_id, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_eq(entry_id, ENTRY_NO_SUCH);
 }
 
 Test(get_entry_by_path, not_existing_ending_slash, .init = cr_redirect_stdall,
@@ -1398,7 +1398,7 @@ Test(get_entry_by_path, not_existing_ending_slash, .init = cr_redirect_stdall,
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), "/not_existing/");
 
-    cr_assert_eq(entry_id, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_eq(entry_id, ENTRY_NO_SUCH);
 }
 
 Test(get_entry_by_path, create_single_file, .init = cr_redirect_stdall,
@@ -1430,7 +1430,7 @@ Test(get_entry_by_path, create_single_file, .init = cr_redirect_stdall,
     struct CryptFS_Entry_ID *entry_id_test_file =
         get_entry_by_path(fpi_get_master_key(), "/test_file");
 
-    cr_assert_neq(entry_id_test_file, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_file, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_file->directory_block, ROOT_DIR_BLOCK,
                  "entry_id_test_file->directory_block: %ld",
                  entry_id_test_file->directory_block);
@@ -1470,14 +1470,14 @@ Test(get_entry_by_path, create_two_file, .init = cr_redirect_stdall,
     struct CryptFS_Entry_ID *entry_id_test_file =
         get_entry_by_path(fpi_get_master_key(), "/test_file");
 
-    cr_assert_neq(entry_id_test_file, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_file, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_file->directory_block, ROOT_DIR_BLOCK);
     cr_assert_eq(entry_id_test_file->directory_index, 0);
 
     struct CryptFS_Entry_ID *entry_id_test_file2 =
         get_entry_by_path(fpi_get_master_key(), "/test_file2");
 
-    cr_assert_neq(entry_id_test_file2, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_file2, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_file2->directory_block, ROOT_DIR_BLOCK);
     cr_assert_eq(entry_id_test_file2->directory_index, 1);
 
@@ -1518,7 +1518,7 @@ Test(get_entry_by_path, create_one_file_one_non_existing,
     struct CryptFS_Entry_ID *entry_id_non_existing =
         get_entry_by_path(fpi_get_master_key(), "/non_existing");
 
-    cr_assert_eq(entry_id_non_existing, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_eq(entry_id_non_existing, ENTRY_NO_SUCH);
 
     free(entry_id);
 }
@@ -1552,7 +1552,7 @@ Test(get_entry_by_path, create_one_directory, .init = cr_redirect_stdall,
     struct CryptFS_Entry_ID *entry_id_test_directory =
         get_entry_by_path(fpi_get_master_key(), "/test_directory");
 
-    cr_assert_neq(entry_id_test_directory, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_directory, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_directory->directory_block, ROOT_DIR_BLOCK);
     cr_assert_eq(entry_id_test_directory->directory_index, 0);
 
@@ -1594,7 +1594,7 @@ Test(get_entry_by_path, create_one_directory_ending_slash,
     struct CryptFS_Entry_ID *entry_id_test_directory =
         get_entry_by_path(fpi_get_master_key(), "/test_directory/");
 
-    cr_assert_neq(entry_id_test_directory, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_directory, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_directory->directory_block, ROOT_DIR_BLOCK);
     cr_assert_eq(entry_id_test_directory->directory_index, 0);
 
@@ -1632,14 +1632,14 @@ Test(get_entry_by_path, create_two_directory, .init = cr_redirect_stdall,
     struct CryptFS_Entry_ID *entry_id_test_directory =
         get_entry_by_path(fpi_get_master_key(), "/test_directory");
 
-    cr_assert_neq(entry_id_test_directory, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_directory, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_directory->directory_block, ROOT_DIR_BLOCK);
     cr_assert_eq(entry_id_test_directory->directory_index, 0);
 
     struct CryptFS_Entry_ID *entry_id_test_directory2 =
         get_entry_by_path(fpi_get_master_key(), "/test_directory2");
 
-    cr_assert_neq(entry_id_test_directory2, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_directory2, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_directory2->directory_block, ROOT_DIR_BLOCK);
     cr_assert_eq(entry_id_test_directory2->directory_index, 1);
 
@@ -1677,7 +1677,7 @@ Test(get_entry_by_path, one_file_in_one_dir, .init = cr_redirect_stdall,
     struct CryptFS_Entry_ID *entry_id_test_directory =
         get_entry_by_path(fpi_get_master_key(), "/test_directory");
 
-    cr_assert_neq(entry_id_test_directory, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_directory, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_directory->directory_block, ROOT_DIR_BLOCK);
     cr_assert_eq(entry_id_test_directory->directory_index, 0);
 
@@ -1690,7 +1690,7 @@ Test(get_entry_by_path, one_file_in_one_dir, .init = cr_redirect_stdall,
     struct CryptFS_Entry_ID *entry_id_test_file =
         get_entry_by_path(fpi_get_master_key(), "/test_directory/test_file");
 
-    cr_assert_neq(entry_id_test_file, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_file, ENTRY_NO_SUCH);
     cr_assert_eq(
         entry_id_test_file->directory_block, test_directory->start_block,
         "entry_id_test_file->directory_block: %ld, "
@@ -1732,7 +1732,7 @@ Test(get_entry_by_path, two_file_in_one_dir, .init = cr_redirect_stdall,
     struct CryptFS_Entry_ID *entry_id_test_directory =
         get_entry_by_path(fpi_get_master_key(), "/test_directory");
 
-    cr_assert_neq(entry_id_test_directory, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_directory, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_directory->directory_block, ROOT_DIR_BLOCK);
     cr_assert_eq(entry_id_test_directory->directory_index, 0);
 
@@ -1747,7 +1747,7 @@ Test(get_entry_by_path, two_file_in_one_dir, .init = cr_redirect_stdall,
     struct CryptFS_Entry_ID *entry_id_test_file =
         get_entry_by_path(fpi_get_master_key(), "/test_directory/test_file");
 
-    cr_assert_neq(entry_id_test_file, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_file, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_file->directory_block,
                  test_directory->start_block);
     cr_assert_eq(entry_id_test_file->directory_index, 0);
@@ -1755,7 +1755,7 @@ Test(get_entry_by_path, two_file_in_one_dir, .init = cr_redirect_stdall,
     struct CryptFS_Entry_ID *entry_id_test_file2 =
         get_entry_by_path(fpi_get_master_key(), "/test_directory/test_file2");
 
-    cr_assert_neq(entry_id_test_file2, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_file2, ENTRY_NO_SUCH);
 }
 
 Test(get_entry_by_path, one_dir_in_one_dir, .init = cr_redirect_stdall,
@@ -1787,7 +1787,7 @@ Test(get_entry_by_path, one_dir_in_one_dir, .init = cr_redirect_stdall,
     struct CryptFS_Entry_ID *entry_id_test_directory =
         get_entry_by_path(fpi_get_master_key(), "/test_directory");
 
-    cr_assert_neq(entry_id_test_directory, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_directory, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_directory->directory_block, ROOT_DIR_BLOCK);
     cr_assert_eq(entry_id_test_directory->directory_index, 0);
 
@@ -1800,7 +1800,7 @@ Test(get_entry_by_path, one_dir_in_one_dir, .init = cr_redirect_stdall,
     struct CryptFS_Entry_ID *entry_id_test_directory2 = get_entry_by_path(
         fpi_get_master_key(), "/test_directory/test_directory2");
 
-    cr_assert_neq(entry_id_test_directory2, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_directory2, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_directory2->directory_block,
                  test_directory->start_block);
     cr_assert_eq(entry_id_test_directory2->directory_index, 0);
@@ -1842,7 +1842,7 @@ Test(get_entry_by_path, one_dir_in_one_dir_ending_slash,
     struct CryptFS_Entry_ID *entry_id_test_directory =
         get_entry_by_path(fpi_get_master_key(), "/test_directory");
 
-    cr_assert_neq(entry_id_test_directory, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_directory, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_directory->directory_block, ROOT_DIR_BLOCK);
     cr_assert_eq(entry_id_test_directory->directory_index, 0);
 
@@ -1855,7 +1855,7 @@ Test(get_entry_by_path, one_dir_in_one_dir_ending_slash,
     struct CryptFS_Entry_ID *entry_id_test_directory2 = get_entry_by_path(
         fpi_get_master_key(), "/test_directory/test_directory2/");
 
-    cr_assert_neq(entry_id_test_directory2, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_directory2, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_directory2->directory_block,
                  test_directory->start_block);
     cr_assert_eq(entry_id_test_directory2->directory_index, 0);
@@ -1894,7 +1894,7 @@ Test(get_entry_by_path, two_dir_in_one_dir, .init = cr_redirect_stdall,
     struct CryptFS_Entry_ID *entry_id_test_directory =
         get_entry_by_path(fpi_get_master_key(), "/test_directory/");
 
-    cr_assert_neq(entry_id_test_directory, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_directory, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_directory->directory_block, ROOT_DIR_BLOCK);
     cr_assert_eq(entry_id_test_directory->directory_index, 0);
 
@@ -1907,7 +1907,7 @@ Test(get_entry_by_path, two_dir_in_one_dir, .init = cr_redirect_stdall,
     struct CryptFS_Entry_ID *entry_id_test_directory2 = get_entry_by_path(
         fpi_get_master_key(), "/test_directory/test_directory2");
 
-    cr_assert_neq(entry_id_test_directory2, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_directory2, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_directory2->directory_block,
                  test_directory->start_block);
     cr_assert_eq(entry_id_test_directory2->directory_index, 0);
@@ -1919,7 +1919,7 @@ Test(get_entry_by_path, two_dir_in_one_dir, .init = cr_redirect_stdall,
     struct CryptFS_Entry_ID *entry_id_test_directory3 = get_entry_by_path(
         fpi_get_master_key(), "/test_directory/test_directory3");
 
-    cr_assert_neq(entry_id_test_directory3, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_directory3, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_directory3->directory_block,
                  test_directory->start_block);
     cr_assert_eq(entry_id_test_directory3->directory_index, 1);
@@ -1962,7 +1962,7 @@ Test(get_entry_by_path, one_file_and_one_dir_in_one_dir,
     struct CryptFS_Entry_ID *entry_id_test_directory =
         get_entry_by_path(fpi_get_master_key(), "/test_directory");
 
-    cr_assert_neq(entry_id_test_directory, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_directory, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_directory->directory_block, ROOT_DIR_BLOCK);
     cr_assert_eq(entry_id_test_directory->directory_index, 0);
 
@@ -1976,7 +1976,7 @@ Test(get_entry_by_path, one_file_and_one_dir_in_one_dir,
     struct CryptFS_Entry_ID *entry_id_test_file =
         get_entry_by_path(fpi_get_master_key(), "/test_directory/test_file");
 
-    cr_assert_neq(entry_id_test_file, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_neq(entry_id_test_file, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_file->directory_block,
                  test_directory->start_block);
     cr_assert_eq(entry_id_test_file->directory_index, 0);
@@ -1986,8 +1986,8 @@ Test(get_entry_by_path, one_file_and_one_dir_in_one_dir,
 
     struct CryptFS_Entry_ID *entry_id_test_directory2 = get_entry_by_path(
         fpi_get_master_key(), "/test_directory/test_directory2");
-    
-    cr_assert_neq(entry_id_test_directory2, BLOCK_NOT_SUCH_ENTRY);
+
+    cr_assert_neq(entry_id_test_directory2, ENTRY_NO_SUCH);
     cr_assert_eq(entry_id_test_directory2->directory_block,
                  test_directory->start_block);
     cr_assert_eq(entry_id_test_directory2->directory_index, 1);
@@ -1996,3 +1996,79 @@ Test(get_entry_by_path, one_file_and_one_dir_in_one_dir,
     free(entry_id_test_directory);
     free(entry_id_test_file);
 }
+
+// create_file_by_path
+Test(create_file_by_path, root, .init = cr_redirect_stdall, .timeout = 10)
+{
+    system("dd if=/dev/zero of=build/create_file_by_path.root.test.shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path("build/create_file_by_path.root.test.shlkfs");
+
+    format_fs("build/create_file_by_path.root.test.shlkfs",
+              "build/create_file_by_path.root.public.pem",
+              "build/create_file_by_path.root.private.pem", NULL, NULL);
+
+    fpi_register_master_key_from_path(
+        "build/create_file_by_path.root.test.shlkfs",
+        "build/create_file_by_path.root.private.pem");
+
+    // Create file and remember its entry ID
+    struct CryptFS_Entry_ID *entry_id =
+        create_file_by_path(fpi_get_master_key(), "/test_file");
+
+    cr_assert_neq(entry_id, ENTRY_NO_SUCH);
+
+    // Get file entry ID
+    struct CryptFS_Entry_ID *entry_id_test_file =
+        get_entry_by_path(fpi_get_master_key(), "/test_file");
+
+    // Check if the entry ID is correct
+    cr_assert_neq(entry_id_test_file, ENTRY_NO_SUCH);
+    cr_assert_eq(entry_id_test_file->directory_block,
+                 entry_id->directory_block);
+    cr_assert_eq(entry_id_test_file->directory_index,
+                 entry_id->directory_index);
+
+    free(entry_id);
+    free(entry_id_test_file);
+}
+
+Test(create_file_by_path, root_already_exists, .init = cr_redirect_stdall,
+     .timeout = 10)
+{
+    system("dd if=/dev/zero "
+           "of=build/create_file_by_path.root_already_exists.test.shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path(
+        "build/create_file_by_path.root_already_exists.test.shlkfs");
+
+    format_fs("build/create_file_by_path.root_already_exists.test.shlkfs",
+              "build/create_file_by_path.root_already_exists.public.pem",
+              "build/create_file_by_path.root_already_exists.private.pem", NULL,
+              NULL);
+
+    fpi_register_master_key_from_path(
+        "build/create_file_by_path.root_already_exists.test.shlkfs",
+        "build/create_file_by_path.root_already_exists.private.pem");
+
+    // Create file and remember its entry ID
+    struct CryptFS_Entry_ID *entry_id =
+        create_file_by_path(fpi_get_master_key(), "/test_file");
+
+    cr_assert_neq(entry_id, ENTRY_NO_SUCH);
+
+    // Create file again
+    struct CryptFS_Entry_ID *entry_id_test_file =
+        create_file_by_path(fpi_get_master_key(), "/test_file");
+
+    // Check if the entry ID is correct
+    cr_assert_eq(entry_id_test_file, ENTRY_EXISTS);
+
+    free(entry_id);
+}
+
+Test(create_file_by_path, in_directory_file, .init = cr_redirect_stdall,
+     .timeout = 10)
+{}
