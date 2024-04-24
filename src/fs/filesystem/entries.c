@@ -244,9 +244,12 @@ struct CryptFS_Entry *get_entry_from_id(const unsigned char *aes_key,
 struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
                                            const char *path)
 {
+    if (path == NULL || strlen(path) == 0 || aes_key == NULL)
+        return (void *)BLOCK_ERROR;
+
     // Copie du chemin pour éviter de modifier l'original
-    char path_copy[PATH_MAX];
-    strncpy(path_copy, path, sizeof(path_copy));
+    char path_copy[PATH_MAX] = { 0 };
+    strncpy(path_copy, path, strlen(path));
 
     // Initialisation de l'ID de l'entrée à la racine
     struct CryptFS_Entry_ID *entry_id =
@@ -277,6 +280,9 @@ struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
             return (void *)BLOCK_NOT_SUCH_ENTRY;
         }
 
+        // Goto struct CryptFS_Directory
+        entry_id->directory_block = entry->start_block;
+
         // Recherche de l'entrée correspondant au nom du répertoire dans le
         // répertoire actuel
         struct CryptFS_Entry *found_entry = NULL;
@@ -304,10 +310,11 @@ struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
             return (void *)BLOCK_NOT_SUCH_ENTRY;
         }
 
-        // Passage à l'entrée suivante dans le chemin
-        entry_id->directory_block = found_entry->start_block;
-        entry_id->directory_index = 0;
         dir_name = strtok(NULL, "/");
+    
+        // Change to directory beginning if found_entry is a directory and
+        if (found_entry->type == ENTRY_TYPE_DIRECTORY && dir_name != NULL)
+            entry_id->directory_index = 0;
 
         free(entry);
         free(found_entry);

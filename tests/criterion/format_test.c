@@ -96,17 +96,18 @@ Test(format_fs, integrity, .init = cr_redirect_stdout, .timeout = 10)
     fclose(file);
 
     // Read the the CryptFS
-    read_blocks(0, 67, shlkfs_after);
+    read_blocks(0, ROOT_DIR_BLOCK + 1, shlkfs_after);
 
     // Check the integrity of the CryptFS
     for (size_t i = 0; i < sizeof(struct CryptFS); i++)
         if (((char *)shlkfs_before)[i] != ((char *)shlkfs_after)[i])
         {
+            cr_log_error("Integrity error at byte '%zu'\n", i);
             // Print the first 10 byte that are different
             for (size_t j = 0; j < 10; j++)
-                cr_log_error("%02x != %02x\n", ((char *)shlkfs_before)[i + j],
+                cr_log_error("%02d != %02d\n", ((char *)shlkfs_before)[i + j],
                              ((char *)shlkfs_after)[i + j]);
-            cr_assert(0);
+            cr_assert(false);
         }
 
     free(shlkfs_before);
@@ -188,21 +189,35 @@ Test(is_already_formatted, formated_check_content, .init = cr_redirect_stdout,
         cr_assert_eq(fat->entries[i].next_block, BLOCK_END);
 
     // Read block ROOT_ENTRY_BLOCK
-    struct CryptFS_Entry *root_dir =
+    struct CryptFS_Entry *root_entry =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, CRYPTFS_BLOCK_SIZE_BYTES);
 
     // Check if content is encrypted
-    cr_assert(read_blocks(ROOT_ENTRY_BLOCK, 1, root_dir) == 0);
+    cr_assert(read_blocks(ROOT_ENTRY_BLOCK, 1, root_entry) == 0);
+    cr_assert_arr_neq(root_entry, zeros, CRYPTFS_BLOCK_SIZE_BYTES);
+
+    // Check the content of the block
+    cr_assert(read_blocks_with_decryption(aes_key, ROOT_ENTRY_BLOCK, 1, root_entry)
+              == 0);
+    cr_assert_eq(root_entry->used, 1);
+    cr_assert_eq(root_entry->type, ENTRY_TYPE_DIRECTORY);
+    cr_assert_eq(root_entry->size, 0);
+    cr_assert_eq(root_entry->nlink, 1);
+    cr_assert_str_empty(root_entry->name);
+
+    // Read block ROOT_DIR_BLOCK
+    struct CryptFS_Directory *root_dir =
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, CRYPTFS_BLOCK_SIZE_BYTES);
+    
+    // Check if content is encrypted
+    cr_assert(read_blocks(ROOT_DIR_BLOCK, 1, root_dir) == 0);
     cr_assert_arr_neq(root_dir, zeros, CRYPTFS_BLOCK_SIZE_BYTES);
 
     // Check the content of the block
-    cr_assert(read_blocks_with_decryption(aes_key, ROOT_ENTRY_BLOCK, 1, root_dir)
+    cr_assert(read_blocks_with_decryption(aes_key, ROOT_DIR_BLOCK, 1, root_dir)
               == 0);
-    cr_assert_eq(root_dir->used, 1);
-    cr_assert_eq(root_dir->type, ENTRY_TYPE_DIRECTORY);
-    cr_assert_eq(root_dir->size, 0);
-    cr_assert_eq(root_dir->nlink, 1);
-    cr_assert_str_empty(root_dir->name);
+    cr_assert_eq(root_dir->current_directory_entry.directory_block, ROOT_ENTRY_BLOCK);
+    cr_assert_eq(root_dir->current_directory_entry.directory_index, 0);
 
     // Free
     free(header);
@@ -210,6 +225,7 @@ Test(is_already_formatted, formated_check_content, .init = cr_redirect_stdout,
     free(aes_key);
     free(zeros);
     free(fat);
+    free(root_entry);
     free(root_dir);
 
     // Delete the file

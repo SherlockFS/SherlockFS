@@ -204,7 +204,8 @@ struct CryptFS
     struct CryptFS_KeySlot keys_storage[NB_ENCRYPTION_KEYS]; // BLOCK 1-64: Keys
     struct CryptFS_FAT first_fat; // BLOCK 65: First FAT
     struct CryptFS_Entry root_entry; // BLOCK 66: Root directory entry
-    // struct CryptFS_Directory root_directory; // BLOCK 67: Root directory directory
+    uint8_t padding[CRYPTFS_BLOCK_SIZE_BYTES - sizeof(struct CryptFS_Entry)]; // CryptFS_Entry unused space
+    struct CryptFS_Directory root_directory; // BLOCK 67: Root directory directory
 } __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
 #endif /* CRYPT_FS_H */

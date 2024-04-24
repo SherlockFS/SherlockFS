@@ -29,18 +29,20 @@
 int main(void)
 {
     system("dd if=/dev/zero "
-           "of=get_entry_by_path.create_single_file.test.shlkfs "
+           "of=get_entry_by_path.create_one_file_one_non_existing.test.shlkfs "
            "bs=4096 count=100");
 
-    set_device_path("get_entry_by_path.create_single_file.test.shlkfs");
+    set_device_path(
+        "get_entry_by_path.create_one_file_one_non_existing.test.shlkfs");
 
-    format_fs("get_entry_by_path.create_single_file.test.shlkfs",
-              "get_entry_by_path.create_single_file.public.pem",
-              "get_entry_by_path.create_single_file.private.pem", NULL, NULL);
+    format_fs("get_entry_by_path.create_one_file_one_non_existing.test.shlkfs",
+              "get_entry_by_path.create_one_file_one_non_existing.public.pem",
+              "get_entry_by_path.create_one_file_one_non_existing.private.pem",
+              NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "get_entry_by_path.create_single_file.test.shlkfs",
-        "get_entry_by_path.create_single_file.private.pem");
+        "get_entry_by_path.create_one_file_one_non_existing.test.shlkfs",
+        "get_entry_by_path.create_one_file_one_non_existing.private.pem");
 
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), "/");
@@ -50,9 +52,12 @@ int main(void)
 
     entry_create_empty_file(fpi_get_master_key(), *entry_id, "test_file");
 
-    struct CryptFS_Entry_ID *entry_id_test_file =
-        get_entry_by_path(fpi_get_master_key(), "/test_file");
+    struct CryptFS_Entry_ID *entry_id_non_existing =
+        get_entry_by_path(fpi_get_master_key(), "/non_existing");
 
-    (void)entry_id_test_file;
+    assert(entry_id_non_existing == (void*)BLOCK_NOT_SUCH_ENTRY);
+
+    free(entry_id);
+    free(entry_id_non_existing);
     return 0;
 }
