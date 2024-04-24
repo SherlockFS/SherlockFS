@@ -14,7 +14,7 @@ int cryptfs_open(const char *path, struct fuse_file_info *file)
 
     if (entry_id == (void*)BLOCK_ERROR)
         return -EIO;
-    if (entry_id == (void*)BLOCK_NOT_DIRECTORY)
+    if (entry_id == (void *)BLOCK_NOT_SUCH_ENTRY)
         return -ENOTDIR;
 
     // FD management

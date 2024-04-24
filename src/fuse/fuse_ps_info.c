@@ -6,6 +6,8 @@
 
 #include "cryptfs.h"
 #include "crypto.h"
+#include "passphrase.h"
+#include "print.h"
 #include "xalloc.h"
 
 // ------------------- File descriptor management -------------------
@@ -90,6 +92,7 @@ void ffi_release_fd(struct fs_file_info *file)
 
 struct fs_ps_info
 {
+    bool master_key_set; // Whether the master key has been set
     unsigned char master_key[AES_KEY_SIZE_BYTES]; // XORed AES master key
     unsigned char xor_key[AES_KEY_SIZE_BYTES]; // master key XOR key
     unsigned char decoded_key[AES_KEY_SIZE_BYTES]; // Decoded key (must be
@@ -98,14 +101,38 @@ struct fs_ps_info
 };
 
 static struct fs_ps_info info = {
+    .master_key_set = false,
     .master_key = { 0 },
     .xor_key = { 0 },
     .decoded_key = { 0 },
     .current_directory_block = ROOT_ENTRY_BLOCK,
 };
 
-void fpi_set_master_key(unsigned char *key)
+void fpi_register_master_key_from_path(const char *device_path,
+                                       const char *private_key_path)
 {
+    char *passphrase = NULL;
+
+    // Check if my private key is encrypted
+    if (rsa_private_is_encrypted(private_key_path))
+        passphrase = ask_user_passphrase(false);
+
+    // Extract the aes_key
+    print_info("Extracting master key from the device...\n");
+    unsigned char *aes_key =
+        extract_aes_key(device_path, private_key_path, passphrase);
+
+    // Register the master key
+    fpi_register_master_key(aes_key);
+
+    free(aes_key);
+    if (passphrase != NULL)
+        free(passphrase);
+}
+
+void fpi_register_master_key(unsigned char *key)
+{
+    info.master_key_set = true;
     srand(time(NULL)); // Basic seed for random number generation, but
                        // acceptable for memory resilience
 
@@ -121,6 +148,9 @@ void fpi_set_master_key(unsigned char *key)
 
 const unsigned char *fpi_get_master_key()
 {
+    if (!info.master_key_set)
+        return NULL;
+
     for (int i = 0; i < AES_KEY_SIZE_BYTES; i++)
         info.decoded_key[i] = info.master_key[i]
             ^ info.xor_key[i]; // Decode the key before returning it

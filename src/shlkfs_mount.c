@@ -34,28 +34,6 @@ static struct fuse_operations ops = {
 
 #define IS_USING_SHLK_ARG(argv) (IS_USING_K_ARG(argv) || IS_USING_V_ARG(argv))
 
-static void __register_aes_key_ps(const char *device_path,
-                                  const char *private_key_path)
-{
-    char *passphrase = NULL;
-
-    // Check if my private key is encrypted
-    if (rsa_private_is_encrypted(private_key_path))
-        passphrase = ask_user_passphrase(false);
-
-    // Extract the aes_key
-    print_info("Extracting master key from the device...\n");
-    unsigned char *aes_key =
-        extract_aes_key(device_path, private_key_path, passphrase);
-
-    // Register the master key
-    fpi_set_master_key(aes_key);
-
-    free(aes_key);
-    if (passphrase != NULL)
-        free(passphrase);
-}
-
 int main(int argc, char *argv[])
 {
     if (argc < 3)
@@ -117,13 +95,13 @@ int main(int argc, char *argv[])
     if (private_key_path == NULL)
         get_rsa_keys_home_paths(NULL, &private_key_path);
 
-    __register_aes_key_ps(device_path, private_key_path);
+    fpi_register_master_key_from_path(device_path, private_key_path);
 
     int ret = fuse_main(argc, new_argv, &ops, NULL);
     if (ret == 0)
         print_success("SherlockFS instance exited successfully.\n");
     else
-        print_error("SherlockFS instance exited with an error: '%d'\n",
+        print_error("SherlockFS instance exited with an error: '%s'\n",
                     strerror(ret));
 
     free(new_argv);

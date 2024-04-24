@@ -74,9 +74,9 @@
                     "ignoreFailures": true
                 },
                 {
-                    "description": "Activer le suivi du processus parent",
-                    "text": "set follow-fork-mode not-child",
-                    "ignoreFailures": true
+                    "description": "Activer le suivi du processus enfant",
+                    "text": "set follow-fork-mode child",
+                    "ignoreFailures": false
                 },
             ],
             "preLaunchTask": "make shlkfs_mount"

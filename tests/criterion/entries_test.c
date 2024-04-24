@@ -10,6 +10,7 @@
 #include "entries.h"
 #include "fat.h"
 #include "format.h"
+#include "fuse_ps_info.h"
 #include "xalloc.h"
 
 // Test entry_truncate
@@ -935,6 +936,9 @@ Test(entry_create_empty_file, in_multiple_blocks, .timeout = 10,
         if (i == NB_ENTRIES_PER_BLOCK)
         {
             // read next directory block
+            // FIXME: #47 @clarelsalassa, quand read_fat_offset renvoie BOCK_END
+            // ça essaie de read_blocks_with_decryption -1 en unisgned ==
+            // 4294967295 => File too large
             read_blocks_with_decryption(
                 aes_key, read_fat_offset(aes_key, dir->entries[0].start_block),
                 1, dir);
@@ -1322,4 +1326,86 @@ Test(entry_create_symlink, bad_path_ascii, .timeout = 10,
     free(dir);
     free(aes_key);
     free(shlkfs);
+}
+
+Test(get_entry_by_path, root)
+{
+    system("dd if=/dev/zero of=build/get_entry_by_path.root.test.shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path("build/get_entry_by_path.root.test.shlkfs");
+
+    format_fs("build/get_entry_by_path.root.test.shlkfs",
+              "build/get_entry_by_path.root.public.pem",
+              "build/get_entry_by_path.root.private.pem", NULL, NULL);
+
+    fpi_register_master_key_from_path(
+        "build/get_entry_by_path.root.test.shlkfs",
+        "build/get_entry_by_path.root.private.pem");
+
+    struct CryptFS_Entry_ID *entry_id =
+        get_entry_by_path(fpi_get_master_key(), "/");
+
+    cr_assert_eq(entry_id->directory_block, ROOT_ENTRY_BLOCK);
+    cr_assert_eq(entry_id->directory_index, 0);
+
+    free(entry_id);
+}
+
+Test(get_entry_by_path, not_existing)
+{
+    system(
+        "dd if=/dev/zero of=build/get_entry_by_path.not_existing.test.shlkfs "
+        "bs=4096 count=100");
+
+    set_device_path("build/get_entry_by_path.not_existing.test.shlkfs");
+
+    format_fs("build/get_entry_by_path.not_existing.test.shlkfs",
+              "build/get_entry_by_path.not_existing.public.pem",
+              "build/get_entry_by_path.not_existing.private.pem", NULL, NULL);
+
+    fpi_register_master_key_from_path(
+        "build/get_entry_by_path.not_existing.test.shlkfs",
+        "build/get_entry_by_path.not_existing.private.pem");
+
+    struct CryptFS_Entry_ID *entry_id =
+        get_entry_by_path(fpi_get_master_key(), "/not_existing");
+
+    cr_assert_eq(entry_id, BLOCK_NOT_SUCH_ENTRY);
+}
+
+Test(get_entry_by_path, create_single_file)
+{
+    system("dd if=/dev/zero "
+           "of=build/get_entry_by_path.create_single_file.test.shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path("build/get_entry_by_path.create_single_file.test.shlkfs");
+
+    format_fs("build/get_entry_by_path.create_single_file.test.shlkfs",
+              "build/get_entry_by_path.create_single_file.public.pem",
+              "build/get_entry_by_path.create_single_file.private.pem", NULL,
+              NULL);
+
+    fpi_register_master_key_from_path(
+        "build/get_entry_by_path.create_single_file.test.shlkfs",
+        "build/get_entry_by_path.create_single_file.private.pem");
+
+    struct CryptFS_Entry_ID *entry_id =
+        get_entry_by_path(fpi_get_master_key(), "/");
+
+    cr_assert_eq(entry_id->directory_block, ROOT_ENTRY_BLOCK);
+    cr_assert_eq(entry_id->directory_index, 0);
+
+    entry_create_empty_file(fpi_get_master_key(), *entry_id, "test_file");
+
+    struct CryptFS_Entry_ID *entry_id_test_file =
+        get_entry_by_path(fpi_get_master_key(), "/test_file");
+
+    cr_assert_neq(entry_id_test_file, BLOCK_NOT_SUCH_ENTRY);
+    cr_assert_eq(entry_id_test_file->directory_block, ROOT_ENTRY_BLOCK);
+    cr_assert_eq(entry_id_test_file->directory_index, 0);
+
+    free(entry_id);
+    free(entry_id_test_file);
 }

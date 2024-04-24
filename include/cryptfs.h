@@ -100,8 +100,7 @@ struct CryptFS_FAT
 
 enum BLOCK_TYPE
 {
-    BLOCK_IS_DIRECTORY = -5, // Block is a directory
-    BLOCK_NOT_DIRECTORY= - 4, // Block is not a directory
+    BLOCK_NOT_SUCH_ENTRY = -4, // Entry not found
     BLOCK_FAT_OOB = -3, // FAT index is out of band
     BLOCK_ERROR = -2, // Error related to blocks. (Never written on the device)
     BLOCK_END = -1, // End of entity.

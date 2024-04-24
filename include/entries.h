@@ -25,15 +25,15 @@ int __blocks_needed_for_dir(size_t size);
 */
 struct CryptFS_Entry* get_entry_from_id(const unsigned char *aes_key,struct CryptFS_Entry_ID entry_id);
 
-
 /**
  * @brief Given a string path, search for the entry unique identifier.
  *
  * @param aes_key The AES key used for encryption/decryption.
  * @param path The path to the entry.
- * @return A entry unique identifier. 
- * BLOCK_ERROR if an error occurred. 
- * BLOCK_NOT_DIRECTORY if the path contains a entry in the middle that is not a directory.
+ * @return A entry unique identifier.
+ * BLOCK_ERROR if an error occurred.
+ * BLOCK_NOT_SUCH_ENTRY if the path contains a entry in the middle that is not a
+ * directory.
  */
 struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
                                      const char *path);

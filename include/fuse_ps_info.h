@@ -57,6 +57,20 @@ void ffi_release_fd(struct fs_file_info *file);
 // ------------------- File system information management -------------------
 
 /**
+ * @brief Sets the AES key for the file system into memory from a device and a
+ * private key path.
+ *
+ * @note The master key is XOR encrypted in memory in order to prevent easy loot
+ * in case of memory corruption.
+ *
+ * @param device_path The path to the device where the master key is stored.
+ * @param private_key_path The path to the private key used to decrypt the
+ * master key.
+ */
+void fpi_register_master_key_from_path(const char *device_path,
+                                       const char *private_key_path);
+
+/**
  * @brief Sets the AES key for the file system into memory.
  *
  * @note The master key is XOR encrypted in memory in order to prevent easy loot
@@ -66,7 +80,7 @@ void ffi_release_fd(struct fs_file_info *file);
  * key is in memory, its value is zeroed after being registered (so don't use it
  * after this, call fpi_get_master_key() instead).
  */
-void fpi_set_master_key(unsigned char *key);
+void fpi_register_master_key(unsigned char *key);
 
 /**
  * @brief Retrieves the AES key of the file system from memory.
@@ -74,7 +88,7 @@ void fpi_set_master_key(unsigned char *key);
  * @warning You must use fpi_clear_decoded_key() just after using this function.
  * @warning Also avoid copying the key to another memory location.
  *
- * @return The AES key.
+ * @return The AES key. NULL if the key is not set.
  */
 const unsigned char *fpi_get_master_key();
 

@@ -12,7 +12,7 @@ CFLAGS = -Wall -Wextra -Werror -Iinclude -g -std=gnu99 -D_ISOC11_SOURCE -D_FILE_
 CFLAGS += -DINTERNAL_ERROR_NO_BACKTRACE
 LDFLAGS = -lm -lcrypto
 
-SRC = $(shell find $(FS_CORE_DIR) -name '*.c')
+SRC = $(shell find $(FS_CORE_DIR) -name '*.c') $(shell find $(FUSE_CORE_DIR) -name '*.c')
 OBJ = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(SRC:.c=.o))
 
 SRC_FUSE = $(shell find $(FUSE_CORE_DIR) -name '*.c')

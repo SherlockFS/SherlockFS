@@ -170,7 +170,7 @@ void format_fs(const char *path, char *public_key_path, char *private_key_path,
     format_fill_filesystem_struct(shlkfs, rsa_passphrase, existing_rsa_keypair,
                                   public_key_path, private_key_path);
 
-    FILE *file = fopen(path, "w+");
+    FILE *file = fopen(path, "r+");
     if (file == NULL)
         error_exit("Impossible to open the fill\n", EXIT_FAILURE);
 
