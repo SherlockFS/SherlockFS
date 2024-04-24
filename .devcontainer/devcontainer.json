@@ -1,4 +1,5 @@
 {
   "name": "SherlockFS, conteneur de développement",
-  "build": { "dockerfile": "Dockerfile" }
+  "build": { "dockerfile": "Dockerfile" },
+  "runArgs": ["--privileged"]
 }
