@@ -203,6 +203,9 @@ Test(is_already_formatted, formated_check_content, .init = cr_redirect_stdout,
     cr_assert_eq(root_entry->type, ENTRY_TYPE_DIRECTORY);
     cr_assert_eq(root_entry->size, 0);
     cr_assert_eq(root_entry->nlink, 1);
+    cr_assert_eq(root_entry->uid, getuid());
+    cr_assert_eq(root_entry->gid, getgid());
+    cr_assert_eq(root_entry->mode, 0777);
     cr_assert_str_empty(root_entry->name);
 
     // Read block ROOT_DIR_BLOCK

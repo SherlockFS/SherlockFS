@@ -132,7 +132,7 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
     shlkfs->root_entry.start_block = ROOT_DIR_BLOCK;
     shlkfs->root_entry.uid = getuid();
     shlkfs->root_entry.gid = getgid();
-    shlkfs->root_entry.mode = 777;
+    shlkfs->root_entry.mode = 0777;
     shlkfs->root_entry.nlink = 1;
     strcpy(shlkfs->root_entry.name, "");
 
