@@ -408,6 +408,9 @@ struct CryptFS_Entry_ID *create_file_by_path(const unsigned char *aes_key,
         uint32_t entry_index_in_dir =
             entry_create_empty_file(aes_key, *parent_dir_entry_id, base_name);
 
+        if (entry_index_in_dir == (uint32_t)BLOCK_ERROR)
+            return (void *)BLOCK_ERROR;
+
         // Get the parent directory entry.start_block (struct CryptFS_Directory)
         struct CryptFS_Entry *parent_dir_entry =
             get_entry_from_id(aes_key, *parent_dir_entry_id);
@@ -453,6 +456,9 @@ struct CryptFS_Entry_ID *create_directory_by_path(const unsigned char *aes_key,
         uint32_t entry_index_in_dir =
             entry_create_directory(aes_key, *parent_dir_entry_id, base_name);
 
+        if (entry_index_in_dir == (uint32_t)BLOCK_ERROR)
+            return (void *)BLOCK_ERROR;
+
         // Get the parent directory entry.start_block (struct CryptFS_Directory)
         struct CryptFS_Entry *parent_dir_entry =
             get_entry_from_id(aes_key, *parent_dir_entry_id);
@@ -471,6 +477,115 @@ struct CryptFS_Entry_ID *create_directory_by_path(const unsigned char *aes_key,
 
         return new_dir_entry_id;
     }
+    // Never reached, but el compilator is happy
+    return NULL;
+}
+
+struct CryptFS_Entry_ID *create_symlink_by_path(const unsigned char *aes_key,
+                                                const char *path,
+                                                const char *symlink)
+{
+    // Create the empty symlink at the parent directory level
+    struct CryptFS_Entry_ID *parent_dir_entry_id = NULL;
+    char *base_name = NULL;
+
+    switch (
+        __create_entry_by_path(aes_key, path, &parent_dir_entry_id, &base_name))
+    {
+    case BLOCK_ERROR:
+        return (void *)BLOCK_ERROR;
+    case ENTRY_NO_SUCH:
+        return (void *)ENTRY_NO_SUCH;
+    case ENTRY_EXISTS:
+        return (void *)ENTRY_EXISTS;
+    default:
+        // Create the empty symlink (and remember its index in the parent
+        // directory)
+        uint32_t entry_index_in_dir = entry_create_symlink(
+            aes_key, *parent_dir_entry_id, base_name, symlink);
+
+        if (entry_index_in_dir == (uint32_t)BLOCK_ERROR)
+            return (void *)BLOCK_ERROR;
+
+        // Get the parent directory entry.start_block (struct CryptFS_Directory)
+        struct CryptFS_Entry *parent_dir_entry =
+            get_entry_from_id(aes_key, *parent_dir_entry_id);
+        block_t parent_dir_entry_dir = parent_dir_entry->start_block;
+        free(parent_dir_entry);
+
+        // Fill the returned structure
+        // (parent_dir_entry_dir, entry_index_in_dir)
+        struct CryptFS_Entry_ID *new_symlink_entry_id = xaligned_alloc(
+            CRYPTFS_BLOCK_SIZE_BYTES, 1, CRYPTFS_BLOCK_SIZE_BYTES);
+        new_symlink_entry_id->directory_block = parent_dir_entry_dir;
+        new_symlink_entry_id->directory_index = entry_index_in_dir;
+
+        free(base_name);
+        free(parent_dir_entry_id);
+
+        return new_symlink_entry_id;
+    }
+    // Never reached, but el compilator is happy
+    return NULL;
+}
+
+struct CryptFS_Entry_ID *create_hardlink_by_path(const unsigned char *aes_key,
+                                                 const char *path,
+                                                 const char *target_path)
+{
+    // Create the empty hardlink at the parent directory level
+    struct CryptFS_Entry_ID *parent_dir_entry_id = NULL;
+    char *base_name = NULL;
+
+    switch (
+        __create_entry_by_path(aes_key, path, &parent_dir_entry_id, &base_name))
+    {
+    case BLOCK_ERROR:
+        return (void *)BLOCK_ERROR;
+    case ENTRY_NO_SUCH:
+        return (void *)ENTRY_NO_SUCH;
+    case ENTRY_EXISTS:
+        return (void *)ENTRY_EXISTS;
+    default:
+        // Get hardlink entry ID by path
+        struct CryptFS_Entry_ID *hardlink_entry_id =
+            get_entry_by_path(aes_key, target_path);
+
+        // If the target entry does not exist, return an error
+        if (hardlink_entry_id == (void *)ENTRY_NO_SUCH)
+        {
+            free(hardlink_entry_id);
+            free(base_name);
+            free(parent_dir_entry_id);
+            return (void *)ENTRY_NO_SUCH;
+        }
+
+        // Create the hardlink (and remember its index in the parent directory)
+        uint32_t entry_index_in_dir = entry_create_hardlink(
+            aes_key, *parent_dir_entry_id, base_name, *hardlink_entry_id);
+
+        if (entry_index_in_dir == (uint32_t)BLOCK_ERROR)
+            return (void *)BLOCK_ERROR;
+
+        // Get the parent directory entry.start_block (struct CryptFS_Directory)
+        struct CryptFS_Entry *parent_dir_entry =
+            get_entry_from_id(aes_key, *parent_dir_entry_id);
+        block_t parent_dir_entry_dir = parent_dir_entry->start_block;
+        free(parent_dir_entry);
+
+        // Fill the returned structure
+        // (parent_dir_entry_dir, entry_index_in_dir)
+        struct CryptFS_Entry_ID *new_hardlink_entry_id = xaligned_alloc(
+            CRYPTFS_BLOCK_SIZE_BYTES, 1, CRYPTFS_BLOCK_SIZE_BYTES);
+        new_hardlink_entry_id->directory_block = parent_dir_entry_dir;
+        new_hardlink_entry_id->directory_index = entry_index_in_dir;
+
+        free(base_name);
+        free(parent_dir_entry_id);
+
+        return new_hardlink_entry_id;
+    }
+
     // Never reached, but el compilator is happy
     return NULL;
 }

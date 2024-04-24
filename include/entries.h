@@ -51,6 +51,35 @@ struct CryptFS_Entry_ID *create_directory_by_path(const unsigned char *aes_key,
                                                   const char *path);
 
 /**
+ * @brief Create a symlink by its path.
+ *
+ * @param aes_key The AES key used for encryption/decryption.
+ * @param path The path to the symlink. The symlink must be at the end of the
+ * path and must not exist.
+ * @param symlink The string corresponding to the symlink's path.
+ *
+ * @return The entry unique identifier of the created symlink.
+ */
+struct CryptFS_Entry_ID *create_symlink_by_path(const unsigned char *aes_key,
+                                                const char *path,
+                                                const char *symlink);
+/**
+ * @brief Create a hardlink by its path.
+ *
+ * @warning The hardlink path must target an entry IN the mounted environment.
+ *
+ * @param aes_key The AES key used for encryption/decryption.
+ * @param path The path to the hardlink. The hardlink must be at the end of the
+ * path and must not exist.
+ * @param target_path The path to the target of the hardlink.
+ *
+ * @return The entry unique identifier of the created hardlink.
+ */
+struct CryptFS_Entry_ID *create_hardlink_by_path(const unsigned char *aes_key,
+                                                 const char *path,
+                                                 const char *target_path);
+
+/**
  * @brief Create a file by its path.
  *
  * @param aes_key The AES key used for encryption/decryption.

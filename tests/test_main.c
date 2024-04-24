@@ -29,33 +29,27 @@
 int main(void)
 {
     system("dd if=/dev/zero "
-           "of=create_file_by_path.in_directory_file.test.shlkfs "
+           "of=create_hardlink_by_path.root.test.shlkfs "
            "bs=4096 count=100");
 
-    set_device_path("create_file_by_path.in_directory_file.test.shlkfs");
+    set_device_path("create_hardlink_by_path.root.test.shlkfs");
 
-    format_fs("create_file_by_path.in_directory_file.test.shlkfs",
-              "create_file_by_path.in_directory_file.public.pem",
-              "create_file_by_path.in_directory_file.private.pem", NULL, NULL);
+    format_fs("create_hardlink_by_path.root.test.shlkfs",
+              "create_hardlink_by_path.root.public.pem",
+              "create_hardlink_by_path.root.private.pem", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "create_file_by_path.in_directory_file.test.shlkfs",
-        "create_file_by_path.in_directory_file.private.pem");
-
-    struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
-                                                           ROOT_ENTRY_BLOCK,
-                                                       .directory_index = 0 };
-
-    entry_create_directory(fpi_get_master_key(), root_dirctory_entry_id,
-                           "test_directory");
-
-    struct CryptFS_Entry_ID *entry_id_test_directory =
-        get_entry_by_path(fpi_get_master_key(), "/test_directory/");
+        "create_hardlink_by_path.root.test.shlkfs",
+        "create_hardlink_by_path.root.private.pem");
 
     struct CryptFS_Entry_ID *entry_id =
-        create_file_by_path(fpi_get_master_key(), "/test_directory/test_file");
+        create_file_by_path(fpi_get_master_key(), "/test_hardlink_target");
+
+    // Create hardlink and remember its entry ID
+    struct CryptFS_Entry_ID *hardlink_entry_id = create_hardlink_by_path(
+        fpi_get_master_key(), "/test_hardlink", "/test_hardlink_target");
 
     (void)entry_id;
-    (void)entry_id_test_directory;
+    (void)hardlink_entry_id;
     return 0;
 }

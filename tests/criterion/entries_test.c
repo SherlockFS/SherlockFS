@@ -2244,3 +2244,265 @@ Test(create_directory_by_path, in_directory_directory,
     free(entry_id_test_directory2);
     free(entry_id_test_directory);
 }
+
+// create_symlink_by_path
+Test(create_symlink_by_path, root, .init = cr_redirect_stdall, .timeout = 10)
+{
+    system("dd if=/dev/zero "
+           "of=build/create_symlink_by_path.root.test.shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path("build/create_symlink_by_path.root.test.shlkfs");
+
+    format_fs("build/create_symlink_by_path.root.test.shlkfs",
+              "build/create_symlink_by_path.root.public.pem",
+              "build/create_symlink_by_path.root.private.pem", NULL, NULL);
+
+    fpi_register_master_key_from_path(
+        "build/create_symlink_by_path.root.test.shlkfs",
+        "build/create_symlink_by_path.root.private.pem");
+
+    // Create symlink and remember its entry ID
+    struct CryptFS_Entry_ID *entry_id = create_symlink_by_path(
+        fpi_get_master_key(), "/test_symlink", "/test_symlink_target");
+
+    cr_assert_neq(entry_id, ENTRY_NO_SUCH);
+
+    // Get symlink entry ID
+    struct CryptFS_Entry_ID *entry_id_test_symlink =
+        get_entry_by_path(fpi_get_master_key(), "/test_symlink");
+
+    // Check if the entry ID is correct
+    cr_assert_neq(entry_id_test_symlink, ENTRY_NO_SUCH);
+    cr_assert_eq(entry_id_test_symlink->directory_block,
+                 entry_id->directory_block);
+    cr_assert_eq(entry_id_test_symlink->directory_index,
+                 entry_id->directory_index);
+
+    free(entry_id);
+    free(entry_id_test_symlink);
+}
+
+Test(create_symlink_by_path, root_already_exists, .init = cr_redirect_stdall,
+     .timeout = 10)
+{
+    system("dd if=/dev/zero "
+           "of=build/create_symlink_by_path.root_already_exists.test.shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path(
+        "build/create_symlink_by_path.root_already_exists.test.shlkfs");
+
+    format_fs("build/create_symlink_by_path.root_already_exists.test.shlkfs",
+              "build/create_symlink_by_path.root_already_exists.public.pem",
+              "build/create_symlink_by_path.root_already_exists.private.pem",
+              NULL, NULL);
+
+    fpi_register_master_key_from_path(
+        "build/create_symlink_by_path.root_already_exists.test.shlkfs",
+        "build/create_symlink_by_path.root_already_exists.private.pem");
+
+    // Create symlink and remember its entry ID
+    struct CryptFS_Entry_ID *entry_id = create_symlink_by_path(
+        fpi_get_master_key(), "/test_symlink", "/test_symlink_target");
+
+    cr_assert_neq(entry_id, ENTRY_NO_SUCH);
+
+    // Create symlink again
+    struct CryptFS_Entry_ID *entry_id_test_symlink = create_symlink_by_path(
+        fpi_get_master_key(), "/test_symlink", "/test_symlink_target");
+
+    // Check if the entry ID is correct
+    cr_assert_eq(entry_id_test_symlink, ENTRY_EXISTS);
+
+    free(entry_id);
+}
+
+Test(create_symlink_by_path, in_directory_symlink, .init = cr_redirect_stdall,
+     .timeout = 10)
+{
+    system("dd if=/dev/zero "
+           "of=build/create_symlink_by_path.in_directory_symlink.test.shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path(
+        "build/create_symlink_by_path.in_directory_symlink.test.shlkfs");
+
+    format_fs("build/create_symlink_by_path.in_directory_symlink.test.shlkfs",
+              "build/create_symlink_by_path.in_directory_symlink.public.pem",
+              "build/create_symlink_by_path.in_directory_symlink.private.pem",
+              NULL, NULL);
+
+    fpi_register_master_key_from_path(
+        "build/create_symlink_by_path.in_directory_symlink.test.shlkfs",
+        "build/create_symlink_by_path.in_directory_symlink.private.pem");
+
+    struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
+                                                           ROOT_ENTRY_BLOCK,
+                                                       .directory_index = 0 };
+
+    entry_create_directory(fpi_get_master_key(), root_dirctory_entry_id,
+                           "test_directory");
+
+    struct CryptFS_Entry_ID *entry_id_test_directory =
+        get_entry_by_path(fpi_get_master_key(), "/test_directory/");
+
+    struct CryptFS_Entry_ID *entry_id = create_symlink_by_path(
+        fpi_get_master_key(), "/test_directory/test_symlink",
+        "/test_directory/test_symlink_target");
+    struct CryptFS_Entry_ID *entry_id_test_symlink =
+        get_entry_by_path(fpi_get_master_key(), "/test_directory/test_symlink");
+
+    cr_assert_neq(entry_id, ENTRY_NO_SUCH);
+    cr_assert_neq(entry_id, ENTRY_EXISTS);
+    cr_assert_neq(entry_id_test_symlink, ENTRY_NO_SUCH);
+
+    cr_assert_eq(
+        entry_id_test_symlink->directory_block, entry_id->directory_block,
+        "entry_id_test_symlink->directory_block: %ld, "
+        "entry_id->directory_block: %ld",
+        entry_id_test_symlink->directory_block, entry_id->directory_block);
+    cr_assert_eq(entry_id_test_symlink->directory_index,
+                 entry_id->directory_index);
+
+    free(entry_id);
+    free(entry_id_test_symlink);
+    free(entry_id_test_directory);
+}
+
+// create_hardlink_by_path
+Test(create_hardlink_by_path, root, .init = cr_redirect_stdall, .timeout = 10)
+{
+    system("dd if=/dev/zero "
+           "of=build/create_hardlink_by_path.root.test.shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path("build/create_hardlink_by_path.root.test.shlkfs");
+
+    format_fs("build/create_hardlink_by_path.root.test.shlkfs",
+              "build/create_hardlink_by_path.root.public.pem",
+              "build/create_hardlink_by_path.root.private.pem", NULL, NULL);
+
+    fpi_register_master_key_from_path(
+        "build/create_hardlink_by_path.root.test.shlkfs",
+        "build/create_hardlink_by_path.root.private.pem");
+
+    struct CryptFS_Entry_ID *entry_id =
+        create_file_by_path(fpi_get_master_key(), "/test_hardlink_target");
+
+    // Create hardlink and remember its entry ID
+    struct CryptFS_Entry_ID *hardlink_entry_id = create_hardlink_by_path(
+        fpi_get_master_key(), "/test_hardlink", "/test_hardlink_target");
+
+    cr_assert_neq(hardlink_entry_id, ENTRY_NO_SUCH);
+
+    // Get hardlink entry ID
+    struct CryptFS_Entry_ID *entry_id_test_hardlink =
+        get_entry_by_path(fpi_get_master_key(), "/test_hardlink");
+
+    // Check if the entry ID is correct
+    cr_assert_neq(entry_id_test_hardlink, ENTRY_NO_SUCH);
+    cr_assert_eq(entry_id_test_hardlink->directory_block,
+                 hardlink_entry_id->directory_block);
+    cr_assert_eq(entry_id_test_hardlink->directory_index,
+                 hardlink_entry_id->directory_index);
+
+    free(entry_id);
+    free(hardlink_entry_id);
+    free(entry_id_test_hardlink);
+}
+
+Test(create_hardlink_by_path, root_already_exists, .init = cr_redirect_stdall,
+     .timeout = 10)
+{
+    system("dd if=/dev/zero "
+           "of=build/create_hardlink_by_path.root_already_exists.test.shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path(
+        "build/create_hardlink_by_path.root_already_exists.test.shlkfs");
+
+    format_fs("build/create_hardlink_by_path.root_already_exists.test.shlkfs",
+              "build/create_hardlink_by_path.root_already_exists.public.pem",
+              "build/create_hardlink_by_path.root_already_exists.private.pem",
+              NULL, NULL);
+
+    fpi_register_master_key_from_path(
+        "build/create_hardlink_by_path.root_already_exists.test.shlkfs",
+        "build/create_hardlink_by_path.root_already_exists.private.pem");
+
+    struct CryptFS_Entry_ID *entry_id =
+        create_file_by_path(fpi_get_master_key(), "/test_hardlink_target");
+
+    // Create hardlink and remember its entry ID
+    struct CryptFS_Entry_ID *hardlink_entry_id = create_hardlink_by_path(
+        fpi_get_master_key(), "/test_hardlink", "/test_hardlink_target");
+
+    cr_assert_neq(hardlink_entry_id, ENTRY_NO_SUCH);
+
+    // Create hardlink again
+    struct CryptFS_Entry_ID *entry_id_test_hardlink = create_hardlink_by_path(
+        fpi_get_master_key(), "/test_hardlink", "/test_hardlink_target");
+
+    // Check if the entry ID is correct
+    cr_assert_eq(entry_id_test_hardlink, ENTRY_EXISTS);
+
+    free(entry_id);
+    free(hardlink_entry_id);
+}
+
+Test(create_hardlink_by_path, in_directory_hardlink, .init = cr_redirect_stdall,
+     .timeout = 10)
+{
+    system("dd if=/dev/zero "
+           "of=build/create_hardlink_by_path.in_directory_hardlink.test.shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path(
+        "build/create_hardlink_by_path.in_directory_hardlink.test.shlkfs");
+
+    format_fs("build/create_hardlink_by_path.in_directory_hardlink.test.shlkfs",
+              "build/create_hardlink_by_path.in_directory_hardlink.public.pem",
+              "build/create_hardlink_by_path.in_directory_hardlink.private.pem",
+              NULL, NULL);
+
+    fpi_register_master_key_from_path(
+        "build/create_hardlink_by_path.in_directory_hardlink.test.shlkfs",
+        "build/create_hardlink_by_path.in_directory_hardlink.private.pem");
+
+    struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
+                                                           ROOT_ENTRY_BLOCK,
+                                                       .directory_index = 0 };
+
+    entry_create_directory(fpi_get_master_key(), root_dirctory_entry_id,
+                           "test_directory");
+
+    struct CryptFS_Entry_ID *entry_id_test_directory =
+        get_entry_by_path(fpi_get_master_key(), "/test_directory/");
+
+    struct CryptFS_Entry_ID *entry_id =
+        create_file_by_path(fpi_get_master_key(), "/test_directory/test_file");
+
+    // Create hardlink and remember its entry ID
+    struct CryptFS_Entry_ID *hardlink_entry_id = create_hardlink_by_path(
+        fpi_get_master_key(), "/test_directory/test_hardlink",
+        "/test_directory/test_file");
+
+    cr_assert_neq(hardlink_entry_id, ENTRY_NO_SUCH);
+
+    // Get hardlink entry ID
+    struct CryptFS_Entry_ID *entry_id_test_hardlink = get_entry_by_path(
+        fpi_get_master_key(), "/test_directory/test_hardlink");
+
+    // Check if the entry ID is correct
+    cr_assert_neq(entry_id_test_hardlink, ENTRY_NO_SUCH);
+    cr_assert_eq(entry_id_test_hardlink->directory_block,
+                 hardlink_entry_id->directory_block);
+    cr_assert_eq(entry_id_test_hardlink->directory_index,
+                 hardlink_entry_id->directory_index);
+
+    free(entry_id);
+    free(hardlink_entry_id);
+    free(entry_id_test_hardlink);
+    free(entry_id_test_directory);
+}
