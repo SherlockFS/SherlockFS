@@ -2071,4 +2071,50 @@ Test(create_file_by_path, root_already_exists, .init = cr_redirect_stdall,
 
 Test(create_file_by_path, in_directory_file, .init = cr_redirect_stdall,
      .timeout = 10)
-{}
+{
+    system("dd if=/dev/zero "
+           "of=build/create_file_by_path.in_directory_file.test.shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path("build/create_file_by_path.in_directory_file.test.shlkfs");
+
+    format_fs("build/create_file_by_path.in_directory_file.test.shlkfs",
+              "build/create_file_by_path.in_directory_file.public.pem",
+              "build/create_file_by_path.in_directory_file.private.pem", NULL,
+              NULL);
+
+    fpi_register_master_key_from_path(
+        "build/create_file_by_path.in_directory_file.test.shlkfs",
+        "build/create_file_by_path.in_directory_file.private.pem");
+
+    struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
+                                                           ROOT_ENTRY_BLOCK,
+                                                       .directory_index = 0 };
+
+    entry_create_directory(fpi_get_master_key(), root_dirctory_entry_id,
+                           "test_directory");
+
+    struct CryptFS_Entry_ID *entry_id_test_directory =
+        get_entry_by_path(fpi_get_master_key(), "/test_directory/");
+
+    struct CryptFS_Entry_ID *entry_id =
+        create_file_by_path(fpi_get_master_key(), "/test_directory/test_file");
+    struct CryptFS_Entry_ID *entry_id_test_file =
+        get_entry_by_path(fpi_get_master_key(), "/test_directory/test_file");
+
+    cr_assert_neq(entry_id, ENTRY_NO_SUCH);
+    cr_assert_neq(entry_id, ENTRY_EXISTS);
+    cr_assert_neq(entry_id_test_file, ENTRY_NO_SUCH);
+
+    cr_assert_eq(entry_id_test_file->directory_block, entry_id->directory_block,
+                 "entry_id_test_file->directory_block: %ld, "
+                 "entry_id->directory_block: %ld",
+                 entry_id_test_file->directory_block,
+                 entry_id->directory_block);
+    cr_assert_eq(entry_id_test_file->directory_index,
+                 entry_id->directory_index);
+
+    free(entry_id);
+    free(entry_id_test_file);
+    free(entry_id_test_directory);
+}

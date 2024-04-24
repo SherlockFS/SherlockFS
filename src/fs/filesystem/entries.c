@@ -347,7 +347,6 @@ struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
 static int __create_entry_by_path(const unsigned char *aes_key,
                                   const char *path,
                                   struct CryptFS_Entry_ID **parent_dir_entry_id,
-                                  block_t *parent_dir_entry_dir,
                                   char **base_name)
 {
     // Check if file already exists
@@ -382,12 +381,6 @@ static int __create_entry_by_path(const unsigned char *aes_key,
         *base_name = xcalloc(NAME_MAX + 1, 1);
         char *base_name_tmp = basename(path_copy);
         strncpy(*base_name, base_name_tmp, strlen(base_name_tmp));
-
-        // Get the parent directory entry.start_block
-        struct CryptFS_Entry *parent_dir_entry =
-            get_entry_from_id(aes_key, **parent_dir_entry_id);
-        *parent_dir_entry_dir = parent_dir_entry->start_block;
-        free(parent_dir_entry);
     }
 
     return 0;
@@ -398,11 +391,10 @@ struct CryptFS_Entry_ID *create_file_by_path(const unsigned char *aes_key,
 {
     // Create the empty file at the parent directory level
     struct CryptFS_Entry_ID *parent_dir_entry_id = NULL;
-    block_t parent_dir_entry_dir = 0;
     char *base_name = NULL;
 
-    switch (__create_entry_by_path(aes_key, path, &parent_dir_entry_id,
-                                   &parent_dir_entry_dir, &base_name))
+    switch (
+        __create_entry_by_path(aes_key, path, &parent_dir_entry_id, &base_name))
     {
     case BLOCK_ERROR:
         return (void *)BLOCK_ERROR;
@@ -411,13 +403,21 @@ struct CryptFS_Entry_ID *create_file_by_path(const unsigned char *aes_key,
     case ENTRY_EXISTS:
         return (void *)ENTRY_EXISTS;
     default:
-        // Create the empty file
+        // Create the empty file (and remember its index in the parent
+        // directory)
         uint32_t entry_index_in_dir =
             entry_create_empty_file(aes_key, *parent_dir_entry_id, base_name);
 
+        // Get the parent directory entry.start_block (struct CryptFS_Directory)
+        struct CryptFS_Entry *parent_dir_entry =
+            get_entry_from_id(aes_key, *parent_dir_entry_id);
+        block_t parent_dir_entry_dir = parent_dir_entry->start_block;
+        free(parent_dir_entry);
+
+        // Fill the returned structure
+        // (parent_dir_entry_dir, entry_index_in_dir)
         struct CryptFS_Entry_ID *new_file_entry_id = xaligned_alloc(
             CRYPTFS_BLOCK_SIZE_BYTES, 1, CRYPTFS_BLOCK_SIZE_BYTES);
-
         new_file_entry_id->directory_block = parent_dir_entry_dir;
         new_file_entry_id->directory_index = entry_index_in_dir;
 
