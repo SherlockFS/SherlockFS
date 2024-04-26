@@ -13,7 +13,7 @@
 
 int cryptfs_getattr(const char *path, struct stat *stbuf)
 {
-    print_debug("getattr() called for '%s'\n", path);
+    print_debug("getattr(path=%s, stbuf=%p)\n", path, stbuf);
     // Init the buffer
     memset(stbuf, 0, sizeof(struct stat));
 

@@ -12,11 +12,6 @@
 int cryptfs_open(const char *path, struct fuse_file_info *file)
 {
     print_debug("open() called for '%s'\n", path);
-    if (strcmp(path, "/file1") == 0)
-    {
-        print_debug("file1 opened\n");
-        return 0;
-    }
 
     // FD management / allocation
     struct fs_file_info *ffi = xcalloc(1, sizeof(struct fs_file_info));

@@ -10,7 +10,8 @@
 int cryptfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                     off_t offset, struct fuse_file_info *fi)
 {
-    print_debug("readdir() called for '%s'\n", path);
+    print_debug("readdir(path=%s, buf=%p, filler=%p, offset=%ld, fi=%p)\n",
+                path, buf, filler, offset, fi);
 
     // Get the entry ID of the directory
     struct CryptFS_Entry_ID *entry_id =

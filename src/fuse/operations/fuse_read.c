@@ -10,9 +10,8 @@
 int cryptfs_read(const char *path, char *buf, size_t sz, off_t offset,
                  struct fuse_file_info *file)
 {
-    print_debug("read() called\n");
-    print_debug("Trying to read %lu bytes from entry '%s', at offset '%lu'\n",
-                sz, path, offset);
+    print_debug("read(path=%s, buf=%p, sz=%lu, offset=%ld, file=%p)\n", path,
+                buf, sz, offset, file);
     ssize_t byte_read;
 
     struct CryptFS_Entry_ID *entry_id = (struct CryptFS_Entry_ID *)file->fh;
