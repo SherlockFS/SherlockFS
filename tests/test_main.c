@@ -29,29 +29,75 @@
 int main(void)
 {
     system("dd if=/dev/zero "
-           "of=delete_entry_by_path.root.test.shlkfs "
+           "of=goto_used_entry_in_directory.30_files_27_29_deleted.test."
+           "shlkfs "
            "bs=4096 count=100");
 
-        set_device_path("delete_entry_by_path.root.test.shlkfs");
+    set_device_path(
+        ""
+        "goto_used_entry_in_directory.30_files_27_29_deleted.test.shlkfs");
 
-        format_fs("delete_entry_by_path.root.test.shlkfs",
-                  "delete_entry_by_path.root.public.pem",
-                  "delete_entry_by_path.root.private.pem", NULL, NULL);
+    format_fs("goto_used_entry_in_directory.30_files_27_29_deleted.test.shlkfs",
+              "goto_used_entry_in_directory.30_files_27_29_deleted.public.pem",
+              "goto_used_entry_in_directory.30_files_27_29_deleted.private.pem",
+              NULL, NULL);
 
-        fpi_register_master_key_from_path(
-            "delete_entry_by_path.root.test.shlkfs",
-            "delete_entry_by_path.root.private.pem");
+    fpi_register_master_key_from_path(
+        "goto_used_entry_in_directory.30_files_27_29_deleted.test.shlkfs",
+        ""
+        "goto_used_entry_in_directory.30_files_27_29_deleted.private.pem");
 
-        free(create_file_by_path(fpi_get_master_key(), "/test_file"));
+    struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
+                                                           ROOT_ENTRY_BLOCK,
+                                                       .directory_index = 0 };
 
-        // Delete entry
-        assert(delete_entry_by_path(fpi_get_master_key(), "/test_file") == 0);
+    struct CryptFS_Entry_ID
+        *entry_ids[30]; // [0,29]: [0, 24] used, [25, 28] unused, 29 used
+    for (int i = 0; i < 30; i++)
+    {
+        char path[100];
+        sprintf(path, "/test_file%d", i);
+        entry_ids[i] = create_file_by_path(fpi_get_master_key(), path);
+    }
 
-        // Get entry ID
-        struct CryptFS_Entry_ID *entry_id_test_file =
-            get_entry_by_path(fpi_get_master_key(), "/test_file");
+    for (int i = 26; i < 28; i++)
+    {
+        char path[100];
+        sprintf(path, "/test_file%d", i);
+        printf("Deleting %s\n", path);
+        delete_entry_by_path(fpi_get_master_key(), path);
 
-        // Check if the entry ID is correct
-        assert(entry_id_test_file == (void *)ENTRY_NO_SUCH);
-        return 0;
+        // Check all entries if any is deleted
+        for (int j = 0; j < 30; j++)
+        {
+            if (entry_ids[j] != NULL)
+            {
+                char path_2[100];
+                sprintf(path_2, "/test_file%d", j);
+                struct CryptFS_Entry_ID *entry_id =
+                    get_entry_by_path(fpi_get_master_key(), path_2);
+
+                // Get entry by ID
+                struct CryptFS_Entry *entry =
+                    get_entry_from_id(fpi_get_master_key(), *entry_id);
+
+                if (entry->used == 0)
+                {
+                    printf("Entry %d is deleted\n", j);
+                    entry_ids[j] = NULL;
+                }
+            }
+        }
+    }
+
+    // Ask entry index 25, must return 25
+    struct CryptFS_Entry_ID *entry_id_test_file25 =
+        goto_used_entry_in_directory(fpi_get_master_key(),
+                                     root_dirctory_entry_id, 25);
+    // Index 25 entry
+    goto_entry_in_directory(fpi_get_master_key(), entry_ids[25]);
+
+    (void)entry_ids;
+    (void)entry_id_test_file25;
+    return 0;
 }

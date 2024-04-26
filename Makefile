@@ -8,7 +8,7 @@ include $(PROJECT_DIR)/global.mk
 
 FSANITIZE = -fsanitize=address
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror -Iinclude -g -std=gnu99 -D_ISOC11_SOURCE -D_FILE_OFFSET_BITS=64
+CFLAGS = -Wall -Wextra -Werror -Iinclude -g -std=gnu99 -D_ISOC11_SOURCE -D_FILE_OFFSET_BITS=64 -DFUSE_USE_VERSION=31
 CFLAGS += -DINTERNAL_ERROR_NO_BACKTRACE
 LDFLAGS = -lm -lcrypto
 
@@ -88,7 +88,7 @@ test_main: $(BUILD_DIR)/test_main
 	
 $(BUILD_DIR)/test_main: $(OBJ) $(BUILD_DIR)/tests/test_main.o
 	@echo "CC/LD\t$@"
-	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_main $^ $(LDFLAGS)
+	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_main $^ $(LDFLAGS) $(FSANITIZE)
 
 check: tests_suite
 	@echo $(call bluetext,"Lancement des tests unitaires")

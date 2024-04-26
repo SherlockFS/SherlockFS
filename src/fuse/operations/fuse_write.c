@@ -13,6 +13,5 @@ int cryptfs_write(const char *path, const char *buf, size_t sz, off_t offset,
     (void)sz;
     (void)offset;
     (void)file;
-    printf("Write syscall\n");
-    return 0;
+    return 1;
 }

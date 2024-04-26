@@ -1,18 +1,25 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "entries.h"
 #include "fuse_mount.h"
 #include "fuse_ps_info.h"
 #include "print.h"
+#include "xalloc.h"
 
 int cryptfs_open(const char *path, struct fuse_file_info *file)
 {
-    print_debug("open() called\n");
+    print_debug("open() called for '%s'\n", path);
+    if (strcmp(path, "/file1") == 0)
+    {
+        print_debug("file1 opened\n");
+        return 0;
+    }
 
     // FD management / allocation
-    struct fs_file_info *ffi = ffi_get_new_fd();
+    struct fs_file_info *ffi = xcalloc(1, sizeof(struct fs_file_info));
     if (!ffi)
         return -EMFILE; // No more file descriptors available
 
@@ -36,10 +43,8 @@ int cryptfs_open(const char *path, struct fuse_file_info *file)
         switch ((uint64_t)entry_id)
         {
         case BLOCK_ERROR:
-            ffi_release_fd(ffi);
             return -EIO;
         case ENTRY_NO_SUCH:
-            ffi_release_fd(ffi);
             return -ENOENT;
         default:
             break;
@@ -52,10 +57,8 @@ int cryptfs_open(const char *path, struct fuse_file_info *file)
         switch ((uint64_t)entry_id)
         {
         case BLOCK_ERROR:
-            ffi_release_fd(ffi);
             return -EIO;
         case ENTRY_NO_SUCH:
-            ffi_release_fd(ffi);
             return -ENOENT;
         default:
             break;

@@ -117,6 +117,27 @@ int goto_entry_in_directory(const unsigned char *aes_key,
                             struct CryptFS_Entry_ID *entry_id);
 
 /**
+ * @brief For a given directory entry, return the index first used entry.
+ *
+ * @note If the directory is empty, the function will return NO_SUCH_ENTRY.
+ * @note If the index > number of entries in the directory, the function will
+ * return NO_SUCH_ENTRY.
+ *
+ * @example If the directory contains [used, used, free, used], and the given
+ * index is 2, the function will return 3.
+ *
+ * @param aes_key The AES key used for encryption/decryption.
+ * @param directory_entry_id The entry ID of the directory to search in.
+ * @param index The index of the first used entry.
+ * @return struct CryptFS_Entry_ID* The entry unique identifier of the first
+ * used entry in the directory.
+ */
+struct CryptFS_Entry_ID *
+goto_used_entry_in_directory(const unsigned char *aes_key,
+                             struct CryptFS_Entry_ID directory_entry_id,
+                             size_t index);
+
+/**
  * @brief Modify an cryptFS_entry size. Equivalent to Linux truncate syscall.
  *
  * @param aes_key The AES key used for encryption/decryption.

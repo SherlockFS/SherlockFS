@@ -26,6 +26,5 @@ int cryptfs_read(const char *path, char *buf, size_t sz, off_t offset,
     (void)buf;
     (void)sz;
     (void)offset;
-    (void)file;
     return byte_read;
 }

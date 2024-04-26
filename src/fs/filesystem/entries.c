@@ -221,8 +221,13 @@ static int __entry_truncate_treatment(const unsigned char *aes_key,
 struct CryptFS_Entry *get_entry_from_id(const unsigned char *aes_key,
                                         struct CryptFS_Entry_ID entry_id)
 {
+    // Correct Entry ID if needed
+    if (goto_entry_in_directory(aes_key, &entry_id))
+        return NULL;
+
     struct CryptFS_Entry *entry =
         xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, CRYPTFS_BLOCK_SIZE_BYTES);
+
     if (entry_id.directory_block == ROOT_ENTRY_BLOCK)
     {
         if (read_blocks_with_decryption(aes_key, entry_id.directory_block, 1,
@@ -233,6 +238,7 @@ struct CryptFS_Entry *get_entry_from_id(const unsigned char *aes_key,
     {
         struct CryptFS_Directory *dir = xaligned_alloc(
             CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_Directory));
+
         if (read_blocks_with_decryption(aes_key, entry_id.directory_block, 1,
                                         dir))
             return NULL;
@@ -630,9 +636,9 @@ int delete_entry_by_path(const unsigned char *aes_key, const char *path)
 int goto_entry_in_directory(const unsigned char *aes_key,
                             struct CryptFS_Entry_ID *entry_id)
 {
-    if (entry_id->directory_index > NB_ENTRIES_PER_BLOCK)
+    if (entry_id->directory_index > NB_ENTRIES_PER_BLOCK - 1)
     {
-        int count = entry_id->directory_index / NB_ENTRIES_PER_BLOCK;
+        int count = __blocks_needed_for_dir(entry_id->directory_index + 1);
         entry_id->directory_index =
             entry_id->directory_index % NB_ENTRIES_PER_BLOCK;
         while (count > 1 && read_fat_offset(aes_key, entry_id->directory_block))
@@ -645,6 +651,59 @@ int goto_entry_in_directory(const unsigned char *aes_key,
             return -1;
     }
     return 0;
+}
+
+struct CryptFS_Entry_ID *
+goto_used_entry_in_directory(const unsigned char *aes_key,
+                             struct CryptFS_Entry_ID directory_entry_id,
+                             size_t index)
+{
+    // Get entry by id
+    struct CryptFS_Entry *entry =
+        get_entry_from_id(aes_key, directory_entry_id);
+
+    if (index + 1 > entry->size)
+    {
+        free(entry);
+        return (void *)ENTRY_NO_SUCH;
+    }
+
+    // Using directory_entry_id for iterating over the directory
+    directory_entry_id.directory_block = entry->start_block;
+    directory_entry_id.directory_index = 0;
+    free(entry);
+
+    while (true)
+    {
+        if (directory_entry_id.directory_index > NB_ENTRIES_PER_BLOCK - 1)
+        {
+            directory_entry_id.directory_block =
+                read_fat_offset(aes_key, directory_entry_id.directory_block);
+            directory_entry_id.directory_index = 0;
+        }
+        else
+        {
+            // Get entry by id
+            entry = get_entry_from_id(aes_key, directory_entry_id);
+            bool is_used = entry->used == 1;
+            printf("Entry %s is used: %d\n", entry->name, is_used);
+            free(entry);
+            if (is_used)
+            {
+                if (index == 0)
+                    break;
+                index--;
+            }
+            directory_entry_id.directory_index++;
+        }
+    }
+
+    struct CryptFS_Entry_ID *entry_id =
+        xmalloc(1, sizeof(struct CryptFS_Entry_ID));
+    entry_id->directory_block = directory_entry_id.directory_block;
+    entry_id->directory_index = directory_entry_id.directory_index;
+
+    return entry_id;
 }
 
 int entry_truncate(const unsigned char *aes_key,
@@ -952,6 +1011,10 @@ int entry_delete(const unsigned char *aes_key,
                  struct CryptFS_Entry_ID parent_dir_entry_id,
                  uint32_t entry_index)
 {
+    // Find the real block and index
+    if (goto_entry_in_directory(aes_key, &parent_dir_entry_id))
+        return BLOCK_ERROR;
+
     if (parent_dir_entry_id.directory_block == ROOT_ENTRY_BLOCK)
     {
         // Allocate struct for reading directory_block
@@ -981,10 +1044,6 @@ int entry_delete(const unsigned char *aes_key,
     }
     else
     {
-        // Find the real block and index
-        if (goto_entry_in_directory(aes_key, &parent_dir_entry_id))
-            return BLOCK_ERROR;
-
         // allocate struct for reading directory_block
         struct CryptFS_Directory *dir = xaligned_alloc(
             CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_Directory));

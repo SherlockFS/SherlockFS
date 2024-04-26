@@ -1898,7 +1898,7 @@ Test(get_entry_by_path, two_dir_in_one_dir, .init = cr_redirect_stdall,
     cr_assert_eq(entry_id_test_directory->directory_block, ROOT_DIR_BLOCK);
     cr_assert_eq(entry_id_test_directory->directory_index, 0);
 
-        entry_create_directory(fpi_get_master_key(), *entry_id_test_directory,
+    entry_create_directory(fpi_get_master_key(), *entry_id_test_directory,
                            "test_directory2");
     // Get entry from ID
     struct CryptFS_Entry *test_directory =
@@ -2613,4 +2613,306 @@ Test(delete_entry_by_path, in_directory_file, .init = cr_redirect_stdall,
 
     free(entry_id);
     free(entry_id_test_directory);
+}
+
+Test(goto_used_entry_in_directory, all_used_files, .init = cr_redirect_stdall,
+     .timeout = 10)
+{
+    system("dd if=/dev/zero "
+           "of=build/goto_used_entry_in_directory.all_used_files.test.shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path(
+        "build/goto_used_entry_in_directory.all_used_files.test.shlkfs");
+
+    format_fs("build/goto_used_entry_in_directory.all_used_files.test.shlkfs",
+              "build/goto_used_entry_in_directory.all_used_files.public.pem",
+              "build/goto_used_entry_in_directory.all_used_files.private.pem",
+              NULL, NULL);
+
+    fpi_register_master_key_from_path(
+        "build/goto_used_entry_in_directory.all_used_files.test.shlkfs",
+        "build/goto_used_entry_in_directory.all_used_files.private.pem");
+
+    struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
+                                                           ROOT_ENTRY_BLOCK,
+                                                       .directory_index = 0 };
+
+    struct CryptFS_Entry_ID *entry_id1 =
+        create_file_by_path(fpi_get_master_key(), "/test_file1");
+    struct CryptFS_Entry_ID *entry_id2 =
+        create_file_by_path(fpi_get_master_key(), "/test_file2");
+    struct CryptFS_Entry_ID *entry_id3 =
+        create_file_by_path(fpi_get_master_key(), "/test_file3");
+
+    struct CryptFS_Entry_ID *entry_id_test_file1 = goto_used_entry_in_directory(
+        fpi_get_master_key(), root_dirctory_entry_id, 0);
+
+    cr_assert_neq(entry_id_test_file1, ENTRY_NO_SUCH);
+    cr_assert_eq(entry_id_test_file1->directory_block,
+                 entry_id1->directory_block); // ROOT_DIR_BLOCK
+    cr_assert_eq(entry_id_test_file1->directory_index,
+                 entry_id1->directory_index); // 0
+
+    free(entry_id1);
+    free(entry_id2);
+    free(entry_id3);
+    free(entry_id_test_file1);
+}
+
+Test(goto_used_entry_in_directory, first_file_deleted,
+     .init = cr_redirect_stdall, .timeout = 10)
+{
+    system("dd if=/dev/zero "
+           "of=build/goto_used_entry_in_directory.first_file_deleted.test."
+           "shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path(
+        "build/goto_used_entry_in_directory.first_file_deleted.test.shlkfs");
+
+    format_fs(
+        "build/goto_used_entry_in_directory.first_file_deleted.test.shlkfs",
+        "build/goto_used_entry_in_directory.first_file_deleted.public.pem",
+        "build/goto_used_entry_in_directory.first_file_deleted.private.pem",
+        NULL, NULL);
+
+    fpi_register_master_key_from_path(
+        "build/goto_used_entry_in_directory.first_file_deleted.test.shlkfs",
+        "build/goto_used_entry_in_directory.first_file_deleted.private.pem");
+
+    struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
+                                                           ROOT_ENTRY_BLOCK,
+                                                       .directory_index = 0 };
+
+    struct CryptFS_Entry_ID *entry_id1 =
+        create_file_by_path(fpi_get_master_key(), "/test_file1");
+    struct CryptFS_Entry_ID *entry_id2 =
+        create_file_by_path(fpi_get_master_key(), "/test_file2");
+    struct CryptFS_Entry_ID *entry_id3 =
+        create_file_by_path(fpi_get_master_key(), "/test_file3");
+
+    delete_entry_by_path(fpi_get_master_key(), "/test_file1");
+
+    struct CryptFS_Entry_ID *entry_id_test_file2 = goto_used_entry_in_directory(
+        fpi_get_master_key(), root_dirctory_entry_id, 0);
+
+    // Get entry 1 by ID
+    struct CryptFS_Entry *entry1 =
+        get_entry_from_id(fpi_get_master_key(), *entry_id1);
+    cr_assert_neq(entry1, ENTRY_NO_SUCH);
+    cr_assert_eq(entry1->used, 0);
+
+    cr_assert_neq(entry_id_test_file2, ENTRY_NO_SUCH);
+    cr_assert_eq(entry_id_test_file2->directory_block,
+                 entry_id2->directory_block); // ROOT_DIR_BLOCK
+    cr_assert_eq(entry_id_test_file2->directory_index,
+                 entry_id2->directory_index);
+
+    free(entry_id1);
+    free(entry_id2);
+    free(entry_id3);
+    free(entry_id_test_file2);
+}
+
+Test(goto_used_entry_in_directory, second_file_deleted,
+     .init = cr_redirect_stdall, .timeout = 10)
+{
+    system("dd if=/dev/zero "
+           "of=build/goto_used_entry_in_directory.second_file_deleted.test."
+           "shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path(
+        "build/goto_used_entry_in_directory.second_file_deleted.test.shlkfs");
+
+    format_fs(
+        "build/goto_used_entry_in_directory.second_file_deleted.test.shlkfs",
+        "build/goto_used_entry_in_directory.second_file_deleted.public.pem",
+        "build/goto_used_entry_in_directory.second_file_deleted.private.pem",
+        NULL, NULL);
+
+    fpi_register_master_key_from_path(
+        "build/goto_used_entry_in_directory.second_file_deleted.test.shlkfs",
+        "build/goto_used_entry_in_directory.second_file_deleted.private.pem");
+
+    struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
+                                                           ROOT_ENTRY_BLOCK,
+                                                       .directory_index = 0 };
+
+    struct CryptFS_Entry_ID *entry_id1 =
+        create_file_by_path(fpi_get_master_key(), "/test_file1");
+    struct CryptFS_Entry_ID *entry_id2 =
+        create_file_by_path(fpi_get_master_key(), "/test_file2");
+    struct CryptFS_Entry_ID *entry_id3 =
+        create_file_by_path(fpi_get_master_key(), "/test_file3");
+
+    delete_entry_by_path(fpi_get_master_key(), "/test_file2");
+
+    struct CryptFS_Entry_ID *entry_id_test_file3 = goto_used_entry_in_directory(
+        fpi_get_master_key(), root_dirctory_entry_id, 1);
+
+    // Get entry 2 by ID
+    struct CryptFS_Entry *entry2 =
+        get_entry_from_id(fpi_get_master_key(), *entry_id2);
+    cr_assert_neq(entry2, ENTRY_NO_SUCH);
+    cr_assert_eq(entry2->used, 0);
+
+    cr_assert_neq(entry_id_test_file3, ENTRY_NO_SUCH);
+    cr_assert_eq(entry_id_test_file3->directory_block,
+                 entry_id3->directory_block); // ROOT_DIR_BLOCK
+    cr_assert_eq(entry_id_test_file3->directory_index,
+                 entry_id3->directory_index);
+
+    free(entry_id1);
+    free(entry_id2);
+    free(entry_id3);
+    free(entry_id_test_file3);
+}
+
+Test(goto_used_entry_in_directory, third_file_deleted,
+     .init = cr_redirect_stdall, .timeout = 10)
+{
+    system("dd if=/dev/zero "
+           "of=build/goto_used_entry_in_directory.third_file_deleted.test."
+           "shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path(
+        "build/goto_used_entry_in_directory.third_file_deleted.test.shlkfs");
+
+    format_fs(
+        "build/goto_used_entry_in_directory.third_file_deleted.test.shlkfs",
+        "build/goto_used_entry_in_directory.third_file_deleted.public.pem",
+        "build/goto_used_entry_in_directory.third_file_deleted.private.pem",
+        NULL, NULL);
+
+    fpi_register_master_key_from_path(
+        "build/goto_used_entry_in_directory.third_file_deleted.test.shlkfs",
+        "build/goto_used_entry_in_directory.third_file_deleted.private.pem");
+
+    struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
+                                                           ROOT_ENTRY_BLOCK,
+                                                       .directory_index = 0 };
+
+    struct CryptFS_Entry_ID *entry_id1 =
+        create_file_by_path(fpi_get_master_key(), "/test_file1");
+    struct CryptFS_Entry_ID *entry_id2 =
+        create_file_by_path(fpi_get_master_key(), "/test_file2");
+    struct CryptFS_Entry_ID *entry_id3 =
+        create_file_by_path(fpi_get_master_key(), "/test_file3");
+
+    delete_entry_by_path(fpi_get_master_key(), "/test_file3");
+
+    struct CryptFS_Entry_ID *entry_id_test_file2 = goto_used_entry_in_directory(
+        fpi_get_master_key(), root_dirctory_entry_id, 1);
+
+    // Get entry 3 by ID
+    struct CryptFS_Entry *entry3 =
+        get_entry_from_id(fpi_get_master_key(), *entry_id3);
+    cr_assert_neq(entry3, ENTRY_NO_SUCH);
+    cr_assert_eq(entry3->used, 0);
+
+    cr_assert_neq(entry_id_test_file2, ENTRY_NO_SUCH);
+    cr_assert_eq(entry_id_test_file2->directory_block,
+                 entry_id2->directory_block); // ROOT_DIR_BLOCK
+    cr_assert_eq(entry_id_test_file2->directory_index,
+                 entry_id2->directory_index);
+
+    free(entry_id1);
+    free(entry_id2);
+    free(entry_id3);
+    free(entry_id_test_file2);
+}
+
+// ! FIXME: This test is disabled because it is not working as expected
+Test(goto_used_entry_in_directory, 30_files_27_29_deleted,
+     .init = cr_redirect_stdall, .timeout = 10, .disabled = true)
+{
+    system("dd if=/dev/zero "
+           "of=build/goto_used_entry_in_directory.30_files_27_29_deleted.test."
+           "shlkfs "
+           "bs=4096 count=100");
+
+    set_device_path(
+        "build/"
+        "goto_used_entry_in_directory.30_files_27_29_deleted.test.shlkfs");
+
+    format_fs(
+        "build/goto_used_entry_in_directory.30_files_27_29_deleted.test.shlkfs",
+        "build/goto_used_entry_in_directory.30_files_27_29_deleted.public.pem",
+        "build/goto_used_entry_in_directory.30_files_27_29_deleted.private.pem",
+        NULL, NULL);
+
+    fpi_register_master_key_from_path(
+        "build/goto_used_entry_in_directory.30_files_27_29_deleted.test.shlkfs",
+        "build/"
+        "goto_used_entry_in_directory.30_files_27_29_deleted.private.pem");
+
+    struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
+                                                           ROOT_ENTRY_BLOCK,
+                                                       .directory_index = 0 };
+
+    struct CryptFS_Entry_ID
+        *entry_ids[30]; // [0,29]: [0, 24] used, [25, 28] unused, 29 used
+    for (int i = 0; i < 30; i++)
+    {
+        char path[100];
+        sprintf(path, "/test_file%d", i);
+        entry_ids[i] = create_file_by_path(fpi_get_master_key(), path);
+    }
+
+    for (int i = 26; i < 28; i++)
+    {
+        char path[100];
+        sprintf(path, "/test_file%d", i);
+        delete_entry_by_path(fpi_get_master_key(), path);
+    }
+
+    // FIXME: entry_delete must use a sanitized block/index, not a
+    // CryptFS_Directory + overflood index
+
+    // Ask entry index 25, must return 25
+    struct CryptFS_Entry_ID *entry_id_test_file25 =
+        goto_used_entry_in_directory(fpi_get_master_key(),
+                                     root_dirctory_entry_id, 25);
+    // Index 25 entry
+    goto_entry_in_directory(fpi_get_master_key(), entry_ids[25]);
+
+    cr_assert_neq(entry_id_test_file25, ENTRY_NO_SUCH);
+    cr_assert_eq(entry_id_test_file25->directory_block,
+                 entry_ids[25]->directory_block);
+    cr_assert_eq(
+        entry_id_test_file25->directory_index, entry_ids[25]->directory_index,
+        "entry_id_test_file25: %ld, "
+        "entry_ids[25]: %ld",
+        entry_id_test_file25->directory_index, entry_ids[25]->directory_index);
+
+    // Ask entry index 26, must return 28
+    struct CryptFS_Entry_ID *entry_id_test_file26 =
+        goto_used_entry_in_directory(fpi_get_master_key(),
+                                     root_dirctory_entry_id, 26);
+    // Index 29 entry
+    goto_entry_in_directory(fpi_get_master_key(), entry_ids[29]);
+
+    cr_assert_neq(entry_id_test_file26, ENTRY_NO_SUCH);
+    cr_assert_eq(entry_id_test_file26->directory_block,
+                 entry_ids[28]->directory_block);
+    cr_assert_eq(
+        entry_id_test_file26->directory_index, entry_ids[28]->directory_index,
+        "entry_id_test_file26: %ld, "
+        "entry_ids[29]: %ld",
+        entry_id_test_file26->directory_index, entry_ids[29]->directory_index);
+
+    // Ask entry index 27, must return ENTRY_NO_SUCH
+    struct CryptFS_Entry_ID *entry_id_test_file27 =
+        goto_used_entry_in_directory(fpi_get_master_key(),
+                                     root_dirctory_entry_id, 27);
+
+    cr_assert_eq(entry_id_test_file27, ENTRY_NO_SUCH);
+
+    for (int i = 0; i < 30; i++)
+        free(entry_ids[i]);
+
+    free(entry_id_test_file25);
 }

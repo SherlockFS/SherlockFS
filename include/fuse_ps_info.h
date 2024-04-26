@@ -22,7 +22,6 @@
  */
 struct fs_file_info
 {
-    int fd; // File descriptor of the files
     struct CryptFS_Entry_ID uid; // SherlockFS unique entry identifier
     size_t seek_offset; // Current seek offset
     bool is_readable_mode; // Whether the file is open for reading
@@ -30,31 +29,6 @@ struct fs_file_info
     struct fs_file_info *next; // Pointer to the next file info node (SherlockFS
                                // internal use, not FUSE)
 };
-
-/** @brief Ask a new file descriptor to SherlockFS process.
- *
- * This function returns a new file descriptor for the file system. The returned
- * file descriptor can be used to perform various operations on the file.
- *
- * @return A pointer to the newly allocated `struct fs_file_info` object. If
- * there is no more file descriptors available, `NULL` is returned and `errno`
- * is set to `EMFILE`.
- */
-struct fs_file_info *ffi_get_new_fd();
-
-/**
- * @brief Release a file descriptor.
- *
- * This function releases the given file descriptor and frees the associated
- * resources. After calling this function, the file descriptor should no longer
- * be used.
- *
- * @param file The `struct fs_file_info` object representing the file descriptor
- * to release.
- *
- * @note If the file descriptor is invalid, `errno` is set to `EBADF`.
- */
-void ffi_release_fd(struct fs_file_info *file);
 
 // ------------------- File system information management -------------------
 
