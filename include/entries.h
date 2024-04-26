@@ -26,6 +26,18 @@ int __blocks_needed_for_dir(size_t size);
 struct CryptFS_Entry* get_entry_from_id(const unsigned char *aes_key,struct CryptFS_Entry_ID entry_id);
 
 /**
+ * @brief Write an entry to the file system.
+ *
+ * @param aes_key The AES key used for encryption/decryption.
+ * @param entry_id The ID of the entry to write.
+ * @param entry The entry to write.
+ * @return int 0 when success, enum SHLKFS_ERROR otherwise.
+ */
+int write_entry_from_id(const unsigned char *aes_key,
+                        struct CryptFS_Entry_ID entry_id,
+                        struct CryptFS_Entry *entry);
+
+/**
  * @brief Given a string path, search for the entry unique identifier.
  *
  * @param aes_key The AES key used for encryption/decryption.

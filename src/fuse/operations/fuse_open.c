@@ -15,8 +15,6 @@ int cryptfs_open(const char *path, struct fuse_file_info *file)
 
     // FD management / allocation
     struct fs_file_info *ffi = xcalloc(1, sizeof(struct fs_file_info));
-    if (!ffi)
-        return -EMFILE; // No more file descriptors available
 
     // open() flags management
     if ((file->flags & O_ACCMODE) == O_RDONLY) // Read only

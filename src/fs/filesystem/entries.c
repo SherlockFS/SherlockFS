@@ -248,6 +248,39 @@ struct CryptFS_Entry *get_entry_from_id(const unsigned char *aes_key,
     return entry;
 }
 
+// TODO: Tests
+int write_entry_from_id(const unsigned char *aes_key,
+                        struct CryptFS_Entry_ID entry_id,
+                        struct CryptFS_Entry *entry)
+{
+    // Sanitize entry_id
+    if (goto_entry_in_directory(aes_key, &entry_id))
+        return BLOCK_ERROR;
+
+    // Read the directory block
+    struct CryptFS_Directory *dir = xaligned_alloc(
+        CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_Directory));
+
+    if (read_blocks_with_decryption(aes_key, entry_id.directory_block, 1, dir))
+    {
+        free(dir);
+        return BLOCK_ERROR;
+    }
+
+    // Write the entry in the directory block
+    dir->entries[entry_id.directory_index] = *entry;
+
+    // Write back the directory block
+    if (write_blocks_with_encryption(aes_key, entry_id.directory_block, 1, dir))
+    {
+        free(dir);
+        return BLOCK_ERROR;
+    }
+
+    free(dir);
+    return 0;
+}
+
 struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
                                            const char *path)
 {

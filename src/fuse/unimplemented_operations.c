@@ -1,42 +1,151 @@
+#include <errno.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#include "entries.h"
 #include "fuse_mount.h"
+#include "fuse_ps_info.h"
 #include "print.h"
 
 int cryptfs_releasedir(const char *path, struct fuse_file_info *file)
 {
     print_debug("releasedir(path=%s, file=%p)\n", path, file);
-    return -1;
+
+    free((void *)file->fh);
+    return 0;
 }
 
 int cryptfs_create(const char *path, mode_t mode, struct fuse_file_info *file)
 {
     print_debug("create(path=%s, mode=%d, file=%p)\n", path, mode, file);
-    return -1;
-}
 
+    struct CryptFS_Entry_ID *entry_id =
+        create_file_by_path(fpi_get_master_key(), path);
+
+    switch ((uint64_t)entry_id)
+    {
+    case ENTRY_EXISTS:
+        return cryptfs_open(path, file);
+    case ENTRY_NO_SUCH:
+        return -ENOENT;
+    case BLOCK_ERROR:
+        return -EIO;
+    default:
+        break;
+    }
+
+    free(entry_id);
+
+    return cryptfs_open(path, file);
+}
 int cryptfs_ftruncate(const char *path, off_t offset,
                       struct fuse_file_info *file)
 {
     print_debug("ftruncate(path=%s, offset=%ld, file=%p)\n", path, offset,
                 file);
+
+    struct fs_file_info *ffi = (struct fs_file_info *)file->fh;
+    struct CryptFS_Entry_ID entry_id = ffi->uid;
+
+    switch (entry_truncate(fpi_get_master_key(), entry_id, offset))
+    {
+    case BLOCK_ERROR:
+        return -EIO;
+        break;
+    default:
+        break;
+    }
     return -1;
 }
 
 int cryptfs_access(const char *path, int mode)
 {
     print_debug("access(path=%s, mode=%d)\n", path, mode);
-    return -1;
+
+    // Get entry ID from path
+    struct CryptFS_Entry_ID *entry_id =
+        get_entry_by_path(fpi_get_master_key(), path);
+
+    switch ((uint64_t)entry_id)
+    {
+    case ENTRY_NO_SUCH:
+        return -ENOENT;
+    case BLOCK_ERROR:
+        return -EIO;
+    default:
+        break;
+    }
+
+    // Only check if the file exists
+    if (mode == 0)
+        return 0;
+
+    // Get entry from ID
+    struct CryptFS_Entry *entry =
+        get_entry_from_id(fpi_get_master_key(), *entry_id);
+
+    if (mode & R_OK)
+    {
+        // Get current user ID et group ID
+        uid_t uid = getuid();
+        gid_t gid = getgid();
+
+        // Check if the user has read permission
+        if (entry->uid == uid && (entry->mode & S_IRUSR) == 0)
+            return -EACCES;
+        if (entry->gid == gid && (entry->mode & S_IRGRP) == 0)
+            return -EACCES;
+        if ((entry->mode & S_IROTH) == 0)
+            return -EACCES;
+    }
+
+    if (mode & W_OK)
+    {
+        // Get current user ID et group ID
+        uid_t uid = getuid();
+        gid_t gid = getgid();
+
+        // Check if the user has write permission
+        if (entry->uid == uid && (entry->mode & S_IWUSR) == 0)
+            return -EACCES;
+        if (entry->gid == gid && (entry->mode & S_IWGRP) == 0)
+            return -EACCES;
+        if ((entry->mode & S_IWOTH) == 0)
+            return -EACCES;
+    }
+
+    if (mode & X_OK)
+    {
+        // Get current user ID et group ID
+        uid_t uid = getuid();
+        gid_t gid = getgid();
+
+        // Check if the user has execute permission
+        if (entry->uid == uid && (entry->mode & S_IXUSR) == 0)
+            return -EACCES;
+        if (entry->gid == gid && (entry->mode & S_IXGRP) == 0)
+            return -EACCES;
+        if ((entry->mode & S_IXOTH) == 0)
+            return -EACCES;
+    }
+
+    return 0;
 }
 
 int cryptfs_flush(const char *path, struct fuse_file_info *file)
 {
     print_debug("flush(path=%s, file=%p)\n", path, file);
-    return -1;
+
+    print_debug("We do no cache anything, so we do nothing here");
+    return 0;
 }
 
 int cryptfs_fsync(const char *path, int datasync, struct fuse_file_info *file)
 {
     print_debug("fsync(path=%s, datasync=%d, file=%p)\n", path, datasync, file);
-    return -1;
+
+    print_debug("We do no cache anything, so we do nothing here");
+    return 0;
 }
 
 int cryptfs_fsyncdir(const char *path, int datasync,
@@ -44,19 +153,58 @@ int cryptfs_fsyncdir(const char *path, int datasync,
 {
     print_debug("fsyncdir(path=%s, datasync=%d, file=%p)\n", path, datasync,
                 file);
-    return -1;
+
+    print_debug("We do no cache anything, so we do nothing here");
+    return 0;
 }
 
 int cryptfs_mkdir(const char *path, mode_t mode)
 {
     print_debug("mkdir(path=%s, mode=%d)\n", path, mode);
-    return -1;
+
+    switch ((uint64_t)create_directory_by_path(fpi_get_master_key(), path))
+    {
+    case ENTRY_EXISTS:
+        return -EEXIST;
+    case ENTRY_NO_SUCH:
+        return -ENOENT;
+    case BLOCK_ERROR:
+        return -EIO;
+    default:
+        break;
+    }
+
+    return 0;
 }
 
 int cryptfs_mknod(const char *path, mode_t mode, dev_t rdev)
 {
     print_debug("mknod(path=%s, mode=%d, rdev=%d)\n", path, mode, rdev);
-    return -1;
+
+    struct CryptFS_Entry_ID *entry_id = NULL;
+
+    if (mode & S_IFREG)
+        entry_id = create_file_by_path(fpi_get_master_key(), path);
+    else if (mode & S_IFDIR)
+        entry_id = create_directory_by_path(fpi_get_master_key(), path);
+    else if (mode & S_IFLNK)
+        entry_id = create_symlink_by_path(fpi_get_master_key(), "", path);
+    else
+        return -EINVAL;
+
+    switch ((uint64_t)entry_id)
+    {
+    case ENTRY_EXISTS:
+        return -EEXIST;
+    case ENTRY_NO_SUCH:
+        return -ENOENT;
+    case BLOCK_ERROR:
+        return -EIO;
+    default:
+        break;
+    }
+
+    return 0;
 }
 
 int cryptfs_readlink(const char *path, char *buf, size_t size)
@@ -80,26 +228,67 @@ int cryptfs_fallocate(const char *path, int mode, off_t offset, off_t length,
     return -1;
 }
 
+// TODO: Implement
 int cryptfs_write_buf(const char *path, struct fuse_bufvec *buf, off_t offset,
                       struct fuse_file_info *file)
 {
     print_debug("write_buf(path=%s, buf=%p, offset=%ld, file=%p)\n", path, buf,
                 offset, file);
-    return -1;
+
+    // Get entry ID from file
+    struct fs_file_info *ffi = (struct fs_file_info *)file->fh;
+    struct CryptFS_Entry_ID entry_id = ffi->uid;
+
+    (void)ffi;
+    (void)entry_id;
+
+    return 0;
 }
 
+// TODO: Implement
 int cryptfs_read_buf(const char *path, struct fuse_bufvec **bufp, size_t size,
                      off_t offset, struct fuse_file_info *file)
 {
     print_debug("read_buf(path=%s, bufp=%p, size=%ld, offset=%ld, file=%p)\n",
                 path, bufp, size, offset, file);
-    return -1;
+
+    // Get entry ID from file
+    struct fs_file_info *ffi = (struct fs_file_info *)file->fh;
+    struct CryptFS_Entry_ID entry_id = ffi->uid;
+
+    return entry_read_raw_data(fpi_get_master_key(), entry_id, offset,
+                               bufp[0]->buf->mem, size);
 }
 
 int cryptfs_opendir(const char *path, struct fuse_file_info *file)
 {
     print_debug("opendir(path=%s, file=%p)\n", path, file);
-    return -1;
+
+    // Get directory from path
+    struct CryptFS_Entry_ID *entry_id =
+        get_entry_by_path(fpi_get_master_key(), path);
+
+    // Check if the directory exists
+    if (entry_id == (void *)ENTRY_NO_SUCH)
+        return -ENOENT;
+    if (entry_id == (void *)BLOCK_ERROR)
+        return -EIO;
+
+    // Get entry from ID
+    struct CryptFS_Entry *entry =
+        get_entry_from_id(fpi_get_master_key(), *entry_id);
+
+    // Check if the entry is a directory
+    if (entry->type != ENTRY_TYPE_DIRECTORY)
+        return -ENOTDIR;
+
+    // ! Not ffi but entry_id for a directory
+    file->fh = (uint64_t)entry_id;
+
+    // Free memory
+    free(entry);
+
+    return 0;
 }
 
 void cryptfs_destroy(void *userdata)
@@ -116,24 +305,102 @@ int cryptfs_statfs(const char *path, struct statvfs *stats)
 int cryptfs_rmdir(const char *path)
 {
     print_debug("rmdir(path=%s)\n", path);
+
+    // Get entry ID from path
+    struct CryptFS_Entry_ID *entry_id =
+        get_entry_by_path(fpi_get_master_key(), path);
+
+    // Check if the directory exists
+    if (entry_id == (void *)ENTRY_NO_SUCH)
+        return -ENOENT;
+
+    // Check if the entry is a directory
+    struct CryptFS_Entry *entry =
+        get_entry_from_id(fpi_get_master_key(), *entry_id);
+
+    if (entry->type != ENTRY_TYPE_DIRECTORY)
+        return -ENOTDIR;
+
+    switch (delete_entry_by_path(fpi_get_master_key(), path))
+    {
+    case 0:
+        return 0;
+    case ENTRY_NO_SUCH:
+        return -ENOENT;
+    case BLOCK_ERROR:
+        return -EIO;
+    default:
+        break;
+    }
     return -1;
 }
 
 int cryptfs_unlink(const char *path)
 {
     print_debug("unlink(path=%s)\n", path);
+
+    // Get entry ID from path
+    struct CryptFS_Entry_ID *entry_id =
+        get_entry_by_path(fpi_get_master_key(), path);
+
+    // Check if the directory exists
+    if (entry_id == (void *)ENTRY_NO_SUCH)
+        return -ENOENT;
+
+    // Check if the entry is a directory
+    struct CryptFS_Entry *entry =
+        get_entry_from_id(fpi_get_master_key(), *entry_id);
+
+    if (entry->type == ENTRY_TYPE_DIRECTORY)
+        return -EISDIR;
+
+    switch (delete_entry_by_path(fpi_get_master_key(), path))
+    {
+    case 0:
+        return 0;
+    case ENTRY_NO_SUCH:
+        return -ENOENT;
+    case BLOCK_ERROR:
+        return -EIO;
+    default:
+        break;
+    }
     return -1;
 }
 
 int cryptfs_symlink(const char *target, const char *link)
 {
-    print_debug("symlink(target=%s, link=%s)\n", target, link);
+    switch (
+        (uint64_t)create_symlink_by_path(fpi_get_master_key(), target, link))
+    {
+    case ENTRY_NO_SUCH:
+        return -ENOENT;
+    case ENTRY_EXISTS:
+        return -EEXIST;
+    case BLOCK_ERROR:
+        return -EIO;
+    default:
+        return 0;
+    }
     return -1;
 }
 
 int cryptfs_link(const char *oldpath, const char *newpath)
 {
     print_debug("link(oldpath=%s, newpath=%s)\n", oldpath, newpath);
+
+    switch ((uint64_t)create_hardlink_by_path(fpi_get_master_key(), oldpath,
+                                              newpath))
+    {
+    case ENTRY_NO_SUCH:
+        return -ENOENT;
+    case ENTRY_EXISTS:
+        return -EEXIST;
+    case BLOCK_ERROR:
+        return -EIO;
+    default:
+        return 0;
+    }
     return -1;
 }
 
@@ -152,7 +419,19 @@ int cryptfs_chown(const char *path, uid_t uid, gid_t gid)
 int cryptfs_truncate(const char *path, off_t offset)
 {
     print_debug("truncate(path=%s, offset=%ld)\n", path, offset);
-    return -1;
+
+    struct CryptFS_Entry_ID *entry_id =
+        get_entry_by_path(fpi_get_master_key(), path);
+
+    switch (entry_truncate(fpi_get_master_key(), *entry_id, offset))
+    {
+    case BLOCK_ERROR:
+        return -EIO;
+        break;
+    default:
+        break;
+    }
+    return 0;
 }
 
 int cryptfs_setxattr(const char *path, const char *name, const char *value,
@@ -168,13 +447,13 @@ int cryptfs_getxattr(const char *path, const char *name, char *value,
 {
     print_debug("getxattr(path=%s, name=%s, value=%s, size=%ld)\n", path, name,
                 value, size);
-    return -1;
+    return 0;
 }
 
 int cryptfs_listxattr(const char *path, char *list, size_t size)
 {
     print_debug("listxattr(path=%s, list=%s, size=%ld)\n", path, list, size);
-    return -1;
+    return 0;
 }
 
 int cryptfs_removexattr(const char *path, const char *name)
@@ -194,7 +473,22 @@ int cryptfs_lock(const char *path, struct fuse_file_info *file, int cmd,
 int cryptfs_utimens(const char *path, const struct timespec tv[2])
 {
     print_debug("utimens(path=%s, tv=%p)\n", path, tv);
-    return -1;
+
+    struct CryptFS_Entry_ID *entry_id =
+        get_entry_by_path(fpi_get_master_key(), path);
+
+    // Get entry from ID
+    struct CryptFS_Entry *entry =
+        get_entry_from_id(fpi_get_master_key(), *entry_id);
+
+    entry->atime = tv[0].tv_sec;
+    entry->mtime = tv[1].tv_sec;
+
+    if (write_entry_from_id(fpi_get_master_key(), *entry_id, entry)
+        == BLOCK_ERROR)
+        return -EIO;
+
+    return 0;
 }
 
 int cryptfs_bmap(const char *path, size_t blocksize, uint64_t *idx)
@@ -228,5 +522,20 @@ int cryptfs_flock(const char *path, struct fuse_file_info *fi, int op)
 int cryptfs_utime(const char *path, struct utimbuf *buf)
 {
     print_debug("utime(path=%s, buf=%p)\n", path, buf);
-    return -1;
+
+    struct CryptFS_Entry_ID *entry_id =
+        get_entry_by_path(fpi_get_master_key(), path);
+
+    // Get entry from ID
+    struct CryptFS_Entry *entry =
+        get_entry_from_id(fpi_get_master_key(), *entry_id);
+
+    entry->atime = buf->actime;
+    entry->mtime = buf->modtime;
+
+    if (write_entry_from_id(fpi_get_master_key(), *entry_id, entry)
+        == BLOCK_ERROR)
+        return -EIO;
+
+    return 0;
 }

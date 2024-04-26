@@ -61,7 +61,5 @@ int cryptfs_getattr(const char *path, struct stat *stbuf)
     stbuf->st_size = entry->size;
     free(entry);
 
-    print_debug("getattr() finished\n");
-
     return 0;
 }
