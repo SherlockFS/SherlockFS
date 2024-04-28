@@ -1,13 +1,265 @@
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "entries.h"
 #include "fuse_mount.h"
 #include "fuse_ps_info.h"
 #include "print.h"
+#include "xalloc.h"
 
 #define MIN(x, y) ((x) > (y) ? (y) : (x))
+
+void *cryptfs_init(struct fuse_conn_info *info)
+{
+    print_debug(".init() called\n");
+    print_info("Mounting a SherlockFS filesystem instance...\n");
+    print_debug("Using FUSE protocol %d.%d\n", info->proto_major,
+                info->proto_minor);
+    print_debug("Max readahead: %d\n", info->max_readahead);
+    print_debug("Max write: %d\n", info->max_write);
+    print_debug("Max background: %d\n", info->max_background);
+    print_debug("Max foreground: %d\n", info->max_write);
+    print_debug("FILESYSTEM WANT: Async read: %d\n",
+                info->want & FUSE_CAP_ASYNC_READ);
+    if (info->want & FUSE_CAP_ASYNC_READ)
+    {
+        info->want = info->want & ~FUSE_CAP_ASYNC_READ;
+        print_warning("Asynchronous read asked by kernel but not currently "
+                      "supported by SherlockFS, this option will be ignored\n");
+    }
+
+    print_debug("FILESYSTEM WANT: Posix lock: %d\n",
+                info->want & FUSE_CAP_POSIX_LOCKS);
+    print_debug("FILESYSTEM WANT: File handle: %d\n",
+                info->want & FUSE_CAP_FLOCK_LOCKS);
+    print_debug("FILESYSTEM WANT: Auto inval: %d\n",
+                info->want & FUSE_CAP_ATOMIC_O_TRUNC);
+    print_debug("FILESYSTEM WANT: Big writes: %d\n",
+                info->want & FUSE_CAP_BIG_WRITES);
+    print_debug("FILESYSTEM WANT: Dont mask: %d\n",
+                info->want & FUSE_CAP_DONT_MASK);
+    print_debug("FILESYSTEM WANT: Splice write: %d\n",
+                info->want & FUSE_CAP_SPLICE_WRITE);
+    print_debug("FILESYSTEM WANT: Splice move: %d\n",
+                info->want & FUSE_CAP_SPLICE_MOVE);
+    print_debug("FILESYSTEM WANT: Splice read: %d\n",
+                info->want & FUSE_CAP_SPLICE_READ);
+    print_debug("FILESYSTEM WANT: Flock locks: %d\n",
+                info->want & FUSE_CAP_FLOCK_LOCKS);
+    print_debug("FILESYSTEM WANT: Has ioctl dir: %d\n",
+                info->want & FUSE_CAP_IOCTL_DIR);
+
+    info->async_read = 0; // Multi-threaded read not supported
+    print_success("SherlockFS filesystem mounted successfully!\n");
+
+    return NULL;
+}
+
+int cryptfs_getattr(const char *path, struct stat *stbuf)
+{
+    print_debug("getattr(path=%s, stbuf=%p)\n", path, stbuf);
+    // if (stbuf == NULL)
+    //     return -EINVAL;
+
+    // Init the buffer
+    memset(stbuf, 0, sizeof(struct stat));
+
+    // Allocate struct for reading directory_block
+    struct CryptFS_Entry_ID *entry_id =
+        get_entry_by_path(fpi_get_master_key(), path);
+
+    switch ((uint64_t)entry_id)
+    {
+    case BLOCK_ERROR:
+        print_debug("getattr(%s, %p) -> -EIO\n", path, stbuf);
+        return -EIO;
+    case ENTRY_NO_SUCH:
+        print_debug("getattr(%s, %p) -> -ENOENT\n", path, stbuf);
+        return -ENOENT;
+    default:
+        break;
+    }
+
+    struct CryptFS_Entry *entry =
+        get_entry_from_id(fpi_get_master_key(), *entry_id);
+    fpi_clear_decoded_key();
+
+    free(entry_id);
+
+    if (entry->type == ENTRY_TYPE_DIRECTORY)
+        stbuf->st_mode = __S_IFDIR | entry->mode;
+
+    else if (entry->type == ENTRY_TYPE_FILE
+             || entry->type == ENTRY_TYPE_HARDLINK)
+        stbuf->st_mode = __S_IFREG | entry->mode;
+
+    else if (entry->type == ENTRY_TYPE_SYMLINK)
+        stbuf->st_mode = __S_IFLNK | entry->mode;
+    else
+    {
+        free(entry);
+        print_debug("getattr(%s, %p) -> -ENOENT\n", path, stbuf);
+        return -ENOENT;
+    }
+
+    stbuf->st_nlink = 1; // TODO: Number of hardlinks
+    stbuf->st_uid = entry->uid;
+    stbuf->st_gid = entry->gid;
+    stbuf->st_atime = entry->atime;
+    stbuf->st_mtime = entry->mtime;
+    stbuf->st_ctime = entry->ctime;
+    stbuf->st_size = entry->size;
+    free(entry);
+
+    print_debug("getattr(%s, %p) -> 0\n", path, stbuf);
+    return 0;
+}
+
+int cryptfs_open(const char *path, struct fuse_file_info *file)
+{
+    print_debug("open(%s, %p)\n", path, file);
+
+    // FD management / allocation
+    struct fs_file_info *ffi = xcalloc(1, sizeof(struct fs_file_info));
+
+    // open() flags management
+    if ((file->flags & O_ACCMODE) == O_RDONLY) // Read only
+        ffi->is_readable_mode = true;
+    else if ((file->flags & O_ACCMODE) == O_WRONLY) // Write only
+        ffi->is_writable_mode = true;
+    else // ((file->flags & O_ACCMODE) == O_RDWR) // Read and write
+    {
+        ffi->is_readable_mode = true;
+        ffi->is_writable_mode = true;
+    }
+
+    // File open / creation management
+    // Open the file
+    struct CryptFS_Entry_ID *entry_id =
+        get_entry_by_path(fpi_get_master_key(), path);
+    switch ((uint64_t)entry_id)
+    {
+    case BLOCK_ERROR:
+        print_error("open(%s, %p) -> -EIO\n", path, file);
+        return -EIO;
+    case ENTRY_NO_SUCH:
+        print_error("open(%s, %p) -> -ENOENT\n", path, file);
+        return -ENOENT;
+    default:
+        break;
+    }
+    fpi_clear_decoded_key();
+
+    ffi->uid = *entry_id;
+    ffi->seek_offset = 0;
+
+    file->fh = (uint64_t)ffi; // File handle is the file information structure
+
+    free(entry_id);
+
+    print_debug("open(%s, %p) -> 0\n", path, file);
+    return 0;
+}
+
+int cryptfs_read(const char *path, char *buf, size_t sz, off_t offset,
+                 struct fuse_file_info *file)
+{
+    print_debug("read(path=%s, buf=%p, sz=%lu, offset=%ld, file=%p)\n", path,
+                buf, sz, offset, file);
+    ssize_t byte_read;
+
+    struct CryptFS_Entry_ID *entry_id = (struct CryptFS_Entry_ID *)file->fh;
+
+    byte_read =
+        entry_read_raw_data(fpi_get_master_key(), *entry_id, offset, buf, sz);
+    fpi_clear_decoded_key();
+    if (byte_read == BLOCK_ERROR)
+        return -EIO;
+
+    // TODO: Implement
+    (void)path;
+    (void)buf;
+    (void)sz;
+    (void)offset;
+    return byte_read;
+}
+
+int cryptfs_write(const char *path, const char *buf, size_t sz, off_t offset,
+                  struct fuse_file_info *file)
+{
+    print_debug("write(path=%s, buf=%p, sz=%lu, offset=%ld, file=%p)\n", path,
+                buf, sz, offset, file);
+
+    // TODO: Implement
+    (void)path;
+    (void)buf;
+    (void)sz;
+    (void)offset;
+    (void)file;
+    return 1;
+}
+
+int cryptfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
+                    off_t offset, struct fuse_file_info *fi)
+{
+    print_debug("readdir(path=%s, buf=%p, filler=%p, offset=%ld, fi=%p)\n",
+                path, buf, filler, offset, fi);
+
+    // Get the entry ID of the directory
+    struct CryptFS_Entry_ID *directory_entry_id =
+        (struct CryptFS_Entry_ID *)fi->fh;
+
+    // Get entry from the entry ID
+    struct CryptFS_Entry *directory_entry =
+        get_entry_from_id(fpi_get_master_key(), *directory_entry_id);
+
+    filler(buf, ".", NULL, 0); // Current Directory
+    filler(buf, "..", NULL, 0); // Parent Directory
+    for (uint64_t i = offset; i < directory_entry->size; i++)
+    {
+        // goto_used_entry_in_directory
+        struct CryptFS_Entry_ID *entry_id = goto_used_entry_in_directory(
+            fpi_get_master_key(), *directory_entry_id, i);
+
+        // Get entry from the entry ID
+        struct CryptFS_Entry *entry =
+            get_entry_from_id(fpi_get_master_key(), *entry_id);
+
+        struct stat stbuf;
+        stbuf.st_mode = entry->mode;
+        stbuf.st_nlink = 1;
+        stbuf.st_uid = entry->uid;
+        stbuf.st_gid = entry->gid;
+        stbuf.st_size = entry->size;
+        stbuf.st_atime = entry->atime;
+        stbuf.st_mtime = entry->mtime;
+        stbuf.st_ctime = entry->ctime;
+
+        filler(buf, entry->name, &stbuf, 0);
+
+        free(entry_id);
+        free(entry);
+    }
+
+    free(directory_entry);
+
+    print_debug("readdir(%s, %p, %p, %ld, %p) -> 0\n", path, buf, filler,
+                offset, fi);
+    return 0;
+}
+
+int cryptfs_release(const char *path, struct fuse_file_info *file)
+{
+    print_debug("release(path=%s, file=%p)\n", path, file);
+
+    struct fs_file_info *ffi = (struct fs_file_info *)file->fh;
+    if (ffi)
+        free(ffi);
+
+    return 0;
+}
 
 int cryptfs_releasedir(const char *path, struct fuse_file_info *file)
 {
