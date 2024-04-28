@@ -439,8 +439,8 @@ int cryptfs_link(const char *oldpath, const char *newpath)
 {
     print_debug("link(oldpath=%s, newpath=%s)\n", oldpath, newpath);
 
-    switch ((uint64_t)create_hardlink_by_path(fpi_get_master_key(), oldpath,
-                                              newpath))
+    switch ((uint64_t)create_hardlink_by_path(fpi_get_master_key(), newpath,
+                                              oldpath))
     {
     case ENTRY_NO_SUCH:
         return -ENOENT;
