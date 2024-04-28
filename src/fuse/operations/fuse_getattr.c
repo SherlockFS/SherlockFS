@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "block.h"
 #include "cryptfs.h"
@@ -14,6 +15,9 @@
 int cryptfs_getattr(const char *path, struct stat *stbuf)
 {
     print_debug("getattr(path=%s, stbuf=%p)\n", path, stbuf);
+    // if (stbuf == NULL)
+    //     return -EINVAL;
+
     // Init the buffer
     memset(stbuf, 0, sizeof(struct stat));
 
@@ -24,8 +28,10 @@ int cryptfs_getattr(const char *path, struct stat *stbuf)
     switch ((uint64_t)entry_id)
     {
     case BLOCK_ERROR:
+        print_debug("getattr(%s, %p) -> -EIO\n", path, stbuf);
         return -EIO;
     case ENTRY_NO_SUCH:
+        print_debug("getattr(%s, %p) -> -ENOENT\n", path, stbuf);
         return -ENOENT;
     default:
         break;
@@ -49,6 +55,7 @@ int cryptfs_getattr(const char *path, struct stat *stbuf)
     else
     {
         free(entry);
+        print_debug("getattr(%s, %p) -> -ENOENT\n", path, stbuf);
         return -ENOENT;
     }
 
@@ -61,5 +68,6 @@ int cryptfs_getattr(const char *path, struct stat *stbuf)
     stbuf->st_size = entry->size;
     free(entry);
 
+    print_debug("getattr(%s, %p) -> 0\n", path, stbuf);
     return 0;
 }

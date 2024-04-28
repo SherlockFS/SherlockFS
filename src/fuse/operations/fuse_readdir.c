@@ -51,26 +51,7 @@ int cryptfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
     free(directory_entry);
 
-    return 0;
-
-    // // TODO: IMPLEMENT readdir
-
-    // // Create fake file stbuf
-    // static struct stat stbuf;
-    // stbuf.st_mode = __S_IFREG | 0755;
-    // stbuf.st_nlink = 2;
-    // stbuf.st_uid = 1000;
-    // stbuf.st_gid = 1000;
-    // stbuf.st_size = 1024;
-    // stbuf.st_atime = time(NULL);
-    // stbuf.st_mtime = time(NULL);
-    // stbuf.st_ctime = time(NULL);
-
-    // filler(buf, "file1", &stbuf, 0);
-    (void)path;
-    (void)buf;
-    (void)filler;
-    (void)offset;
-    (void)fi;
+    print_debug("readdir(%s, %p, %p, %ld, %p) -> 0\n", path, buf, filler,
+                offset, fi);
     return 0;
 }

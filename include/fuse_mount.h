@@ -300,11 +300,12 @@ int cryptfs_unlink(const char *path);
 /**
  * @brief Create a symbolic link.
  *
- * @param target The target of the symbolic link.
- * @param link The path of the symbolic link to be created.
+ * @param target The target of the symbolic link. (The string)
+ * @param path The path of the symbolic link to be created.
+ * (The path of the inode)
  * @return 0 on success, -errno on failure.
  */
-int cryptfs_symlink(const char *target, const char *link);
+int cryptfs_symlink(const char *target, const char *path);
 
 /**
  * @brief Create a hard link.

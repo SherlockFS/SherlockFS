@@ -7,6 +7,8 @@
 #include "fuse_ps_info.h"
 #include "print.h"
 
+#define MIN(x, y) ((x) > (y) ? (y) : (x))
+
 int cryptfs_releasedir(const char *path, struct fuse_file_info *file)
 {
     print_debug("releasedir(path=%s, file=%p)\n", path, file);
@@ -25,16 +27,19 @@ int cryptfs_create(const char *path, mode_t mode, struct fuse_file_info *file)
     switch ((uint64_t)entry_id)
     {
     case ENTRY_EXISTS:
-        return cryptfs_open(path, file);
+        break; // Can open the file
     case ENTRY_NO_SUCH:
+        print_debug("create(path=%s, mode=%d, file=%p) = %d\n", path, mode,
+                    file, -ENOENT);
         return -ENOENT;
     case BLOCK_ERROR:
+        print_debug("create(path=%s, mode=%d, file=%p) = %d\n", path, mode,
+                    file, -EIO);
         return -EIO;
     default:
+        free(entry_id);
         break;
     }
-
-    free(entry_id);
 
     return cryptfs_open(path, file);
 }
@@ -55,7 +60,9 @@ int cryptfs_ftruncate(const char *path, off_t offset,
     default:
         break;
     }
-    return -1;
+    print_debug("ftruncate(path=%s, offset=%ld, file=%p) = %d\n", path, offset,
+                file, 0);
+    return 0;
 }
 
 int cryptfs_access(const char *path, int mode)
@@ -77,58 +84,59 @@ int cryptfs_access(const char *path, int mode)
     }
 
     // Only check if the file exists
-    if (mode == 0)
-        return 0;
-
-    // Get entry from ID
-    struct CryptFS_Entry *entry =
-        get_entry_from_id(fpi_get_master_key(), *entry_id);
-
-    if (mode & R_OK)
+    if (mode != 0)
     {
-        // Get current user ID et group ID
-        uid_t uid = getuid();
-        gid_t gid = getgid();
+        // Get entry from ID
+        struct CryptFS_Entry *entry =
+            get_entry_from_id(fpi_get_master_key(), *entry_id);
 
-        // Check if the user has read permission
-        if (entry->uid == uid && (entry->mode & S_IRUSR) == 0)
-            return -EACCES;
-        if (entry->gid == gid && (entry->mode & S_IRGRP) == 0)
-            return -EACCES;
-        if ((entry->mode & S_IROTH) == 0)
-            return -EACCES;
+        if (mode & R_OK)
+        {
+            // Get current user ID et group ID
+            uid_t uid = getuid();
+            gid_t gid = getgid();
+
+            // Check if the user has read permission
+            if (entry->uid == uid && (entry->mode & S_IRUSR) == 0)
+                return -EACCES;
+            if (entry->gid == gid && (entry->mode & S_IRGRP) == 0)
+                return -EACCES;
+            if ((entry->mode & S_IROTH) == 0)
+                return -EACCES;
+        }
+
+        if (mode & W_OK)
+        {
+            // Get current user ID et group ID
+            uid_t uid = getuid();
+            gid_t gid = getgid();
+
+            // Check if the user has write permission
+            if (entry->uid == uid && (entry->mode & S_IWUSR) == 0)
+                return -EACCES;
+            if (entry->gid == gid && (entry->mode & S_IWGRP) == 0)
+                return -EACCES;
+            if ((entry->mode & S_IWOTH) == 0)
+                return -EACCES;
+        }
+
+        if (mode & X_OK)
+        {
+            // Get current user ID et group ID
+            uid_t uid = getuid();
+            gid_t gid = getgid();
+
+            // Check if the user has execute permission
+            if (entry->uid == uid && (entry->mode & S_IXUSR) == 0)
+                return -EACCES;
+            if (entry->gid == gid && (entry->mode & S_IXGRP) == 0)
+                return -EACCES;
+            if ((entry->mode & S_IXOTH) == 0)
+                return -EACCES;
+        }
     }
 
-    if (mode & W_OK)
-    {
-        // Get current user ID et group ID
-        uid_t uid = getuid();
-        gid_t gid = getgid();
-
-        // Check if the user has write permission
-        if (entry->uid == uid && (entry->mode & S_IWUSR) == 0)
-            return -EACCES;
-        if (entry->gid == gid && (entry->mode & S_IWGRP) == 0)
-            return -EACCES;
-        if ((entry->mode & S_IWOTH) == 0)
-            return -EACCES;
-    }
-
-    if (mode & X_OK)
-    {
-        // Get current user ID et group ID
-        uid_t uid = getuid();
-        gid_t gid = getgid();
-
-        // Check if the user has execute permission
-        if (entry->uid == uid && (entry->mode & S_IXUSR) == 0)
-            return -EACCES;
-        if (entry->gid == gid && (entry->mode & S_IXGRP) == 0)
-            return -EACCES;
-        if ((entry->mode & S_IXOTH) == 0)
-            return -EACCES;
-    }
-
+    print_debug("access(path=%s, mode=%d) = %d\n", path, mode, 0);
     return 0;
 }
 
@@ -136,7 +144,7 @@ int cryptfs_flush(const char *path, struct fuse_file_info *file)
 {
     print_debug("flush(path=%s, file=%p)\n", path, file);
 
-    print_debug("We do no cache anything, so we do nothing here");
+    print_debug("We do no cache anything, so we do nothing here\n");
     return 0;
 }
 
@@ -144,7 +152,7 @@ int cryptfs_fsync(const char *path, int datasync, struct fuse_file_info *file)
 {
     print_debug("fsync(path=%s, datasync=%d, file=%p)\n", path, datasync, file);
 
-    print_debug("We do no cache anything, so we do nothing here");
+    print_debug("We do no cache anything, so we do nothing here\n");
     return 0;
 }
 
@@ -154,7 +162,7 @@ int cryptfs_fsyncdir(const char *path, int datasync,
     print_debug("fsyncdir(path=%s, datasync=%d, file=%p)\n", path, datasync,
                 file);
 
-    print_debug("We do no cache anything, so we do nothing here");
+    print_debug("We do no cache anything, so we do nothing here\n");
     return 0;
 }
 
@@ -209,8 +217,45 @@ int cryptfs_mknod(const char *path, mode_t mode, dev_t rdev)
 
 int cryptfs_readlink(const char *path, char *buf, size_t size)
 {
+    int err = 0;
+
     print_debug("readlink(path=%s, buf=%p, size=%ld)\n", path, buf, size);
-    return -1;
+
+    // Get entry ID from path
+    struct CryptFS_Entry_ID *entry_id =
+        get_entry_by_path(fpi_get_master_key(), path);
+
+    switch ((uint64_t)entry_id)
+    {
+    case ENTRY_NO_SUCH:
+        return -ENOENT;
+    case BLOCK_ERROR:
+        return -EIO;
+    default:
+        break;
+    }
+
+    // Get entry from ID
+    struct CryptFS_Entry *entry =
+        get_entry_from_id(fpi_get_master_key(), *entry_id);
+
+    if (entry->type != ENTRY_TYPE_SYMLINK)
+    {
+        err = -EINVAL;
+        goto err;
+    }
+
+    if (entry_read_raw_data(fpi_get_master_key(), *entry_id, 0, buf,
+                            MIN(size, entry->size))
+        == BLOCK_ERROR)
+    {
+        err = -EIO;
+        goto err;
+    }
+err:
+    free(entry_id);
+    free(entry);
+    return err;
 }
 
 int cryptfs_rename(const char *oldpath, const char *newpath)
@@ -368,21 +413,26 @@ int cryptfs_unlink(const char *path)
     return -1;
 }
 
-int cryptfs_symlink(const char *target, const char *link)
+int cryptfs_symlink(const char *target, const char *path)
 {
+    print_debug("symlink(target=%s, path=%s)\n", target, path);
+
     switch (
-        (uint64_t)create_symlink_by_path(fpi_get_master_key(), target, link))
+        (uint64_t)create_symlink_by_path(fpi_get_master_key(), path, target))
     {
     case ENTRY_NO_SUCH:
+        print_debug("symlink(%s, %s) = %d\n", target, path, -ENOENT);
         return -ENOENT;
     case ENTRY_EXISTS:
+        print_debug("symlink(%s, %s) = %d\n", target, path, -EEXIST);
         return -EEXIST;
     case BLOCK_ERROR:
+        print_debug("symlink(%s, %s) = %d\n", target, path, -EIO);
         return -EIO;
     default:
-        return 0;
+        break;
     }
-    return -1;
+    return 0;
 }
 
 int cryptfs_link(const char *oldpath, const char *newpath)

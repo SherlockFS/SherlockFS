@@ -308,7 +308,7 @@ struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
         if (!entry)
         {
             free(entry_id);
-            return (void *)BLOCK_ERROR;
+            return (void *)ENTRY_NO_SUCH;
         }
 
         // Si l'entrée n'est pas un répertoire et qu'il reste des éléments dans
@@ -322,6 +322,7 @@ struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
 
         // Goto struct CryptFS_Directory
         entry_id->directory_block = entry->start_block;
+        entry_id->directory_index = 0;
 
         // Recherche de l'entrée correspondant au nom du répertoire dans le
         // répertoire actuel
@@ -351,10 +352,6 @@ struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
         }
 
         dir_name = strtok(NULL, "/");
-
-        // Change to directory beginning if found_entry is a directory and
-        if (found_entry->type == ENTRY_TYPE_DIRECTORY && dir_name != NULL)
-            entry_id->directory_index = 0;
 
         free(entry);
         free(found_entry);
@@ -390,12 +387,16 @@ static int __create_entry_by_path(const unsigned char *aes_key,
 {
     // Check if file already exists
     struct CryptFS_Entry_ID *entry_id = get_entry_by_path(aes_key, path);
-    if (entry_id != (void *)ENTRY_NO_SUCH)
+    switch ((uint64_t)entry_id)
     {
+    case BLOCK_ERROR:
+        return BLOCK_ERROR;
+    case ENTRY_NO_SUCH:
+        break;
+    default:
         free(entry_id);
         return ENTRY_EXISTS;
     }
-
     // Get the parent directory path using dirname()
     char path_copy[PATH_MAX] = { 0 };
     strncpy(path_copy, path, strlen(path));
@@ -719,7 +720,6 @@ goto_used_entry_in_directory(const unsigned char *aes_key,
             // Get entry by id
             entry = get_entry_from_id(aes_key, directory_entry_id);
             bool is_used = entry->used == 1;
-            printf("Entry %s is used: %d\n", entry->name, is_used);
             free(entry);
             if (is_used)
             {
