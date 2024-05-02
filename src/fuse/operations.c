@@ -59,7 +59,7 @@ void *cryptfs_init(struct fuse_conn_info *info)
 
 int cryptfs_getattr(const char *path, struct stat *stbuf)
 {
-    print_debug("getattr(path=%s, stbuf=%p)\n", path, stbuf);
+    //print_debug("getattr(path=%s, stbuf=%p)\n", path, stbuf);
     // if (stbuf == NULL)
     //     return -EINVAL;
 
@@ -113,7 +113,7 @@ int cryptfs_getattr(const char *path, struct stat *stbuf)
     stbuf->st_size = entry->size;
     free(entry);
 
-    print_debug("getattr(%s, %p) -> 0\n", path, stbuf);
+    //print_debug("getattr(%s, %p) -> 0\n", path, stbuf);
     return 0;
 }
 
@@ -123,6 +123,10 @@ int cryptfs_open(const char *path, struct fuse_file_info *file)
 
     // FD management / allocation
     struct fs_file_info *ffi = xcalloc(1, sizeof(struct fs_file_info));
+
+    // set default value
+    ffi->is_readable_mode = false;
+    ffi->is_writable_mode = false;
 
     // open() flags management
     if ((file->flags & O_ACCMODE) == O_RDONLY) // Read only
@@ -153,11 +157,12 @@ int cryptfs_open(const char *path, struct fuse_file_info *file)
     fpi_clear_decoded_key();
 
     ffi->uid = *entry_id;
+    print_debug("uid %i\n", ffi->uid);
     ffi->seek_offset = 0;
 
     file->fh = (uint64_t)ffi; // File handle is the file information structure
 
-    free(entry_id);
+    //free(entry_id);
 
     print_debug("open(%s, %p) -> 0\n", path, file);
     return 0;
@@ -170,19 +175,22 @@ int cryptfs_read(const char *path, char *buf, size_t sz, off_t offset,
                 buf, sz, offset, file);
     ssize_t byte_read;
 
-    struct CryptFS_Entry_ID *entry_id = (struct CryptFS_Entry_ID *)file->fh;
+    struct fs_file_info *ffi = (struct fs_file_info *)file->fh;
+    struct CryptFS_Entry_ID entry_id = ffi->uid;
+
+    if (ffi->is_readable_mode == false)
+        return -EACCES;
+    print_debug("uid %i\n", ffi->uid);
 
     byte_read =
-        entry_read_raw_data(fpi_get_master_key(), *entry_id, offset, buf, sz);
+        entry_read_raw_data(fpi_get_master_key(), entry_id, offset + ffi->seek_offset, buf, sz);
+    print_debug("read done\n");
     fpi_clear_decoded_key();
     if (byte_read == BLOCK_ERROR)
         return -EIO;
 
-    // TODO: Implement
-    (void)path;
-    (void)buf;
-    (void)sz;
-    (void)offset;
+    print_debug("read(path=%s, buf=%p, sz=%lu, offset=%ld, file=%p) -> %u\n", path,
+                buf, sz, offset, file, byte_read);
     return byte_read;
 }
 
@@ -192,13 +200,26 @@ int cryptfs_write(const char *path, const char *buf, size_t sz, off_t offset,
     print_debug("write(path=%s, buf=%p, sz=%lu, offset=%ld, file=%p)\n", path,
                 buf, sz, offset, file);
 
-    // TODO: Implement
-    (void)path;
-    (void)buf;
-    (void)sz;
-    (void)offset;
-    (void)file;
-    return 1;
+    ssize_t byte_write;
+   
+    struct fs_file_info *ffi = (struct fs_file_info *)file->fh;
+    struct CryptFS_Entry_ID entry_id = ffi->uid;
+    print_debug("uid %i\n", ffi->uid);
+    print_debug("writabe mode %s, seek %i\n", ffi->is_writable_mode == false ? "false": "true", ffi->seek_offset);
+    if (ffi->is_writable_mode == false)
+        return -EACCES;
+
+    print_debug("Trying to write to buf ...\n");
+    byte_write = entry_write_buffer_from(fpi_get_master_key(), entry_id, offset, buf, sz);
+    print_debug("byte write %i, buf : %s\n", sz, buf);
+   
+    fpi_clear_decoded_key();
+    if (byte_write == BLOCK_ERROR)
+        return -EIO;
+
+    print_debug("write(path=%s, buf=%p, sz=%lu, offset=%ld, file=%p) -> %u\n", path,
+                buf, sz, offset, file, sz);
+    return sz;
 }
 
 int cryptfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
@@ -526,18 +547,31 @@ int cryptfs_fallocate(const char *path, int mode, off_t offset, off_t length,
 }
 
 // TODO: Implement
+/*
 int cryptfs_write_buf(const char *path, struct fuse_bufvec *buf, off_t offset,
                       struct fuse_file_info *file)
 {
     print_debug("write_buf(path=%s, buf=%p, offset=%ld, file=%p)\n", path, buf,
                 offset, file);
 
+    ssize_t byte_write;
+
     // Get entry ID from file
     struct fs_file_info *ffi = (struct fs_file_info *)file->fh;
     struct CryptFS_Entry_ID entry_id = ffi->uid;
 
-    (void)ffi;
-    (void)entry_id;
+    print_debug("Call to write buffer from\n");
+    if (ffi->is_writable_mode == false)
+        return -1;
+
+    print_debug("Call to write buffer from\n");
+    byte_write = entry_write_buffer_from(fpi_get_master_key(), entry_id, offset, buf, sz);
+    fpi_clear_decoded_key();
+    if (byte_write == BLOCK_ERROR)
+        return -EIO;
+    print_debug("write(number byte write: %u)\n", byte_write);
+    return byte_write;
+}
 
     return 0;
 }
@@ -555,7 +589,7 @@ int cryptfs_read_buf(const char *path, struct fuse_bufvec **bufp, size_t size,
 
     return entry_read_raw_data(fpi_get_master_key(), entry_id, offset,
                                bufp[0]->buf->mem, size);
-}
+}*/
 
 int cryptfs_opendir(const char *path, struct fuse_file_info *file)
 {
