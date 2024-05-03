@@ -500,5 +500,17 @@ int cryptfs_readlink(const char *path, char *buf, size_t size);
  */
 int cryptfs_utime(const char *path, struct utimbuf *buf);
 
+/**
+ * @brief Moves the read/write file offset within the file.
+ * 
+ * @param path The path of the file
+ * @param off The offset to move to
+ * @param whence The reference point for the offset
+ * @param file Pointer to the fuse_file_info structure.
+ * @return The new offset on success, -errno on failure
+ */
+// off_t crypfs_lseek(const char *path, off_t off, int whence, struct fuse_file_info *file);
+
+
 #endif /* FUSE_OPERATIONS_H */
 

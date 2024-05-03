@@ -58,6 +58,7 @@ static struct fuse_operations ops = {
     .flock = cryptfs_flock,
     .ftruncate = cryptfs_ftruncate,
     .destroy = cryptfs_destroy,
+ //   .lseek = crypfs_lseek,
 };
 
 // Parser grammar
