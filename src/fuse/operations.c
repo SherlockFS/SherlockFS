@@ -69,6 +69,7 @@ int cryptfs_getattr(const char *path, struct stat *stbuf)
     // Allocate struct for reading directory_block
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), path);
+    fpi_clear_decoded_key();
 
     switch ((uint64_t)entry_id)
     {
@@ -143,6 +144,8 @@ int cryptfs_open(const char *path, struct fuse_file_info *file)
     // Open the file
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), path);
+    fpi_clear_decoded_key();
+
     switch ((uint64_t)entry_id)
     {
     case BLOCK_ERROR:
@@ -160,7 +163,6 @@ int cryptfs_open(const char *path, struct fuse_file_info *file)
     ffi->seek_offset = 0;         
 
     file->fh = (uint64_t)ffi; // File handle is the file information structure
-    fpi_clear_decoded_key();
     free(entry_id);
 
     print_debug("open(%s, %p) -> 0\n", path, file);
@@ -290,6 +292,7 @@ int cryptfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
         free(entry);
     }
 
+    fpi_clear_decoded_key();
     free(directory_entry);
 
     print_debug("readdir(%s, %p, %p, %ld, %p) -> 0\n", path, buf, filler,
@@ -322,6 +325,7 @@ int cryptfs_create(const char *path, mode_t mode, struct fuse_file_info *file)
 
     struct CryptFS_Entry_ID *entry_id =
         create_file_by_path(fpi_get_master_key(), path);
+    fpi_clear_decoded_key();
 
     switch ((uint64_t)entry_id)
     {
@@ -354,11 +358,13 @@ int cryptfs_ftruncate(const char *path, off_t offset,
     switch (entry_truncate(fpi_get_master_key(), entry_id, offset))
     {
     case BLOCK_ERROR:
+        fpi_clear_decoded_key();
         return -EIO;
-        break;
     default:
         break;
     }
+
+    fpi_clear_decoded_key();
     print_debug("ftruncate(path=%s, offset=%ld, file=%p) = %d\n", path, offset,
                 file, 0);
     return 0;
@@ -371,6 +377,7 @@ int cryptfs_access(const char *path, int mode)
     // Get entry ID from path
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), path);
+    fpi_clear_decoded_key();
 
     switch ((uint64_t)entry_id)
     {
@@ -388,6 +395,7 @@ int cryptfs_access(const char *path, int mode)
         // Get entry from ID
         struct CryptFS_Entry *entry =
             get_entry_from_id(fpi_get_master_key(), *entry_id);
+        fpi_clear_decoded_key();
 
         if (mode & R_OK)
         {
@@ -469,7 +477,10 @@ int cryptfs_mkdir(const char *path, mode_t mode)
 {
     print_debug("mkdir(path=%s, mode=%d)\n", path, mode);
 
-    switch ((uint64_t)create_directory_by_path(fpi_get_master_key(), path))
+    uint64_t entry_id = (uint64_t)create_directory_by_path(fpi_get_master_key(), path);
+    fpi_clear_decoded_key();
+
+    switch (entry_id)
     {
     case ENTRY_EXISTS:
         return -EEXIST;
@@ -499,6 +510,8 @@ int cryptfs_mknod(const char *path, mode_t mode, dev_t rdev)
     else
         return -EINVAL;
 
+    fpi_clear_decoded_key();
+
     switch ((uint64_t)entry_id)
     {
     case ENTRY_EXISTS:
@@ -523,6 +536,7 @@ int cryptfs_readlink(const char *path, char *buf, size_t size)
     // Get entry ID from path
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), path);
+    fpi_clear_decoded_key();
 
     switch ((uint64_t)entry_id)
     {
@@ -537,7 +551,7 @@ int cryptfs_readlink(const char *path, char *buf, size_t size)
     // Get entry from ID
     struct CryptFS_Entry *entry =
         get_entry_from_id(fpi_get_master_key(), *entry_id);
-
+    
     if (entry->type != ENTRY_TYPE_SYMLINK)
     {
         err = -EINVAL;
@@ -552,6 +566,7 @@ int cryptfs_readlink(const char *path, char *buf, size_t size)
         goto err;
     }
 err:
+    fpi_clear_decoded_key();
     free(entry_id);
     free(entry);
     return err;
@@ -624,6 +639,7 @@ int cryptfs_opendir(const char *path, struct fuse_file_info *file)
     // Get directory from path
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), path);
+    fpi_clear_decoded_key();
 
     // Check if the directory exists
     if (entry_id == (void *)ENTRY_NO_SUCH)
@@ -634,6 +650,7 @@ int cryptfs_opendir(const char *path, struct fuse_file_info *file)
     // Get entry from ID
     struct CryptFS_Entry *entry =
         get_entry_from_id(fpi_get_master_key(), *entry_id);
+    fpi_clear_decoded_key();
 
     // Check if the entry is a directory
     if (entry->type != ENTRY_TYPE_DIRECTORY)
@@ -666,6 +683,7 @@ int cryptfs_rmdir(const char *path)
     // Get entry ID from path
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), path);
+    fpi_clear_decoded_key();
 
     // Check if the directory exists
     if (entry_id == (void *)ENTRY_NO_SUCH)
@@ -674,11 +692,15 @@ int cryptfs_rmdir(const char *path)
     // Check if the entry is a directory
     struct CryptFS_Entry *entry =
         get_entry_from_id(fpi_get_master_key(), *entry_id);
+    fpi_clear_decoded_key();
 
     if (entry->type != ENTRY_TYPE_DIRECTORY)
         return -ENOTDIR;
 
-    switch (delete_entry_by_path(fpi_get_master_key(), path))
+    int err = delete_entry_by_path(fpi_get_master_key(), path);
+    fpi_clear_decoded_key();
+
+    switch (err)
     {
     case 0:
         return 0;
@@ -699,6 +721,7 @@ int cryptfs_unlink(const char *path)
     // Get entry ID from path
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), path);
+     fpi_clear_decoded_key();
 
     // Check if the directory exists
     if (entry_id == (void *)ENTRY_NO_SUCH)
@@ -707,11 +730,15 @@ int cryptfs_unlink(const char *path)
     // Check if the entry is a directory
     struct CryptFS_Entry *entry =
         get_entry_from_id(fpi_get_master_key(), *entry_id);
+     fpi_clear_decoded_key();
 
     if (entry->type == ENTRY_TYPE_DIRECTORY)
         return -EISDIR;
 
-    switch (delete_entry_by_path(fpi_get_master_key(), path))
+    int err = delete_entry_by_path(fpi_get_master_key(), path);
+    fpi_clear_decoded_key();
+
+    switch (err)
     {
     case 0:
         return 0;
@@ -729,8 +756,9 @@ int cryptfs_symlink(const char *target, const char *path)
 {
     print_debug("symlink(target=%s, path=%s)\n", target, path);
 
-    switch (
-        (uint64_t)create_symlink_by_path(fpi_get_master_key(), path, target))
+    uint64_t entry_id = (uint64_t)create_symlink_by_path(fpi_get_master_key(), path, target);
+    fpi_clear_decoded_key();
+    switch (entry_id)
     {
     case ENTRY_NO_SUCH:
         print_debug("symlink(%s, %s) = %d\n", target, path, -ENOENT);
@@ -751,8 +779,11 @@ int cryptfs_link(const char *oldpath, const char *newpath)
 {
     print_debug("link(oldpath=%s, newpath=%s)\n", oldpath, newpath);
 
-    switch ((uint64_t)create_hardlink_by_path(fpi_get_master_key(), newpath,
-                                              oldpath))
+    uint64_t entry_id = (uint64_t)create_hardlink_by_path(fpi_get_master_key(), newpath,
+                                              oldpath);
+    fpi_clear_decoded_key();
+    
+    switch (entry_id)
     {
     case ENTRY_NO_SUCH:
         return -ENOENT;
@@ -785,11 +816,13 @@ int cryptfs_truncate(const char *path, off_t offset)
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), path);
 
-    switch (entry_truncate(fpi_get_master_key(), *entry_id, offset))
+    uint64_t err = (uint64_t)entry_truncate(fpi_get_master_key(), *entry_id, offset);
+    fpi_clear_decoded_key();
+
+    switch (err)
     {
     case BLOCK_ERROR:
         return -EIO;
-        break;
     default:
         break;
     }
@@ -848,8 +881,13 @@ int cryptfs_utimens(const char *path, const struct timespec tv[2])
 
     if (write_entry_from_id(fpi_get_master_key(), *entry_id, entry)
         == BLOCK_ERROR)
+    {
+        fpi_clear_decoded_key();
         return -EIO;
 
+    }
+    
+    fpi_clear_decoded_key();
     return 0;
 }
 
@@ -897,7 +935,11 @@ int cryptfs_utime(const char *path, struct utimbuf *buf)
 
     if (write_entry_from_id(fpi_get_master_key(), *entry_id, entry)
         == BLOCK_ERROR)
+    {
+        fpi_clear_decoded_key();
         return -EIO;
-
+    }
+        
+    fpi_clear_decoded_key();
     return 0;
 }
