@@ -248,40 +248,6 @@ int cryptfs_write(const char *path, const char *buf, size_t sz, off_t offset,
     return sz;
 }
 
-/*
-off_t crypfs_lseek(const char *path, off_t off, int whence, struct fuse_file_info *file)
-{
-    print_debug("lseek(path=%s, off=%p, whence=%p, file=%ld)\n",
-                path, off, whence, file);
-    
-    struct fs_file_info *ffi = (struct fs_file_info *)file->fh;
-    struct CryptFS_Entry_ID entry_id = ffi->uid;
-
-    switch (whence)
-    {
-    case SEEK_SET:
-        ffi->seek_offset = off;
-        break;
-    case SEEK_CUR:
-        ffi->seek_offset += off;
-        break;
-    case SEEK_END:
-        struct CryptFS_Entry *entry = get_entry_from_id(fpi_get_master_key(), entry_id);
-        fpi_clear_decoded_key();
-        ffi->seek_offset = entry->size + off;
-        break;
-    default:
-        print_error("lseek(path=%s, off=%p, whence=%p, file=%ld) -> EINVAL\n",
-                path, off, whence, file);
-        return -EINVAL;
-    }
-
-    print_debug("lseek(path=%s, off=%p, whence=%p, file=%ld) -> %u\n",
-                path, off, whence, file, ffi->seek_offset);
-    return ffi->seek_offset;
-}
-*/
-
 int cryptfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                     off_t offset, struct fuse_file_info *fi)
 {

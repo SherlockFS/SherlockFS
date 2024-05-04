@@ -509,7 +509,6 @@ int cryptfs_utime(const char *path, struct utimbuf *buf);
  * @param file Pointer to the fuse_file_info structure.
  * @return The new offset on success, -errno on failure
  */
-// off_t crypfs_lseek(const char *path, off_t off, int whence, struct fuse_file_info *file);
 
 
 #endif /* FUSE_OPERATIONS_H */
