@@ -64,8 +64,8 @@ Test(shlkfs_adduser, formated, .timeout = 10, .init = cr_redirect_stdout)
 
     format_fs("build/tests/shlkfs_adduser.formated.test.shlkfs",
               "build/tests/shlkfs_adduser.formated.test.public.pem",
-              "build/tests/shlkfs_adduser.formated.test.private.pem", NULL,
-              my_rsa);
+              "build/tests/shlkfs_adduser.formated.test.private.pem", "label",
+              NULL, my_rsa);
     cr_assert(is_already_formatted(
         "build/tests/shlkfs_adduser.formated.test.shlkfs"));
 
@@ -122,7 +122,7 @@ Test(shlkfs_adduser, already_exists, .timeout = 10, .init = cr_redirect_stdall)
     format_fs("build/tests/shlkfs_adduser.already_exists.test.shlkfs",
               "build/tests/shlkfs_adduser.already_exists.test.public.pem",
               "build/tests/shlkfs_adduser.already_exists.test.private.pem",
-              NULL, my_rsa);
+              "label", NULL, my_rsa);
 
     cr_assert(is_already_formatted(
         "build/tests/shlkfs_adduser.already_exists.test.shlkfs"));

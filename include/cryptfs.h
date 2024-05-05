@@ -1,5 +1,5 @@
-#ifndef CRYPT_FS_H
-#define CRYPT_FS_H
+#ifndef CRYPTFS_H
+#define CRYPTFS_H
 
 #include <openssl/sha.h>
 #include <stdint.h>
@@ -11,7 +11,8 @@
 // HEADER SECTION
 // -----------------------------------------------------------------------------
 #define CRYPTFS_BOOT_SECTION_SIZE_BYTES 2048
-#define CRYPTFS_MAGIC "sfkcolrehs"
+#define CRYPTFS_MAGIC "sfkcolrehs" // reverse("sherlockfs")
+#define CRYPTFS_LABEL_SIZE 128 // reverse("sherlockfs")
 #define CRYPTFS_VERSION 1
 #define CRYPTFS_BLOCK_SIZE_BYTES 4096
 #define CRYPTFS_BLOCK_SIZE_BITS (CRYPTFS_BLOCK_SIZE_BYTES * 8)
@@ -29,6 +30,7 @@ struct CryptFS_Header
     uint8_t magic[sizeof(CRYPTFS_MAGIC)]; // Magic number
     uint8_t version; // CRYPTFS_VERSION
     uint32_t blocksize; // in bytes
+    uint8_t label[CRYPTFS_LABEL_SIZE]; // Filesystem label
     uint64_t last_fat_block; // Last FAT block index
 } __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
@@ -217,4 +219,4 @@ struct CryptFS
         root_directory; // BLOCK 67: Root directory directory
 } __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
-#endif /* CRYPT_FS_H */
+#endif /* CRYPTFS_H */

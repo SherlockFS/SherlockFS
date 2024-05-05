@@ -59,8 +59,8 @@ Test(shlkfs_deluser, one_user, .timeout = 10, .init = cr_redirect_stdall)
 
     format_fs("build/tests/shlkfs_deluser.one_user.test.shlkfs",
               "build/tests/shlkfs_deluser.one_user.test.public.pem",
-              "build/tests/shlkfs_deluser.one_user.test.private.pem", NULL,
-              my_rsa);
+              "build/tests/shlkfs_deluser.one_user.test.private.pem", "label",
+              NULL, my_rsa);
     cr_assert(is_already_formatted(
         "build/tests/shlkfs_deluser.one_user.test.shlkfs"));
 
@@ -75,7 +75,7 @@ Test(shlkfs_deluser, one_user, .timeout = 10, .init = cr_redirect_stdall)
     // EVP_PKEY *other_rsa = generate_rsa_keypair();
     // write_rsa_keys_on_disk(
     //     my_rsa, "build/tests/shlkfs_deluser.one_user.my_public.pem",
-    //     "build/tests/shlkfs_deluser.one_user.my_private.pem", NULL);
+    //     "build/tests/shlkfs_deluser.one_user.my_private.pem","label", NULL);
     // write_rsa_keys_on_disk(
     //     other_rsa, "build/tests/shlkfs_deluser.one_user.other_public.pem",
     //     NULL, NULL);
@@ -114,8 +114,8 @@ Test(shlkfs_deluser, two_users_delete_other, .timeout = 10,
 
     format_fs("build/tests/shlkfs_deluser.two_users.test.shlkfs",
               "build/tests/shlkfs_deluser.two_users.test.public.pem",
-              "build/tests/shlkfs_deluser.two_users.test.private.pem", NULL,
-              my_rsa);
+              "build/tests/shlkfs_deluser.two_users.test.private.pem", "label",
+              NULL, my_rsa);
     cr_assert(is_already_formatted(
         "build/tests/shlkfs_deluser.two_users.test.shlkfs"));
 
@@ -177,7 +177,7 @@ Test(shlkfs_deluser, two_users_delete_me_yes, .timeout = 10,
     format_fs("build/tests/shlkfs_deluser.two_users_delete_me.test.shlkfs",
               "build/tests/shlkfs_deluser.two_users_delete_me.test.public.pem",
               "build/tests/shlkfs_deluser.two_users_delete_me.test.private.pem",
-              NULL, my_rsa);
+              "label", NULL, my_rsa);
     cr_assert(is_already_formatted(
         "build/tests/shlkfs_deluser.two_users_delete_me.test.shlkfs"));
 
@@ -249,7 +249,7 @@ Test(shlkfs_deluser, two_users_delete_me_no, .timeout = 10,
         "build/tests/shlkfs_deluser.two_users_delete_me_no.test.shlkfs",
         "build/tests/shlkfs_deluser.two_users_delete_me_no.test.public.pem",
         "build/tests/shlkfs_deluser.two_users_delete_me_no.test.private.pem",
-        NULL, my_rsa);
+        "label", NULL, my_rsa);
     cr_assert(is_already_formatted(
         "build/tests/shlkfs_deluser.two_users_delete_me_no.test.shlkfs"));
 
