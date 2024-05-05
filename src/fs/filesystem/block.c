@@ -18,11 +18,20 @@ void set_device_path(const char *path)
     DEVICE_PATH = path;
 
     // Create file (if not created)
-    FILE *tmp_file = fopen(path, "w+");
+    FILE *tmp_file = fopen(path, "r+");
     if (!tmp_file)
-        error_exit("Impossible to create device file '%s'\n", EXIT_FAILURE,
-                   path);
+        error_exit("Impossible to open the device '%s': %s\n", EXIT_FAILURE,
+                   path, strerror(errno));
 
+    // Check file size
+    fseek(tmp_file, 0, SEEK_END);
+    size_t file_size = ftell(tmp_file);
+    if (file_size < sizeof(struct CryptFS))
+        error_exit(
+            "The device '%s' is too small to be a SherlockFS filesystem\n",
+            EXIT_FAILURE, path);
+
+    fseek(tmp_file, 0, SEEK_SET);
     fclose(tmp_file);
 }
 
@@ -41,7 +50,7 @@ int read_blocks(block_t start_block, size_t nb_blocks, void *buffer)
     if (!buffer)
         return BLOCK_ERROR;
 
-    FILE *file = fopen(DEVICE_PATH, "r+");
+    FILE *file = fopen(DEVICE_PATH, "r");
     if (!file)
     {
         error_exit("fopen '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
@@ -51,8 +60,8 @@ int read_blocks(block_t start_block, size_t nb_blocks, void *buffer)
 
     if (fseek(file, start_block * CRYPTFS_BLOCK_SIZE_BYTES, SEEK_SET) != 0)
     {
-        error_exit("fseek '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
-                   strerror(errno));
+        print_error("fseek '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
+                    strerror(errno));
         return BLOCK_ERROR;
     }
 
@@ -62,7 +71,22 @@ int read_blocks(block_t start_block, size_t nb_blocks, void *buffer)
         size_t n = fread(buffer + read * CRYPTFS_BLOCK_SIZE_BYTES,
                          CRYPTFS_BLOCK_SIZE_BYTES, nb_blocks - read, file);
         if (n == 0)
-            return BLOCK_ERROR;
+        {
+            // Glitch: if you can read at a non existing offset, try to right at
+            // this one, then try again
+            write_blocks(start_block + read, 1,
+                         buffer + read * CRYPTFS_BLOCK_SIZE_BYTES);
+            n = fread(buffer + read * CRYPTFS_BLOCK_SIZE_BYTES,
+                      CRYPTFS_BLOCK_SIZE_BYTES, nb_blocks - read, file);
+
+            // If still cannot, this is a real error
+            if (n == 0)
+            {
+                print_error("fread '%s' failed: %s\n", DEVICE_PATH,
+                            strerror(errno));
+                return BLOCK_ERROR;
+            }
+        }
 
         read += n;
     }
@@ -85,15 +109,13 @@ int write_blocks(block_t start_block, size_t nb_blocks, const void *buffer)
     FILE *file = fopen(DEVICE_PATH, "r+");
     if (!file)
     {
-        error_exit("fopen '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
-                   strerror(errno));
+        print_error("fopen '%s' failed: %s\n", DEVICE_PATH, strerror(errno));
         return BLOCK_ERROR;
     }
 
     if (fseek(file, start_block * CRYPTFS_BLOCK_SIZE_BYTES, SEEK_SET) == -1)
     {
-        error_exit("fseek '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
-                   strerror(errno));
+        print_error("fseek '%s' failed: %s\n", DEVICE_PATH, strerror(errno));
         return BLOCK_ERROR;
     }
 
@@ -103,7 +125,11 @@ int write_blocks(block_t start_block, size_t nb_blocks, const void *buffer)
         size_t n = fwrite(buffer + written * CRYPTFS_BLOCK_SIZE_BYTES,
                           CRYPTFS_BLOCK_SIZE_BYTES, nb_blocks - written, file);
         if (n == 0)
+        {
+            print_error("fwrite '%s' failed: %s\n", DEVICE_PATH,
+                        strerror(errno));
             return BLOCK_ERROR;
+        }
 
         written += n;
     }

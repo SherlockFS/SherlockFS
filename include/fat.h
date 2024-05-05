@@ -16,8 +16,8 @@
 sblock_t find_first_free_block(const unsigned char *aes_key);
 
 /**
- * @brief Find the first safe free block in the FAT table, the difference with 
- * "find_first_free_block" is that it only return a positive block index as it 
+ * @brief Find the first safe free block in the FAT table, the difference with
+ * "find_first_free_block" is that it only return a positive block index as it
  * initialize another FAT in case of out of range.
  *
  * @param aes_key The AES key to use for in place decryption of the FAT tables.
@@ -45,7 +45,7 @@ sblock_t create_fat(const unsigned char *aes_key);
  * @param aes_key The AES key to use for in place decryption of the FAT tables.
  * @param offset The index of the FAT table to write to.
  * @param value The value to write.
- * @return int 0 on success, BLOCK_ERROR on error. BLOCK_FAT_OOB in case of out
+ * @return int 0 on success, BLOCK_ERROR on error. FAT_INDEX_OOB in case of out
  * of range.
  */
 int write_fat_offset(const unsigned char *aes_key, uint64_t offset,
@@ -57,7 +57,7 @@ int write_fat_offset(const unsigned char *aes_key, uint64_t offset,
  * @param aes_key The AES key to use for in place decryption of the FAT tables.
  * @param offset The index of the FAT table to read from.
  * @return uint32_t The value at `offset` index in the FAT table. BLOCK_ERROR
- * on error. BLOCK_FAT_OOB in case of out of range.
+ * on error. FAT_INDEX_OOB in case of out of range.
  */
 uint32_t read_fat_offset(const unsigned char *aes_key, uint64_t offset);
 

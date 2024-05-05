@@ -29,7 +29,6 @@ struct CryptFS_Header
     uint64_t magic; // CRYPTFS_MAGIC
     uint8_t version; // CRYPTFS_VERSION
     uint32_t blocksize; // in bytes
-    uint64_t device_size; // in bytes
     uint64_t last_fat_block; // Last FAT block index
 } __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
@@ -99,10 +98,16 @@ struct CryptFS_FAT
     ((CRYPTFS_BLOCK_SIZE_BYTES - sizeof(uint64_t))                             \
      / sizeof(struct CryptFS_FAT_Entry))
 
+enum SHLKFS_ERRORS
+{
+    ENTRY_EXISTS = -5, // The entry already exists
+    ENTRY_NO_SUCH = -4, // Entry not found / not existing
+    FAT_INDEX_OOB = -3, // FAT index is out of FAT bounds
+    BLOCK_ERROR = -2, // Error related to blocks. (e.g. read/write error)
+};
+
 enum BLOCK_TYPE
 {
-    BLOCK_FAT_OOB = -3, // FAT index is out of band
-    BLOCK_ERROR = -2, // Error related to blocks. (Never written on the device)
     BLOCK_END = -1, // End of entity.
     BLOCK_FREE = 0, // The block is free.
 };
@@ -163,6 +168,7 @@ struct CryptFS_Entry
     uint64_t start_block; // First block of the entry
     char name[ENTRY_NAME_MAX_LEN]; // Name of the entry
     uint64_t size; // in number of entries for directories, in bytes for others
+    uint32_t nlink; // TODO: Number of hardlinks
     uint32_t uid; // User ID
     uint32_t gid; // Group ID
     uint32_t mode; // Permissions (Unix-like)
@@ -178,29 +184,37 @@ struct CryptFS_Entry_ID
 } __attribute__((packed));
 
 #define NB_ENTRIES_PER_BLOCK                                                   \
-    ((CRYPTFS_BLOCK_SIZE_BYTES - sizeof(struct CryptFS_Entry_ID)) /            \
-         sizeof(struct CryptFS_Entry))
+    ((CRYPTFS_BLOCK_SIZE_BYTES - sizeof(struct CryptFS_Entry_ID))              \
+     / sizeof(struct CryptFS_Entry))
 
 struct CryptFS_Directory
 {
-    struct CryptFS_Entry_ID current_directory_entry; // Current CryptFS_Entry Directory identifier (.)
+    struct CryptFS_Entry_ID current_directory_entry; // Current CryptFS_Entry
+                                                     // Directory identifier (.)
     struct CryptFS_Entry entries[NB_ENTRIES_PER_BLOCK];
 } __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
 // -----------------------------------------------------------------------------
 // CRYPTFS FILE SYSTEM
 // -----------------------------------------------------------------------------
-#define HEADER_BLOCK 0
-#define KEYS_STORAGE_BLOCK (HEADER_BLOCK + 1)
-#define FIRST_FAT_BLOCK (KEYS_STORAGE_BLOCK + NB_ENCRYPTION_KEYS)
-#define ROOT_DIR_BLOCK (FIRST_FAT_BLOCK + 1)
+#define HEADER_BLOCK 0 // struct CryptFS_Header
+#define KEYS_STORAGE_BLOCK (HEADER_BLOCK + 1) // struct CryptFS_KeySlot
+#define FIRST_FAT_BLOCK                                                        \
+    (KEYS_STORAGE_BLOCK + NB_ENCRYPTION_KEYS) // struct CryptFS_FAT
+#define ROOT_ENTRY_BLOCK (FIRST_FAT_BLOCK + 1) // struct CryptFS_Entry
+#define ROOT_DIR_BLOCK (ROOT_ENTRY_BLOCK + 1) // struct CryptFS_Directory
 
 struct CryptFS
 {
     struct CryptFS_Header header; // BLOCK 0: Header
     struct CryptFS_KeySlot keys_storage[NB_ENCRYPTION_KEYS]; // BLOCK 1-64: Keys
     struct CryptFS_FAT first_fat; // BLOCK 65: First FAT
-    struct CryptFS_Entry root_directory; // BLOCK 66: Root directory
-} __attribute__((aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
+    struct CryptFS_Entry root_entry; // BLOCK 66: Root directory entry
+    uint8_t
+        padding[CRYPTFS_BLOCK_SIZE_BYTES
+                - sizeof(struct CryptFS_Entry)]; // CryptFS_Entry unused space
+    struct CryptFS_Directory
+        root_directory; // BLOCK 67: Root directory directory
+} __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
 #endif /* CRYPT_FS_H */

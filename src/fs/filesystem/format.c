@@ -1,11 +1,13 @@
 #include "format.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include "block.h"
@@ -119,22 +121,34 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
     /// ------------------------------------------------------------
 
     shlkfs->first_fat.next_fat_table = BLOCK_END;
-    for (size_t i = 0; i <= ROOT_DIR_BLOCK + 1; i++)
+    for (size_t i = 0; i <= ROOT_DIR_BLOCK; i++)
         shlkfs->first_fat.entries[i].next_block = BLOCK_END;
 
     /// ------------------------------------------------------------
-    /// BLOCK 3 : ROOT DIRECTORY
+    /// BLOCK 3 : ROOT DIRECTORY ENTRY
     /// ------------------------------------------------------------
 
-    // Add an entry at ROOT_DIR_BLOCK for the root directory
-    struct CryptFS_Entry root_dir = { 0 };
-    root_dir.used = 1;
-    root_dir.type = ENTRY_TYPE_DIRECTORY;
-    root_dir.start_block = ROOT_DIR_BLOCK + 1;
-    root_dir.uid = getuid();
-    root_dir.gid = getgid();
-    root_dir.mode = 777;
-    strcpy(root_dir.name, "/");
+    // Add an entry at ROOT_ENTRY_BLOCK for the root directory
+    uint32_t creation_time = time(NULL);
+
+    shlkfs->root_entry.used = 1;
+    shlkfs->root_entry.type = ENTRY_TYPE_DIRECTORY;
+    shlkfs->root_entry.start_block = ROOT_DIR_BLOCK;
+    shlkfs->root_entry.uid = getuid();
+    shlkfs->root_entry.gid = getgid();
+    shlkfs->root_entry.mode = 0777;
+    shlkfs->root_entry.ctime = creation_time;
+    shlkfs->root_entry.mtime = creation_time;
+    shlkfs->root_entry.atime = creation_time;
+    shlkfs->root_entry.nlink = 1;
+    strcpy(shlkfs->root_entry.name, "");
+
+    /// ------------------------------------------------------------
+    /// BLOCK 4 : ROOT DIRECTORY DIRECTORY
+    /// ------------------------------------------------------------
+    shlkfs->root_directory.current_directory_entry.directory_block =
+        ROOT_ENTRY_BLOCK;
+    shlkfs->root_directory.current_directory_entry.directory_index = 0;
 
     /// ------------------------------------------------------------
     /// Encrypting FAT and ROOT DIRECTORY with AES
@@ -148,15 +162,24 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
 
     size_t encrypted_entry_size;
     unsigned char *encrypted_root_dir =
+        aes_encrypt_data(aes_key, &shlkfs->root_entry, CRYPTFS_BLOCK_SIZE_BYTES,
+                         &encrypted_entry_size);
+    memset(&shlkfs->root_entry, 0, CRYPTFS_BLOCK_SIZE_BYTES);
+    memcpy(&shlkfs->root_entry, encrypted_root_dir, encrypted_entry_size);
+
+    size_t encrypted_root_dir_size;
+    unsigned char *encrypted_root_directory =
         aes_encrypt_data(aes_key, &shlkfs->root_directory,
-                         CRYPTFS_BLOCK_SIZE_BYTES, &encrypted_entry_size);
+                         CRYPTFS_BLOCK_SIZE_BYTES, &encrypted_root_dir_size);
     memset(&shlkfs->root_directory, 0, CRYPTFS_BLOCK_SIZE_BYTES);
-    memcpy(&shlkfs->root_directory, encrypted_root_dir, encrypted_entry_size);
+    memcpy(&shlkfs->root_directory, encrypted_root_directory,
+           encrypted_root_dir_size);
 
     free(aes_key);
     EVP_PKEY_free(rsa_key);
     free(encrypted_fat);
     free(encrypted_root_dir);
+    free(encrypted_root_directory);
 }
 
 void format_fs(const char *path, char *public_key_path, char *private_key_path,
@@ -170,7 +193,7 @@ void format_fs(const char *path, char *public_key_path, char *private_key_path,
     format_fill_filesystem_struct(shlkfs, rsa_passphrase, existing_rsa_keypair,
                                   public_key_path, private_key_path);
 
-    FILE *file = fopen(path, "w+");
+    FILE *file = fopen(path, "r+");
     if (file == NULL)
         error_exit("Impossible to open the fill\n", EXIT_FAILURE);
 

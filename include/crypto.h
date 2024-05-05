@@ -163,10 +163,12 @@ EVP_PKEY *load_rsa_keypair_from_home(char **passphrase);
  *
  * @param device_path A path of the device to extract the AES key from
  * @param private_key_path A path of the private key file.
+ * @param passphrase The passphrase used to decrypt the private key, NULL if the
+ * key is not encrypted.
  * @return unsigned char* The extracted AES key., or NULL if the key cannot be
  * extracted.
  */
 unsigned char *extract_aes_key(const char *device_path,
-                               const char *private_key_path);
+                               const char *private_key_path, char *passphrase);
 
 #endif /* CRYPTO_H */

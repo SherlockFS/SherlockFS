@@ -1,3 +1,4 @@
+#include <linux/limits.h>
 #include <openssl/core_names.h>
 #include <openssl/evp.h>
 #include <openssl/pem.h>
@@ -53,21 +54,23 @@ EVP_PKEY *load_rsa_keypair_from_disk(const char *public_key_path,
 {
     EVP_PKEY *rsa_keypair = NULL;
 
-    FILE *public_key_file = fopen(public_key_path, "r");
-    FILE *private_key_file = fopen(private_key_path, "r");
-
-    if (public_key_file)
+    if (public_key_path)
     {
-        if (PEM_read_PUBKEY(public_key_file, &rsa_keypair, NULL, NULL) == NULL)
+        FILE *public_key_file = fopen(public_key_path, "r");
+        if (!public_key_file
+            || PEM_read_PUBKEY(public_key_file, &rsa_keypair, NULL, NULL)
+                == NULL)
             return NULL;
         fclose(public_key_file);
     }
 
-    if (private_key_file)
+    if (private_key_path)
     {
-        if (PEM_read_PrivateKey(private_key_file, &rsa_keypair, NULL,
-                                passphrase)
-            == NULL)
+        FILE *private_key_file = fopen(private_key_path, "r");
+        if (!private_key_file
+            || PEM_read_PrivateKey(private_key_file, &rsa_keypair, NULL,
+                                   passphrase)
+                == NULL)
             return NULL;
         fclose(private_key_file);
     }
@@ -123,12 +126,13 @@ EVP_PKEY *load_rsa_keypair_from_home(char **passphrase)
 
 // TODO: Add a test for this function
 unsigned char *extract_aes_key(const char *device_path,
-                               const char *private_key_path)
+                               const char *private_key_path, char *passphrase)
+
 {
     struct CryptFS *shlkfs = read_cryptfs_headers(device_path);
 
     EVP_PKEY *rsa_keypair =
-        load_rsa_keypair_from_disk(NULL, private_key_path, NULL);
+        load_rsa_keypair_from_disk(NULL, private_key_path, passphrase);
 
     if (rsa_keypair == NULL)
         error_exit("Impossible to load the RSA keypair\n", EXIT_FAILURE);

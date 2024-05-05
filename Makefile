@@ -8,14 +8,17 @@ include $(PROJECT_DIR)/global.mk
 
 FSANITIZE = -fsanitize=address
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror -Iinclude -g -std=gnu99 -D_ISOC11_SOURCE
+CFLAGS = -Wall -Wextra -Werror -Iinclude -g -std=gnu99 -D_ISOC11_SOURCE -D_FILE_OFFSET_BITS=64 -DFUSE_USE_VERSION=31
 CFLAGS += -DINTERNAL_ERROR_NO_BACKTRACE
 LDFLAGS = -lm -lcrypto
 
-SRC = $(shell find $(FS_CORE_DIR) -name '*.c')
+SRC = $(shell find $(FS_CORE_DIR) -name '*.c') $(shell find $(FUSE_CORE_DIR) -name '*.c')
 OBJ = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(SRC:.c=.o))
 
-TESTS_SRC = $(shell find $(TESTS_DIR) -name '*.c')
+SRC_FUSE = $(shell find $(FUSE_CORE_DIR) -name '*.c')
+OBJ_FUSE = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(SRC_FUSE:.c=.o))
+
+TESTS_SRC = $(shell find $(TESTS_DIR) -name '*.c') $(SRC)
 TESTS_OBJ = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(TESTS_SRC:.c=.o))
 
 FORMAT_SRC = $(SRC_DIR)/shlkfs_formater.c
@@ -50,20 +53,25 @@ shlkfs_mount: $(BUILD_DIR)/shlkfs_mount
 	@echo $(call greentext,"Le binaire 'shlkfs_mount' a été compilé avec succès")
 
 $(BUILD_DIR)/shlkfs_formater: $(FORMAT_OBJ) $(OBJ)
+	@echo "CC/LD\t$@"
 	@$(CC) $(CFLAGS) $^ -o $(BUILD_DIR)/shlkfs_formater $(LDFLAGS)
 
 $(BUILD_DIR)/shlkfs_adduser: $(ADDUSER_OBJ) $(OBJ)
+	@echo "CC/LD\t$@"
 	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/shlkfs_adduser $^ $(LDFLAGS)
 
 $(BUILD_DIR)/shlkfs_deluser: $(DELUSER_OBJ) $(OBJ)
+	@echo "CC/LD\t$@"
 	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/shlkfs_deluser $^ $(LDFLAGS)
 
-$(BUILD_DIR)/shlkfs_mount: $(MOUNT_OBJ) $(OBJ)
-	@$(CC) $(CFLAGS) $^ -o $(BUILD_DIR)/shlkfs_mount $(LDFLAGS)
+$(BUILD_DIR)/shlkfs_mount: $(LDFLAGS) += -lfuse
+$(BUILD_DIR)/shlkfs_mount: $(MOUNT_OBJ) $(OBJ_FUSE) $(OBJ)
+	@echo "CC/LD\t$@"
+	@$(CC) $(CFLAGS) $^ `pkg-config fuse --cflags --libs`  -o $(BUILD_DIR)/shlkfs_mount $(LDFLAGS)
 
 $(BUILD_DIR)/%.o: $(PROJECT_DIR)/%.c
 	@mkdir -p $(dir $@)
-	@echo "Compilation de '$<'"
+	@echo "CC\t$<"
 	@$(CC) $(CFLAGS) -c $< -o $@ $(LDFLAGS)
 
 tests_suite: LDFLAGS += $(FSANITIZE)
@@ -72,13 +80,15 @@ tests_suite: $(BUILD_DIR)/tests_suite
 tests_suite_no_asan: $(BUILD_DIR)/tests_suite
 	
 $(BUILD_DIR)/tests_suite: LDFLAGS += -lcriterion
-$(BUILD_DIR)/tests_suite: $(TESTS_OBJ) $(OBJ)
+$(BUILD_DIR)/tests_suite: $(TESTS_OBJ)
+	@echo "CC/LD\t$@"
 	@$(CC) $(CFLAGS) $^ -o $(BUILD_DIR)/tests_suite $(LDFLAGS)
 
 test_main: $(BUILD_DIR)/test_main
 	
 $(BUILD_DIR)/test_main: $(OBJ) $(BUILD_DIR)/tests/test_main.o
-	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_main $^ $(LDFLAGS)
+	@echo "CC/LD\t$@"
+	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_main $^ $(LDFLAGS) $(FSANITIZE)
 
 check: tests_suite
 	@echo $(call bluetext,"Lancement des tests unitaires")

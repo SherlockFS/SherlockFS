@@ -70,6 +70,10 @@ dkms.conf
 *.xz
 *.rar
 
+# VS Code configuration files
+.vscode/c_cpp_properties.json
+.vscode/settings.json
+
 # Build files
 build/*
 logs/*

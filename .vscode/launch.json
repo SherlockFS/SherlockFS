@@ -52,13 +52,15 @@
             "preLaunchTask": "make shlkfs_formater"
         },
         {
-            "name": "mount",
+            "name": "shlkfs_mount",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/mount",
+            "program": "${workspaceFolder}/build/shlkfs_mount",
             "args": [
+                "-v",
                 "${input:mountDevice}",
-                "${input:mountPath}"
+                "${input:mountFuseOptions}",
+                "${input:mountPoint}"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build",
@@ -71,8 +73,13 @@
                     "text": "-enable-pretty-printing",
                     "ignoreFailures": true
                 },
+                {
+                    "description": "Activer le suivi du processus enfant",
+                    "text": "set follow-fork-mode child",
+                    "ignoreFailures": false
+                },
             ],
-            "preLaunchTask": "make mount"
+            "preLaunchTask": "make shlkfs_mount"
         },
         {
             "name": "shlkfs_adduser",
@@ -112,10 +119,16 @@
             "default": "test.shlkfs"
         },
         {
-            "id": "mountPath",
+            "id": "mountPoint",
             "description": "Point de montage",
             "type": "promptString",
             "default": "mnt"
+        },
+        {
+            "id": "mountFuseOptions",
+            "description": "Options de montage FUSE",
+            "type": "promptString",
+            "default": "-f"
         },
         {
             "id": "publicKey",
