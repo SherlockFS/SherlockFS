@@ -10,8 +10,8 @@
 // -----------------------------------------------------------------------------
 // HEADER SECTION
 // -----------------------------------------------------------------------------
-#define CRYPTFS_BOOT_SECTION_SIZE_BYTES 1024
-#define CRYPTFS_MAGIC 0x63727970746673
+#define CRYPTFS_BOOT_SECTION_SIZE_BYTES 2048
+#define CRYPTFS_MAGIC "sfkcolrehs"
 #define CRYPTFS_VERSION 1
 #define CRYPTFS_BLOCK_SIZE_BYTES 4096
 #define CRYPTFS_BLOCK_SIZE_BITS (CRYPTFS_BLOCK_SIZE_BYTES * 8)
@@ -26,7 +26,7 @@ struct CryptFS_Header
 {
     uint8_t boot[CRYPTFS_BOOT_SECTION_SIZE_BYTES]; // Reserved for boot code
                                                    // (bootloader, etc.)
-    uint64_t magic; // CRYPTFS_MAGIC
+    uint8_t magic[sizeof(CRYPTFS_MAGIC)]; // Magic number
     uint8_t version; // CRYPTFS_VERSION
     uint32_t blocksize; // in bytes
     uint64_t last_fat_block; // Last FAT block index

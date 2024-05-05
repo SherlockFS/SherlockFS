@@ -30,7 +30,7 @@ bool is_already_formatted(const char *device_path)
     fclose(file);
 
     // Check if the magic number is correct
-    if (header.magic != CRYPTFS_MAGIC)
+    if (strcmp((char *)header.magic, CRYPTFS_MAGIC) != 0)
         return false;
     // Check if the version is correct
     else if (header.version != CRYPTFS_VERSION)
@@ -57,7 +57,7 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
     /// ------------------------------------------------------------
 
     // Craft the header
-    shlkfs->header.magic = CRYPTFS_MAGIC;
+    strcpy((char *)shlkfs->header.magic, CRYPTFS_MAGIC);
     shlkfs->header.version = CRYPTFS_VERSION;
     shlkfs->header.blocksize = CRYPTFS_BLOCK_SIZE_BYTES;
     shlkfs->header.last_fat_block = FIRST_FAT_BLOCK;
