@@ -797,16 +797,59 @@ int cryptfs_link(const char *oldpath, const char *newpath)
     return -1;
 }
 
+// TODO: Implement access control for chmod and chown in all functions
 int cryptfs_chmod(const char *path, mode_t mode)
 {
     print_debug("chmod(path=%s, mode=%d)\n", path, mode);
-    return -1;
+
+    // Get entry ID from path
+    struct CryptFS_Entry_ID *entry_id =
+        get_entry_by_path(fpi_get_master_key(), path);
+
+    // Get entry from ID
+    struct CryptFS_Entry *entry =
+        get_entry_from_id(fpi_get_master_key(), *entry_id);
+
+    entry->mode = mode;
+
+    if (write_entry_from_id(fpi_get_master_key(), *entry_id, entry)
+        == BLOCK_ERROR)
+    {
+        fpi_clear_decoded_key();
+        return -EIO;
+    }
+
+    fpi_clear_decoded_key();
+    free(entry_id);
+    free(entry);
+    return 0;
 }
 
 int cryptfs_chown(const char *path, uid_t uid, gid_t gid)
 {
     print_debug("chown(path=%s, uid=%d, gid=%d)\n", path, uid, gid);
-    return -1;
+
+    // Get entry ID from path
+    struct CryptFS_Entry_ID *entry_id =
+        get_entry_by_path(fpi_get_master_key(), path);
+
+    // Get entry from ID
+    struct CryptFS_Entry *entry =
+        get_entry_from_id(fpi_get_master_key(), *entry_id);
+
+    entry->uid = uid;
+    entry->gid = gid;
+
+    if (write_entry_from_id(fpi_get_master_key(), *entry_id, entry)
+        == BLOCK_ERROR)
+    {
+        fpi_clear_decoded_key();
+        return -EIO;
+    }
+    fpi_clear_decoded_key();
+    free(entry_id);
+    free(entry);
+    return 0;
 }
 
 int cryptfs_truncate(const char *path, off_t offset)
