@@ -27,8 +27,8 @@ Test(entry_truncate, file_add_blocks, .timeout = 10, .init = cr_redirect_stdout)
 
     format_fs("build/tests/entry_truncate.file_add_blocks.test.shlkfs",
               "build/tests/entry_truncate.file_add_blocks.public.pem",
-              "build/tests/entry_truncate.file_add_blocks.private.pem", NULL,
-              NULL);
+              "build/tests/entry_truncate.file_add_blocks.private.pem", "label",
+              NULL, NULL);
 
     struct CryptFS *shlkfs =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
@@ -112,8 +112,8 @@ Test(entry_truncate, file_remove_blocks, .timeout = 10,
 
     format_fs("build/tests/entry_truncate.file_remove_blocks.test.shlkfs",
               "build/tests/entry_truncate.file_remove_blocks.public.pem",
-              "build/tests/entry_truncate.file_remove_blocks.private.pem", NULL,
-              NULL);
+              "build/tests/entry_truncate.file_remove_blocks.private.pem",
+              "label", NULL, NULL);
 
     struct CryptFS *shlkfs =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
@@ -202,7 +202,7 @@ Test(entry_truncate, file_remove_blocks_till_empty, .timeout = 10,
         "build/tests/entry_truncate.file_remove_blocks_to_empty.test.shlkfs",
         "build/tests/entry_truncate.file_remove_blocks_to_empty.public.pem",
         "build/tests/entry_truncate.file_remove_blocks_to_empty.private.pem",
-        NULL, NULL);
+        "label", NULL, NULL);
 
     struct CryptFS *shlkfs =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
@@ -283,7 +283,7 @@ Test(entry_truncate, directory_add_blocks, .timeout = 10,
     format_fs("build/tests/entry_truncate.directory_add_blocks.test.shlkfs",
               "build/tests/entry_truncate.directory_add_blocks.public.pem",
               "build/tests/entry_truncate.directory_add_blocks.private.pem",
-              NULL, NULL);
+              "label", NULL, NULL);
 
     struct CryptFS *shlkfs =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
@@ -369,7 +369,7 @@ Test(entry_write_buffer_from, begining_add, .timeout = 10,
     format_fs("build/tests/entry_write_buffer_from.begining_add.test.shlkfs",
               "build/tests/entry_write_buffer_from.begining_add.public.pem",
               "build/tests/entry_write_buffer_from.begining_add.private.pem",
-              NULL, NULL);
+              "label", NULL, NULL);
 
     struct CryptFS *shlkfs =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
@@ -458,7 +458,7 @@ Test(entry_write_buffer_from, between_blocks_adding, .timeout = 10,
         "build/tests/entry_write_buffer_from.between_blocks_adding.test.shlkfs",
         "build/tests/entry_write_buffer_from.between_blocks_adding.public.pem",
         "build/tests/entry_write_buffer_from.between_blocks_adding.private.pem",
-        NULL, NULL);
+        "label", NULL, NULL);
 
     struct CryptFS *shlkfs =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
@@ -561,7 +561,7 @@ Test(entry_read_raw_data, reading_between_blocks, .timeout = 10,
         "build/tests/entry_write_buffer_from.reading_between_blocks.public.pem",
         "build/tests/"
         "entry_write_buffer_from.reading_between_blocks.private.pem",
-        NULL, NULL);
+        "label", NULL, NULL);
 
     struct CryptFS *shlkfs =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
@@ -651,8 +651,8 @@ Test(entry_delete, file_and_directory, .timeout = 10,
 
     format_fs("build/tests/entry_delete.file_and_directory.test.shlkfs",
               "build/tests/entry_delete.file_and_directory.public.pem",
-              "build/tests/entry_delete.file_and_directory.private.pem", NULL,
-              NULL);
+              "build/tests/entry_delete.file_and_directory.private.pem",
+              "label", NULL, NULL);
 
     struct CryptFS *shlkfs =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
@@ -738,7 +738,7 @@ Test(entry_create_empty_file, in_one_block, .timeout = 10,
     format_fs("build/tests/entry_create_empty_file.in_one_block.test.shlkfs",
               "build/tests/entry_create_empty_file.in_one_block.public.pem",
               "build/tests/entry_create_empty_file.in_one_block.private.pem",
-              NULL, NULL);
+              "label", NULL, NULL);
 
     struct CryptFS *shlkfs =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
@@ -820,7 +820,7 @@ Test(entry_create_empty_file, in_multiple_blocks, .timeout = 10,
         "build/tests/entry_create_empty_file.in_multiple_blocks.test.shlkfs",
         "build/tests/entry_create_empty_file.in_multiple_blocks.public.pem",
         "build/tests/entry_create_empty_file.in_multiple_blocks.private.pem",
-        NULL, NULL);
+        "label", NULL, NULL);
 
     struct CryptFS *shlkfs =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
@@ -917,7 +917,7 @@ Test(entry_create_directory, embedded_directories, .timeout = 10,
         "build/tests/entry_create_directory.embedded_directories.test.shlkfs",
         "build/tests/entry_create_directory.embedded_directories.public.pem",
         "build/tests/entry_create_directory.embedded_directories.private.pem",
-        NULL, NULL);
+        "label", NULL, NULL);
 
     struct CryptFS *shlkfs =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
@@ -1016,7 +1016,7 @@ Test(entry_create_hardlink, simple_hardlink, .timeout = 10,
     format_fs("build/tests/entry_create_hardlink.simple_hardlink.test.shlkfs",
               "build/tests/entry_create_hardlink.simple_hardlink.public.pem",
               "build/tests/entry_create_hardlink.simple_hardlink.private.pem",
-              NULL, NULL);
+              "label", NULL, NULL);
 
     struct CryptFS *shlkfs =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
@@ -1125,7 +1125,7 @@ Test(entry_create_symlink, simple_symlink, .timeout = 10,
     format_fs("build/tests/entry_create_symlink.simple_symlink.test.shlkfs",
               "build/tests/entry_create_symlink.simple_symlink.public.pem",
               "build/tests/entry_create_symlink.simple_symlink.private.pem",
-              NULL, NULL);
+              "label", NULL, NULL);
 
     struct CryptFS *shlkfs =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
@@ -1218,7 +1218,7 @@ Test(entry_create_symlink, bad_path_ascii, .timeout = 10,
     format_fs("build/tests/entry_create_symlink.bad_path_ascii.test.shlkfs",
               "build/tests/entry_create_symlink.bad_path_ascii.public.pem",
               "build/tests/entry_create_symlink.bad_path_ascii.private.pem",
-              NULL, NULL);
+              "label", NULL, NULL);
 
     struct CryptFS *shlkfs =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
@@ -1286,7 +1286,7 @@ Test(get_entry_by_path, root, .init = cr_redirect_stdall, .timeout = 10)
 
     format_fs("build/get_entry_by_path.root.test.shlkfs",
               "build/get_entry_by_path.root.public.pem",
-              "build/get_entry_by_path.root.private.pem", NULL, NULL);
+              "build/get_entry_by_path.root.private.pem", "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/get_entry_by_path.root.test.shlkfs",
@@ -1311,7 +1311,8 @@ Test(get_entry_by_path, not_existing, .init = cr_redirect_stdall, .timeout = 10)
 
     format_fs("build/get_entry_by_path.not_existing.test.shlkfs",
               "build/get_entry_by_path.not_existing.public.pem",
-              "build/get_entry_by_path.not_existing.private.pem", NULL, NULL);
+              "build/get_entry_by_path.not_existing.private.pem", "label", NULL,
+              NULL);
 
     fpi_register_master_key_from_path(
         "build/get_entry_by_path.not_existing.test.shlkfs",
@@ -1336,7 +1337,7 @@ Test(get_entry_by_path, not_existing_ending_slash, .init = cr_redirect_stdall,
     format_fs("build/get_entry_by_path.not_existing_ending_slash.test.shlkfs",
               "build/get_entry_by_path.not_existing_ending_slash.public.pem",
               "build/get_entry_by_path.not_existing_ending_slash.private.pem",
-              NULL, NULL);
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/get_entry_by_path.not_existing_ending_slash.test.shlkfs",
@@ -1359,8 +1360,8 @@ Test(get_entry_by_path, create_single_file, .init = cr_redirect_stdall,
 
     format_fs("build/get_entry_by_path.create_single_file.test.shlkfs",
               "build/get_entry_by_path.create_single_file.public.pem",
-              "build/get_entry_by_path.create_single_file.private.pem", NULL,
-              NULL);
+              "build/get_entry_by_path.create_single_file.private.pem", "label",
+              NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/get_entry_by_path.create_single_file.test.shlkfs",
@@ -1398,8 +1399,8 @@ Test(get_entry_by_path, create_two_file, .init = cr_redirect_stdall,
 
     format_fs("build/get_entry_by_path.create_two_file.test.shlkfs",
               "build/get_entry_by_path.create_two_file.public.pem",
-              "build/get_entry_by_path.create_two_file.private.pem", NULL,
-              NULL);
+              "build/get_entry_by_path.create_two_file.private.pem", "label",
+              NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/get_entry_by_path.create_two_file.test.shlkfs",
@@ -1448,7 +1449,7 @@ Test(get_entry_by_path, create_one_file_one_non_existing,
         "build/get_entry_by_path.create_one_file_one_non_existing.test.shlkfs",
         "build/get_entry_by_path.create_one_file_one_non_existing.public.pem",
         "build/get_entry_by_path.create_one_file_one_non_existing.private.pem",
-        NULL, NULL);
+        "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/get_entry_by_path.create_one_file_one_non_existing.test.shlkfs",
@@ -1481,8 +1482,8 @@ Test(get_entry_by_path, create_one_directory, .init = cr_redirect_stdall,
 
     format_fs("build/get_entry_by_path.create_one_directory.test.shlkfs",
               "build/get_entry_by_path.create_one_directory.public.pem",
-              "build/get_entry_by_path.create_one_directory.private.pem", NULL,
-              NULL);
+              "build/get_entry_by_path.create_one_directory.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/get_entry_by_path.create_one_directory.test.shlkfs",
@@ -1523,7 +1524,7 @@ Test(get_entry_by_path, create_one_directory_ending_slash,
         "build/get_entry_by_path.create_one_directory_ending_slash.test.shlkfs",
         "build/get_entry_by_path.create_one_directory_ending_slash.public.pem",
         "build/get_entry_by_path.create_one_directory_ending_slash.private.pem",
-        NULL, NULL);
+        "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/get_entry_by_path.create_one_directory_ending_slash.test.shlkfs",
@@ -1560,8 +1561,8 @@ Test(get_entry_by_path, create_two_directory, .init = cr_redirect_stdall,
 
     format_fs("build/get_entry_by_path.create_two_directory.test.shlkfs",
               "build/get_entry_by_path.create_two_directory.public.pem",
-              "build/get_entry_by_path.create_two_directory.private.pem", NULL,
-              NULL);
+              "build/get_entry_by_path.create_two_directory.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/get_entry_by_path.create_two_directory.test.shlkfs",
@@ -1606,8 +1607,8 @@ Test(get_entry_by_path, one_file_in_one_dir, .init = cr_redirect_stdall,
 
     format_fs("build/get_entry_by_path.one_file_in_one_dir.test.shlkfs",
               "build/get_entry_by_path.one_file_in_one_dir.public.pem",
-              "build/get_entry_by_path.one_file_in_one_dir.private.pem", NULL,
-              NULL);
+              "build/get_entry_by_path.one_file_in_one_dir.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/get_entry_by_path.one_file_in_one_dir.test.shlkfs",
@@ -1661,8 +1662,8 @@ Test(get_entry_by_path, two_file_in_one_dir, .init = cr_redirect_stdall,
 
     format_fs("build/get_entry_by_path.two_file_in_one_dir.test.shlkfs",
               "build/get_entry_by_path.two_file_in_one_dir.public.pem",
-              "build/get_entry_by_path.two_file_in_one_dir.private.pem", NULL,
-              NULL);
+              "build/get_entry_by_path.two_file_in_one_dir.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/get_entry_by_path.two_file_in_one_dir.test.shlkfs",
@@ -1716,8 +1717,8 @@ Test(get_entry_by_path, one_dir_in_one_dir, .init = cr_redirect_stdall,
 
     format_fs("build/get_entry_by_path.one_dir_in_one_dir.test.shlkfs",
               "build/get_entry_by_path.one_dir_in_one_dir.public.pem",
-              "build/get_entry_by_path.one_dir_in_one_dir.private.pem", NULL,
-              NULL);
+              "build/get_entry_by_path.one_dir_in_one_dir.private.pem", "label",
+              NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/get_entry_by_path.one_dir_in_one_dir.test.shlkfs",
@@ -1772,7 +1773,7 @@ Test(get_entry_by_path, one_dir_in_one_dir_ending_slash,
         "build/get_entry_by_path.one_dir_in_one_dir_ending_slash.test.shlkfs",
         "build/get_entry_by_path.one_dir_in_one_dir_ending_slash.public.pem",
         "build/get_entry_by_path.one_dir_in_one_dir_ending_slash.private.pem",
-        NULL, NULL);
+        "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/get_entry_by_path.one_dir_in_one_dir_ending_slash.test.shlkfs",
@@ -1823,8 +1824,8 @@ Test(get_entry_by_path, two_dir_in_one_dir, .init = cr_redirect_stdall,
 
     format_fs("build/get_entry_by_path.two_dir_in_one_dir.test.shlkfs",
               "build/get_entry_by_path.two_dir_in_one_dir.public.pem",
-              "build/get_entry_by_path.two_dir_in_one_dir.private.pem", NULL,
-              NULL);
+              "build/get_entry_by_path.two_dir_in_one_dir.private.pem", "label",
+              NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/get_entry_by_path.two_dir_in_one_dir.test.shlkfs",
@@ -1892,7 +1893,7 @@ Test(get_entry_by_path, one_file_and_one_dir_in_one_dir,
         "build/get_entry_by_path.one_file_and_one_dir_in_one_dir.test.shlkfs",
         "build/get_entry_by_path.one_file_and_one_dir_in_one_dir.public.pem",
         "build/get_entry_by_path.one_file_and_one_dir_in_one_dir.private.pem",
-        NULL, NULL);
+        "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/get_entry_by_path.one_file_and_one_dir_in_one_dir.test.shlkfs",
@@ -1954,7 +1955,8 @@ Test(create_file_by_path, root, .init = cr_redirect_stdall, .timeout = 10)
 
     format_fs("build/create_file_by_path.root.test.shlkfs",
               "build/create_file_by_path.root.public.pem",
-              "build/create_file_by_path.root.private.pem", NULL, NULL);
+              "build/create_file_by_path.root.private.pem", "label", NULL,
+              NULL);
 
     fpi_register_master_key_from_path(
         "build/create_file_by_path.root.test.shlkfs",
@@ -1993,8 +1995,8 @@ Test(create_file_by_path, root_already_exists, .init = cr_redirect_stdall,
 
     format_fs("build/create_file_by_path.root_already_exists.test.shlkfs",
               "build/create_file_by_path.root_already_exists.public.pem",
-              "build/create_file_by_path.root_already_exists.private.pem", NULL,
-              NULL);
+              "build/create_file_by_path.root_already_exists.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/create_file_by_path.root_already_exists.test.shlkfs",
@@ -2027,8 +2029,8 @@ Test(create_file_by_path, in_directory_file, .init = cr_redirect_stdall,
 
     format_fs("build/create_file_by_path.in_directory_file.test.shlkfs",
               "build/create_file_by_path.in_directory_file.public.pem",
-              "build/create_file_by_path.in_directory_file.private.pem", NULL,
-              NULL);
+              "build/create_file_by_path.in_directory_file.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/create_file_by_path.in_directory_file.test.shlkfs",
@@ -2077,7 +2079,8 @@ Test(create_directory_by_path, root, .init = cr_redirect_stdall, .timeout = 10)
 
     format_fs("build/create_directory_by_path.root.test.shlkfs",
               "build/create_directory_by_path.root.public.pem",
-              "build/create_directory_by_path.root.private.pem", NULL, NULL);
+              "build/create_directory_by_path.root.private.pem", "label", NULL,
+              NULL);
 
     fpi_register_master_key_from_path(
         "build/create_directory_by_path.root.test.shlkfs",
@@ -2117,7 +2120,7 @@ Test(create_directory_by_path, root_already_exists, .init = cr_redirect_stdall,
     format_fs("build/create_directory_by_path.root_already_exists.test.shlkfs",
               "build/create_directory_by_path.root_already_exists.public.pem",
               "build/create_directory_by_path.root_already_exists.private.pem",
-              NULL, NULL);
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/create_directory_by_path.root_already_exists.test.shlkfs",
@@ -2154,7 +2157,7 @@ Test(create_directory_by_path, in_directory_directory,
         "build/create_directory_by_path.in_directory_directory.test.shlkfs",
         "build/create_directory_by_path.in_directory_directory.public.pem",
         "build/create_directory_by_path.in_directory_directory.private.pem",
-        NULL, NULL);
+        "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/create_directory_by_path.in_directory_directory.test.shlkfs",
@@ -2203,7 +2206,8 @@ Test(create_symlink_by_path, root, .init = cr_redirect_stdall, .timeout = 10)
 
     format_fs("build/create_symlink_by_path.root.test.shlkfs",
               "build/create_symlink_by_path.root.public.pem",
-              "build/create_symlink_by_path.root.private.pem", NULL, NULL);
+              "build/create_symlink_by_path.root.private.pem", "label", NULL,
+              NULL);
 
     fpi_register_master_key_from_path(
         "build/create_symlink_by_path.root.test.shlkfs",
@@ -2243,7 +2247,7 @@ Test(create_symlink_by_path, root_already_exists, .init = cr_redirect_stdall,
     format_fs("build/create_symlink_by_path.root_already_exists.test.shlkfs",
               "build/create_symlink_by_path.root_already_exists.public.pem",
               "build/create_symlink_by_path.root_already_exists.private.pem",
-              NULL, NULL);
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/create_symlink_by_path.root_already_exists.test.shlkfs",
@@ -2278,7 +2282,7 @@ Test(create_symlink_by_path, in_directory_symlink, .init = cr_redirect_stdall,
     format_fs("build/create_symlink_by_path.in_directory_symlink.test.shlkfs",
               "build/create_symlink_by_path.in_directory_symlink.public.pem",
               "build/create_symlink_by_path.in_directory_symlink.private.pem",
-              NULL, NULL);
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/create_symlink_by_path.in_directory_symlink.test.shlkfs",
@@ -2328,7 +2332,8 @@ Test(create_hardlink_by_path, root, .init = cr_redirect_stdall, .timeout = 10)
 
     format_fs("build/create_hardlink_by_path.root.test.shlkfs",
               "build/create_hardlink_by_path.root.public.pem",
-              "build/create_hardlink_by_path.root.private.pem", NULL, NULL);
+              "build/create_hardlink_by_path.root.private.pem", "label", NULL,
+              NULL);
 
     fpi_register_master_key_from_path(
         "build/create_hardlink_by_path.root.test.shlkfs",
@@ -2372,7 +2377,7 @@ Test(create_hardlink_by_path, root_already_exists, .init = cr_redirect_stdall,
     format_fs("build/create_hardlink_by_path.root_already_exists.test.shlkfs",
               "build/create_hardlink_by_path.root_already_exists.public.pem",
               "build/create_hardlink_by_path.root_already_exists.private.pem",
-              NULL, NULL);
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/create_hardlink_by_path.root_already_exists.test.shlkfs",
@@ -2411,7 +2416,7 @@ Test(create_hardlink_by_path, in_directory_hardlink, .init = cr_redirect_stdall,
     format_fs("build/create_hardlink_by_path.in_directory_hardlink.test.shlkfs",
               "build/create_hardlink_by_path.in_directory_hardlink.public.pem",
               "build/create_hardlink_by_path.in_directory_hardlink.private.pem",
-              NULL, NULL);
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/create_hardlink_by_path.in_directory_hardlink.test.shlkfs",
@@ -2465,7 +2470,8 @@ Test(delete_entry_by_path, root, .init = cr_redirect_stdall, .timeout = 10)
 
     format_fs("build/delete_entry_by_path.root.test.shlkfs",
               "build/delete_entry_by_path.root.public.pem",
-              "build/delete_entry_by_path.root.private.pem", NULL, NULL);
+              "build/delete_entry_by_path.root.private.pem", "label", NULL,
+              NULL);
 
     fpi_register_master_key_from_path(
         "build/delete_entry_by_path.root.test.shlkfs",
@@ -2495,8 +2501,8 @@ Test(delete_entry_by_path, root_not_exists, .init = cr_redirect_stdall,
 
     format_fs("build/delete_entry_by_path.root_not_exists.test.shlkfs",
               "build/delete_entry_by_path.root_not_exists.public.pem",
-              "build/delete_entry_by_path.root_not_exists.private.pem", NULL,
-              NULL);
+              "build/delete_entry_by_path.root_not_exists.private.pem", "label",
+              NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/delete_entry_by_path.root_not_exists.test.shlkfs",
@@ -2525,8 +2531,8 @@ Test(delete_entry_by_path, in_directory_file, .init = cr_redirect_stdall,
 
     format_fs("build/delete_entry_by_path.in_directory_file.test.shlkfs",
               "build/delete_entry_by_path.in_directory_file.public.pem",
-              "build/delete_entry_by_path.in_directory_file.private.pem", NULL,
-              NULL);
+              "build/delete_entry_by_path.in_directory_file.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/delete_entry_by_path.in_directory_file.test.shlkfs",
@@ -2575,7 +2581,7 @@ Test(goto_used_entry_in_directory, all_used_files, .init = cr_redirect_stdall,
     format_fs("build/goto_used_entry_in_directory.all_used_files.test.shlkfs",
               "build/goto_used_entry_in_directory.all_used_files.public.pem",
               "build/goto_used_entry_in_directory.all_used_files.private.pem",
-              NULL, NULL);
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/goto_used_entry_in_directory.all_used_files.test.shlkfs",
@@ -2622,7 +2628,7 @@ Test(goto_used_entry_in_directory, first_file_deleted,
         "build/goto_used_entry_in_directory.first_file_deleted.test.shlkfs",
         "build/goto_used_entry_in_directory.first_file_deleted.public.pem",
         "build/goto_used_entry_in_directory.first_file_deleted.private.pem",
-        NULL, NULL);
+        "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/goto_used_entry_in_directory.first_file_deleted.test.shlkfs",
@@ -2677,7 +2683,7 @@ Test(goto_used_entry_in_directory, second_file_deleted,
         "build/goto_used_entry_in_directory.second_file_deleted.test.shlkfs",
         "build/goto_used_entry_in_directory.second_file_deleted.public.pem",
         "build/goto_used_entry_in_directory.second_file_deleted.private.pem",
-        NULL, NULL);
+        "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/goto_used_entry_in_directory.second_file_deleted.test.shlkfs",
@@ -2732,7 +2738,7 @@ Test(goto_used_entry_in_directory, third_file_deleted,
         "build/goto_used_entry_in_directory.third_file_deleted.test.shlkfs",
         "build/goto_used_entry_in_directory.third_file_deleted.public.pem",
         "build/goto_used_entry_in_directory.third_file_deleted.private.pem",
-        NULL, NULL);
+        "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/goto_used_entry_in_directory.third_file_deleted.test.shlkfs",
@@ -2789,7 +2795,7 @@ Test(goto_used_entry_in_directory, 30_files_27_29_deleted,
         "build/goto_used_entry_in_directory.30_files_27_29_deleted.test.shlkfs",
         "build/goto_used_entry_in_directory.30_files_27_29_deleted.public.pem",
         "build/goto_used_entry_in_directory.30_files_27_29_deleted.private.pem",
-        NULL, NULL);
+        "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
         "build/goto_used_entry_in_directory.30_files_27_29_deleted.test.shlkfs",

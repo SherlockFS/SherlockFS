@@ -35,7 +35,7 @@ int main(void)
 
     format_fs("/home/nathan/epita/SherlockFS/build/test_main.shlkfs",
               "/home/nathan/.sherlockfs/public.pem",
-              "/home/nathan/.sherlockfs/private.pem", NULL, NULL);
+              "/home/nathan/.sherlockfs/private.pem", "label", NULL, NULL);
 
     set_device_path("/home/nathan/epita/SherlockFS/build/test_main.shlkfs");
 

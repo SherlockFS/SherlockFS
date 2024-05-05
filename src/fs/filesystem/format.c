@@ -47,7 +47,8 @@ bool is_already_formatted(const char *device_path)
     return true;
 }
 
-void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
+void format_fill_filesystem_struct(struct CryptFS *shlkfs, const char *label,
+                                   char *rsa_passphrase,
                                    EVP_PKEY *existing_rsa_keypair,
                                    const char *public_key_path,
                                    const char *private_key_path)
@@ -60,6 +61,8 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
     strcpy((char *)shlkfs->header.magic, CRYPTFS_MAGIC);
     shlkfs->header.version = CRYPTFS_VERSION;
     shlkfs->header.blocksize = CRYPTFS_BLOCK_SIZE_BYTES;
+    if (label)
+        strncpy((char *)shlkfs->header.label, label, CRYPTFS_LABEL_SIZE - 1);
     shlkfs->header.last_fat_block = FIRST_FAT_BLOCK;
 
     for (size_t i = 0; i < CRYPTFS_BOOT_SECTION_SIZE_BYTES; i++)
@@ -183,15 +186,17 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
 }
 
 void format_fs(const char *path, char *public_key_path, char *private_key_path,
-               char *rsa_passphrase, EVP_PKEY *existing_rsa_keypair)
+               const char *label, char *rsa_passphrase,
+               EVP_PKEY *existing_rsa_keypair)
 {
     struct CryptFS *shlkfs =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS));
 
     set_device_path(path);
 
-    format_fill_filesystem_struct(shlkfs, rsa_passphrase, existing_rsa_keypair,
-                                  public_key_path, private_key_path);
+    format_fill_filesystem_struct(shlkfs, label, rsa_passphrase,
+                                  existing_rsa_keypair, public_key_path,
+                                  private_key_path);
 
     FILE *file = fopen(path, "r+");
     if (file == NULL)
