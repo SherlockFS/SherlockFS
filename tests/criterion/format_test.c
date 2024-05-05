@@ -197,8 +197,9 @@ Test(is_already_formatted, formated_check_content, .init = cr_redirect_stdout,
     cr_assert_arr_neq(root_entry, zeros, CRYPTFS_BLOCK_SIZE_BYTES);
 
     // Check the content of the block
-    cr_assert(read_blocks_with_decryption(aes_key, ROOT_ENTRY_BLOCK, 1, root_entry)
-              == 0);
+    cr_assert(
+        read_blocks_with_decryption(aes_key, ROOT_ENTRY_BLOCK, 1, root_entry)
+        == 0);
     cr_assert_eq(root_entry->used, 1);
     cr_assert_eq(root_entry->type, ENTRY_TYPE_DIRECTORY);
     cr_assert_eq(root_entry->size, 0);
@@ -211,7 +212,7 @@ Test(is_already_formatted, formated_check_content, .init = cr_redirect_stdout,
     // Read block ROOT_DIR_BLOCK
     struct CryptFS_Directory *root_dir =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, CRYPTFS_BLOCK_SIZE_BYTES);
-    
+
     // Check if content is encrypted
     cr_assert(read_blocks(ROOT_DIR_BLOCK, 1, root_dir) == 0);
     cr_assert_arr_neq(root_dir, zeros, CRYPTFS_BLOCK_SIZE_BYTES);
@@ -219,7 +220,8 @@ Test(is_already_formatted, formated_check_content, .init = cr_redirect_stdout,
     // Check the content of the block
     cr_assert(read_blocks_with_decryption(aes_key, ROOT_DIR_BLOCK, 1, root_dir)
               == 0);
-    cr_assert_eq(root_dir->current_directory_entry.directory_block, ROOT_ENTRY_BLOCK);
+    cr_assert_eq(root_dir->current_directory_entry.directory_block,
+                 ROOT_ENTRY_BLOCK);
     cr_assert_eq(root_dir->current_directory_entry.directory_index, 0);
 
     // Free

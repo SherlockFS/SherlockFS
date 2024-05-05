@@ -11,7 +11,7 @@ function yellow() {
 }
 
 IS_ALL_CORRECT=1
-for file in $(find . -name "*.h" -o -name "*.c"); do
+for file in $(find . -name "*.h" -o -name "*.c" -type f); do
     clang-format -style=file -output-replacements-xml $file | grep "<replacement " >/dev/null
     if [ $? -eq 0 ]; then
         yellow "Le fichier $file n'est pas formaté correctement, veuillez exécuter 'clang-format -i $file'" >&2
