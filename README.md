@@ -42,7 +42,7 @@ Pour compiler les programmes :
 
 Les exécutables compilés se trouveront dans le dossier `build/`.
 
-## Utilisation
+## Utilisation des utilitaires
 
 ### `shlkfs_formater`
 
@@ -97,6 +97,30 @@ SherlockFS v1 - Deleting user from device keys storage
 ```
 
 `shlkfs_deluser` permet de supprimer un utilisateur du système de fichiers. Il prend en paramètre le chemin vers le périphérique formaté avec SherlockFS, le chemin vers la clé publique de l'utilisateur à supprimer et éventuellement le chemin vers la clé privée d'un utilisateur déjà enregistré sur le périphérique. Si la clé privée n'est pas spécifiée, `shlkfs_deluser` cherchera à utiliser la clé privée de l'utilisateur courant (celui qui exécute le programme), dans le dossier `~/.sherlockfs/`.
+
+## Utilisation avec Docker
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/SherlockFS/SherlockFS/tree/dev?quickstart=1)
+
+### Création de l'image Docker
+
+Pour créer l'image Docker de SherlockFS, vous pouvez exécuter la commande suivante depuis la racine du dépôt du projet :
+
+```shell
+docker build -t shlkfs .
+```
+
+> Cette image contient toutes les dépendances nécessaires pour compiler et exécuter SherlockFS.
+
+### Démarrage du conteneur Docker
+
+Pour démarrer un conteneur Docker avec l'image de SherlockFS, vous pouvez exécuter la commande suivante depuis la racine du dépôt du projet :
+
+```shell
+docker run -it -v $(pwd):/workspace/SherlockFS shlkfs
+```
+
+> Cette commande monte le dépôt du projet situé dans le répertoire courant dans le conteneur Docker, dans le répertoire `/workspace/SherlockFS`.
 
 ## Développement
 
