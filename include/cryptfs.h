@@ -199,7 +199,8 @@ struct CryptFS_Directory
 // -----------------------------------------------------------------------------
 #define HEADER_BLOCK 0 // struct CryptFS_Header
 #define KEYS_STORAGE_BLOCK (HEADER_BLOCK + 1) // struct CryptFS_KeySlot
-#define FIRST_FAT_BLOCK (KEYS_STORAGE_BLOCK + NB_ENCRYPTION_KEYS) // struct CryptFS_FAT
+#define FIRST_FAT_BLOCK                                                        \
+    (KEYS_STORAGE_BLOCK + NB_ENCRYPTION_KEYS) // struct CryptFS_FAT
 #define ROOT_ENTRY_BLOCK (FIRST_FAT_BLOCK + 1) // struct CryptFS_Entry
 #define ROOT_DIR_BLOCK (ROOT_ENTRY_BLOCK + 1) // struct CryptFS_Directory
 
@@ -209,8 +210,11 @@ struct CryptFS
     struct CryptFS_KeySlot keys_storage[NB_ENCRYPTION_KEYS]; // BLOCK 1-64: Keys
     struct CryptFS_FAT first_fat; // BLOCK 65: First FAT
     struct CryptFS_Entry root_entry; // BLOCK 66: Root directory entry
-    uint8_t padding[CRYPTFS_BLOCK_SIZE_BYTES - sizeof(struct CryptFS_Entry)]; // CryptFS_Entry unused space
-    struct CryptFS_Directory root_directory; // BLOCK 67: Root directory directory
+    uint8_t
+        padding[CRYPTFS_BLOCK_SIZE_BYTES
+                - sizeof(struct CryptFS_Entry)]; // CryptFS_Entry unused space
+    struct CryptFS_Directory
+        root_directory; // BLOCK 67: Root directory directory
 } __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
 #endif /* CRYPT_FS_H */

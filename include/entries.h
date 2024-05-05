@@ -17,13 +17,14 @@ int __blocks_needed_for_dir(size_t size);
 
 /**
  * @brief Get an entry from its ID.
- * 
+ *
  * @param aes_key The AES key used for encryption/decryption.
  * @param entry_id The ID of the entry to get.
- * 
+ *
  * @return The entry corresponding to the ID. NULL if an error occurred.
-*/
-struct CryptFS_Entry* get_entry_from_id(const unsigned char *aes_key,struct CryptFS_Entry_ID entry_id);
+ */
+struct CryptFS_Entry *get_entry_from_id(const unsigned char *aes_key,
+                                        struct CryptFS_Entry_ID entry_id);
 
 /**
  * @brief Write an entry to the file system.
@@ -46,7 +47,7 @@ int write_entry_from_id(const unsigned char *aes_key,
  * enum SHLKFS_ERROR if an error occurred.
  */
 struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
-                                     const char *path);
+                                           const char *path);
 
 /**
  * @brief Create a directory by its path.

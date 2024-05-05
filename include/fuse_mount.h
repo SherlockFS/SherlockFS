@@ -366,7 +366,6 @@ int cryptfs_statfs(const char *path, struct statvfs *stats);
 int cryptfs_setxattr(const char *path, const char *name, const char *value,
                      size_t size, int flags);
 
-                
 /**
  * @brief Get an extended attribute.
  *
@@ -379,7 +378,7 @@ int cryptfs_setxattr(const char *path, const char *name, const char *value,
 int cryptfs_getxattr(const char *path, const char *name, char *value,
                      size_t size);
 
-                     /**
+/**
  * @brief List extended attributes.
  *
  * @param path The path of the file.
@@ -464,7 +463,8 @@ int cryptfs_ioctl(const char *path, int cmd, void *arg,
  * @param revents The events.
  * @return 0 on success, -errno on failure.
  */
-int cryptfs_poll(const char *path, struct fuse_file_info *file, struct fuse_pollhandle *ph, unsigned *revents);
+int cryptfs_poll(const char *path, struct fuse_file_info *file,
+                 struct fuse_pollhandle *ph, unsigned *revents);
 
 /**
  * @brief Lock a file.
@@ -502,7 +502,7 @@ int cryptfs_utime(const char *path, struct utimbuf *buf);
 
 /**
  * @brief Moves the read/write file offset within the file.
- * 
+ *
  * @param path The path of the file
  * @param off The offset to move to
  * @param whence The reference point for the offset
@@ -510,6 +510,4 @@ int cryptfs_utime(const char *path, struct utimbuf *buf);
  * @return The new offset on success, -errno on failure
  */
 
-
 #endif /* FUSE_OPERATIONS_H */
-
