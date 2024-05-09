@@ -215,17 +215,14 @@ ssize_t entry_read_raw_data(const unsigned char *aes_key,
  * @brief Delete an entry.
  *
  * @param aes_key The AES key used for encryption/decryption.
- * @param parent_dir_entry_id Structure, composed of the block number where a
+ * @param entry_id Structure, composed of the block number where a
  * struct CryptFS_Directory starts and the index of the entry within this
  * current CryptFS_Directory, serves to uniquely identify an entry on the file
  * system.
- * @param entry_index Index within the struct CryptFS_Directory pointed by
- * parent_dir_entry_id.
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
 int entry_delete(const unsigned char *aes_key,
-                 struct CryptFS_Entry_ID parent_dir_entry_id,
-                 uint32_t entry_index);
+                 struct CryptFS_Entry_ID entry_id);
 
 /**
  * @brief Create an empty file.

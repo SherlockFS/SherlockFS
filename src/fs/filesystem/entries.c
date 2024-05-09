@@ -214,6 +214,8 @@ static int __entry_truncate_treatment(const unsigned char *aes_key,
         entry->size = new_size;
         entry->mtime = (uint32_t)time(NULL);
     }
+    if (new_size == 0)
+        entry->used = 0;
     // if new_size == entry.size, do nothing
     return 0;
 }
@@ -654,8 +656,7 @@ int delete_entry_by_path(const unsigned char *aes_key, const char *path)
         return BLOCK_ERROR;
     }
 
-    if (entry_delete(aes_key, *parent_dir_entry_id, entry_id->directory_index)
-        != 0)
+    if (entry_delete(aes_key, *entry_id) != 0)
     {
         free(entry_id);
         free(parent_dir_entry_id);
@@ -1000,114 +1001,104 @@ err_read_entry:
  * @param new_size Size to truncate the entry with.
  * @return 0 when success, BLOCK_ERROR otherwise.
  */
-static int __entry_delete_routine(const unsigned char *aes_key,
-                                  struct CryptFS_Entry *parent_dir_entry,
-                                  uint32_t entry_index)
+// static int __entry_delete_routine(const unsigned char *aes_key,
+//                                   struct CryptFS_Entry *parent_dir_entry,
+//                                   uint32_t entry_index)
+// {
+//     block_t s_block = parent_dir_entry->start_block;
+//     struct CryptFS_Entry_ID entry_id = { s_block, entry_index };
+//     goto_entry_in_directory(aes_key, &entry_id);
+
+//     struct CryptFS_Directory *parent_dir = xaligned_alloc(
+//         CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_Directory));
+//     if (read_blocks_with_decryption(aes_key, s_block, 1, parent_dir))
+//         goto err_entry_delete;
+
+//     // FIXME: Overflow in case of entry_index > NB_ENTRIES_PER_BLOCK?
+//     // @clarelsalassa
+//     struct CryptFS_Entry entry = parent_dir->entries[entry_index];
+
+//     // Check if Directory is empty or if entry exist
+//     if ((entry.type == ENTRY_TYPE_DIRECTORY && entry.size != 0)
+//         || entry.used == 0)
+//         goto err_entry_delete;
+
+//     if (entry_truncate(aes_key, entry_id, 0))
+//         goto err_entry_delete;
+
+//     // Update entry;
+//     read_blocks_with_decryption(aes_key, s_block, 1, parent_dir);
+//     entry = parent_dir->entries[entry_index];
+//     entry.used = 0;
+//     parent_dir->entries[entry_index] = entry;
+//     write_blocks_with_encryption(aes_key, s_block, 1, parent_dir);
+
+//     free(parent_dir);
+//     return 0;
+
+// err_entry_delete:
+//     free(parent_dir);
+//     return BLOCK_ERROR;
+// }
+
+int entry_delete(const unsigned char *aes_key, struct CryptFS_Entry_ID entry_id)
 {
-    block_t s_block = parent_dir_entry->start_block;
-    struct CryptFS_Entry_ID entry_id = { s_block, entry_index };
-    goto_entry_in_directory(aes_key, &entry_id);
-
-    struct CryptFS_Directory *parent_dir = xaligned_alloc(
-        CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_Directory));
-    if (read_blocks_with_decryption(aes_key, s_block, 1, parent_dir))
-        goto err_entry_delete;
-
-    // FIXME: Overflow in case of entry_index > NB_ENTRIES_PER_BLOCK?
-    // @clarelsalassa
-    struct CryptFS_Entry entry = parent_dir->entries[entry_index];
-
-    // Check if Directory is empty or if entry exist
-    if ((entry.type == ENTRY_TYPE_DIRECTORY && entry.size != 0)
-        || entry.used == 0)
-        goto err_entry_delete;
-
-    if (entry_truncate(aes_key, entry_id, 0))
-        goto err_entry_delete;
-
-    // Update entry;
-    read_blocks_with_decryption(aes_key, s_block, 1, parent_dir);
-    entry = parent_dir->entries[entry_index];
-    entry.used = 0;
-    parent_dir->entries[entry_index] = entry;
-    write_blocks_with_encryption(aes_key, s_block, 1, parent_dir);
-
-    free(parent_dir);
-    return 0;
-
-err_entry_delete:
-    free(parent_dir);
-    return BLOCK_ERROR;
-}
-
-int entry_delete(const unsigned char *aes_key,
-                 struct CryptFS_Entry_ID parent_dir_entry_id,
-                 uint32_t entry_index)
-{
-    // Find the real block and index
-    if (goto_entry_in_directory(aes_key, &parent_dir_entry_id))
-        return BLOCK_ERROR;
-
-    if (parent_dir_entry_id.directory_block == ROOT_ENTRY_BLOCK)
+    if (entry_id.directory_block == ROOT_ENTRY_BLOCK)
     {
-        // Allocate struct for reading directory_block
-        struct CryptFS_Entry *root_entry = xaligned_alloc(
-            CRYPTFS_BLOCK_SIZE_BYTES, 1, CRYPTFS_BLOCK_SIZE_BYTES);
-
-        // Read the root Entry (corner case)
-        if (read_blocks_with_decryption(
-                aes_key, parent_dir_entry_id.directory_block, 1, root_entry))
-            goto err_entry_delete_root;
-
-        // Put routine
-        if (__entry_delete_routine(aes_key, root_entry, entry_index))
-            goto err_entry_delete_root;
-
-        // Update Entry Root entry
-        root_entry->size--;
-        write_blocks_with_encryption(
-            aes_key, parent_dir_entry_id.directory_block, 1, root_entry);
-
-        free(root_entry);
-        return 0;
-
-    err_entry_delete_root:
-        free(root_entry);
+        // Can't delete root directory
         return BLOCK_ERROR;
+    }
+
+    // Allocate struct for reading the directory_block where is the entry_id
+    struct CryptFS_Directory *dir_block_buff = xaligned_alloc(
+        CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_Directory));
+    read_blocks_with_decryption(aes_key, entry_id.directory_block, 1,
+                                dir_block_buff);
+
+    // Check the entry_id type
+    if (dir_block_buff->entries[entry_id.directory_index].type
+            == ENTRY_TYPE_DIRECTORY
+        && dir_block_buff->entries[entry_id.directory_index].size != 0)
+    {
+        free(dir_block_buff);
+        return BLOCK_ERROR;
+    }
+
+    // Get the directory_entry_id of the actual directory
+    struct CryptFS_Entry_ID dir_entry_id =
+        dir_block_buff->current_directory_entry;
+
+    struct CryptFS_Entry *dir_entry =
+        xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, CRYPTFS_BLOCK_SIZE_BYTES);
+
+    // Update Directory Entry
+    if (dir_entry_id.directory_block == ROOT_ENTRY_BLOCK)
+    {
+        // If the actual directory is the Root, then the entry is tacking the
+        // entire block
+        read_blocks_with_decryption(aes_key, dir_entry_id.directory_block, 1,
+                                    dir_entry);
+        dir_entry->size--;
+        write_blocks_with_encryption(aes_key, dir_entry_id.directory_block, 1,
+                                     dir_entry);
     }
     else
     {
-        // allocate struct for reading directory_block
-        struct CryptFS_Directory *dir = xaligned_alloc(
-            CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_Directory));
-
-        if (read_blocks_with_decryption(
-                aes_key, parent_dir_entry_id.directory_block, 1, dir))
-            goto err_entry_delete;
-
-        // Get the correct Directory Entry (where is stocked the entry to
-        // delete)
-        struct CryptFS_Entry parent_dir_entry =
-            dir->entries[parent_dir_entry_id.directory_index];
-        if (parent_dir_entry.type != ENTRY_TYPE_DIRECTORY)
-            goto err_entry_delete;
-
-        // routine start here
-        if (__entry_delete_routine(aes_key, &parent_dir_entry, entry_index))
-            goto err_entry_delete;
-
-        // Update Entry of directory containing the deleted entry
-        dir->entries[parent_dir_entry_id.directory_index].size--;
-        write_blocks_with_encryption(
-            aes_key, parent_dir_entry_id.directory_block, 1, dir);
-
-        free(dir);
-        return 0;
-
-    err_entry_delete:
-        free(dir);
-        return BLOCK_ERROR;
+        // Read block where the directory Entry is stocked
+        read_blocks_with_decryption(aes_key, dir_entry_id.directory_block, 1,
+                                    dir_block_buff);
+        *dir_entry = dir_block_buff->entries[dir_entry_id.directory_index];
+        dir_entry->size--;
+        dir_block_buff->entries[dir_entry_id.directory_index] = *dir_entry;
+        write_blocks_with_encryption(aes_key, dir_entry_id.directory_block, 1,
+                                     dir_block_buff);
     }
+
+    entry_truncate(aes_key, entry_id, 0);
+
+    free(dir_block_buff);
+    free(dir_entry);
+    return 0;
 }
 
 /**
