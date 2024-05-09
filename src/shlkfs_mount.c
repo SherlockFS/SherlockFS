@@ -151,10 +151,6 @@ int main(int argc, char *argv[])
             EXIT_FAILURE, device_path);
     }
 
-    // If the private key path is not provided, get it from the RSA keys home
-    if (private_key_path == NULL)
-        get_rsa_keys_home_paths(NULL, &private_key_path);
-
     fpi_register_master_key_from_path(device_path, private_key_path);
 
     print_info("Mounting a SherlockFS filesystem instance...\n");
