@@ -51,7 +51,7 @@ Les exécutables compilés se trouveront dans le dossier `build/`.
 # ./build/shlkfs_formater
 
 SherlockFS v1 - Format a device
-        Usage: ./build/shlkfs_formater <device>
+        Usage: ./build/shlkfs_formater <device> [label]
 ```
 
 `shlkfs_formater` permet d'initialiser un périphérique avec le système de fichiers SherlockFS. Il prend en paramètre le chemin vers le périphérique à formater. Le périphérique peut être vide mais doit être non monté. Si le périphérique est déjà formaté avec SherlockFS, il vous sera demandé si vous souhaitez le reformater.

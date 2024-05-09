@@ -145,7 +145,7 @@ Test(is_already_formatted, formated_check_content, .init = cr_redirect_stdout,
 
     // Check the content of the block
     cr_assert_eq(header->blocksize, CRYPTFS_BLOCK_SIZE_BYTES);
-    cr_assert_str_eq((char *)header->magic, CRYPTFS_MAGIC);
+    cr_assert_arr_eq((char *)header->magic, CRYPTFS_MAGIC, CRYPTFS_MAGIC_SIZE);
     cr_assert_eq(header->last_fat_block, FIRST_FAT_BLOCK);
     cr_assert_eq(header->version, CRYPTFS_VERSION);
 

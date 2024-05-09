@@ -114,6 +114,31 @@ int main(int argc, char *argv[])
 
     const char *device_path = argv[0];
 
+    // Check if the user asked '-s' and '-f' in FUSE options
+    // TODO: Implement multi-threading support (#59)
+    bool has_s_option = false;
+    bool has_f_option = false;
+    for (int i = 1; i < argc; i++)
+    {
+        if (strcmp(argv[i], "-s") == 0)
+            has_s_option = true;
+        else if (strcmp(argv[i], "-f") == 0)
+            has_f_option = true;
+
+        if (has_s_option && has_f_option)
+            break;
+    }
+
+    if (!has_s_option)
+        error_exit("Multiple threads are not currently supported. Please use "
+                   "the '-s' FUSE option.\n",
+                   EXIT_FAILURE);
+    if (!has_f_option)
+        error_exit("The 'foreground' mode is required (issue #60). Please use "
+                   "the '-f' "
+                   "FUSE option.\n",
+                   EXIT_FAILURE);
+
     // Set the file system global variables
     set_device_path(device_path);
 
@@ -132,6 +157,7 @@ int main(int argc, char *argv[])
 
     fpi_register_master_key_from_path(device_path, private_key_path);
 
+    print_info("Mounting a SherlockFS filesystem instance...\n");
     int ret = fuse_main(argc, new_argv, &ops, NULL);
     if (ret == 0)
         print_success("SherlockFS instance exited successfully.\n");

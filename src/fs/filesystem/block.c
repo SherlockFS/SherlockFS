@@ -82,8 +82,10 @@ int read_blocks(block_t start_block, size_t nb_blocks, void *buffer)
             // If still cannot, this is a real error
             if (n == 0)
             {
-                print_error("fread '%s' failed: %s\n", DEVICE_PATH,
-                            strerror(errno));
+                print_error(
+                    "Fail to read '%lu' blocks, starting at block '%lu' "
+                    "from '%s': %s\n",
+                    start_block, nb_blocks, DEVICE_PATH, strerror(errno));
                 return BLOCK_ERROR;
             }
         }
@@ -126,8 +128,9 @@ int write_blocks(block_t start_block, size_t nb_blocks, const void *buffer)
                           CRYPTFS_BLOCK_SIZE_BYTES, nb_blocks - written, file);
         if (n == 0)
         {
-            print_error("fwrite '%s' failed: %s\n", DEVICE_PATH,
-                        strerror(errno));
+            print_error("Fail to write '%lu' blocks, starting at block '%lu' "
+                        "to '%s': %s\n",
+                        start_block, nb_blocks, DEVICE_PATH, strerror(errno));
             return BLOCK_ERROR;
         }
 
@@ -154,21 +157,26 @@ int read_blocks_with_decryption(const unsigned char *aes_key,
         return read_blocks_res;
     }
 
-    size_t useless_size = 0;
-    unsigned char *decrypted_buffer =
-        aes_decrypt_data(aes_key, encrypted_buffer,
-                         nb_blocks * CRYPTFS_BLOCK_SIZE_BYTES, &useless_size);
-
-    if (decrypted_buffer == NULL)
+    unsigned char *decrypted_buffer = buffer;
+    for (size_t i = 0; i < nb_blocks; i++)
     {
-        free(encrypted_buffer);
-        free(decrypted_buffer);
-        return -1;
+        size_t useless_size = 0;
+        unsigned char *decrypted_block = aes_decrypt_data(
+            aes_key, encrypted_buffer + i * CRYPTFS_BLOCK_SIZE_BYTES,
+            CRYPTFS_BLOCK_SIZE_BYTES, &useless_size);
+
+        if (decrypted_block == NULL)
+        {
+            free(encrypted_buffer);
+            return -1;
+        }
+
+        memcpy(decrypted_buffer + i * CRYPTFS_BLOCK_SIZE_BYTES, decrypted_block,
+               CRYPTFS_BLOCK_SIZE_BYTES);
+        free(decrypted_block);
     }
 
-    memcpy(buffer, decrypted_buffer, nb_blocks * CRYPTFS_BLOCK_SIZE_BYTES);
     free(encrypted_buffer);
-    free(decrypted_buffer);
     return 0;
 }
 
@@ -176,13 +184,31 @@ int write_blocks_with_encryption(const unsigned char *aes_key,
                                  block_t start_block, size_t nb_blocks,
                                  const void *buffer)
 {
-    size_t useless_size = 0;
-    unsigned char *encrypted_buffer = aes_encrypt_data(
-        aes_key, buffer, nb_blocks * CRYPTFS_BLOCK_SIZE_BYTES, &useless_size);
-    if (encrypted_buffer == NULL)
-        return -1;
+    unsigned char *encrypted_buffer =
+        xmalloc(nb_blocks, CRYPTFS_BLOCK_SIZE_BYTES);
+
+    const unsigned char *unencrypted_buffer = buffer;
+    for (size_t i = 0; i < nb_blocks; i++)
+    {
+        size_t useless_size = 0;
+        unsigned char *encrypted_block = aes_encrypt_data(
+            aes_key, unencrypted_buffer + i * CRYPTFS_BLOCK_SIZE_BYTES,
+            CRYPTFS_BLOCK_SIZE_BYTES, &useless_size);
+
+        if (encrypted_block == NULL)
+        {
+            free(encrypted_buffer);
+            return -1;
+        }
+
+        memcpy(encrypted_buffer + i * CRYPTFS_BLOCK_SIZE_BYTES, encrypted_block,
+               CRYPTFS_BLOCK_SIZE_BYTES);
+        free(encrypted_block);
+    }
+
     int write_blocks_res =
         write_blocks(start_block, nb_blocks, encrypted_buffer);
+
     free(encrypted_buffer);
     return write_blocks_res;
 }
