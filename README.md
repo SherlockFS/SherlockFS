@@ -54,7 +54,7 @@ SherlockFS v1 - Format a device
         Usage: ./build/shlkfs_formater <device> [label]
 ```
 
-`shlkfs_formater` permet d'initialiser un périphérique avec le système de fichiers SherlockFS. Il prend en paramètre le chemin vers le périphérique à formater. Le périphérique peut être vide mais doit être non monté. Si le périphérique est déjà formaté avec SherlockFS, il vous sera demandé si vous souhaitez le reformater.
+`shlkfs_formater` permet d'initialiser un périphérique avec le système de fichiers SherlockFS. Il prend en paramètre le chemin vers le périphérique à formater, et éventuellement un label (nom du système de fichiers). Le périphérique peut être vide mais doit être non monté. Si le périphérique est déjà formaté avec SherlockFS, il vous sera demandé si vous souhaitez le reformater.
 
 Une fois le formatage effectué, les clés publiques et privées utisées lors du formatage seront sauvegardées dans le dossier `~/.sherlockfs` (`public.pem` et `private.pem`). Ces clés sont nécessaires pour monter le périphérique et ajouter de nouveaux utilisateurs au système de fichiers. **Il est donc important de les conserver en lieu sûr et de ne pas les perdre.**
 
@@ -117,22 +117,7 @@ docker build -t shlkfs .
 Pour démarrer un conteneur Docker avec l'image de SherlockFS, vous pouvez exécuter la commande suivante depuis la racine du dépôt du projet :
 
 ```shell
-docker run -it -v $(pwd):/workspace/SherlockFS shlkfs
+docker run --privileged -it -v $(pwd):/workspace/SherlockFS shlkfs
 ```
 
 > Cette commande monte le dépôt du projet situé dans le répertoire courant dans le conteneur Docker, dans le répertoire `/workspace/SherlockFS`.
-
-## Développement
-
-### Structure du projet
-
-Le projet est divisé en plusieurs dossiers :
-
-- `src/` : Contient les sources des programmes. La racine de ce dossier contient les sources "`main()`" de chaque programme (`shlkfs_formater`, `shlkfs_adduser`, etc.)
-  - `src/fs`: Contient les sources purement relatives au système de fichiers.
-  - `src/fuse`: Contient les sources relatives à l'implémentation FUSE.
-- `include/` : Contient les en-têtes des programmes.
-- `build/` : Contient les exécutables compilés.
-- `tests/` : Contient les tests unitaires.
-  - `tests/criterion` : Contient les sources de la bibliothèque de tests unitaires Criterion.
-  - `tests/test_main.c` : Fichier de test (un peu sale) qui permet de tester diverses fonctionnalités (utilisable avec `make test_main`, puis `./build/test_main`).
