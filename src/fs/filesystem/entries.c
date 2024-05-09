@@ -967,12 +967,18 @@ ssize_t entry_read_raw_data(const unsigned char *aes_key,
     struct CryptFS_Entry entry = dir->entries[file_entry_id.directory_index];
 
     // Check if the offset to read is correct
+    // If the offset is greater than the size of the entry, return 0
+    if (start_from >= entry.size)
+    {
+        free(dir);
+        return 0;
+    }
+
     if (entry.size < start_from + count)
     {
-        print_error("entry_read_raw_data: entry.size(%lu) < start_from(%lu) + "
-                    "count(%lu)\n",
-                    entry.size, start_from, count);
-        goto err_read_entry;
+        free(dir);
+        return entry_read_raw_data(aes_key, file_entry_id, start_from, buf,
+                                   entry.size - start_from);
     }
 
     sblock_t s_block = entry.start_block;
