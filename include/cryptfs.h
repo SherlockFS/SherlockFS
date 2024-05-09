@@ -12,6 +12,7 @@
 // -----------------------------------------------------------------------------
 #define CRYPTFS_BOOT_SECTION_SIZE_BYTES 2048
 #define CRYPTFS_MAGIC "sfkcolrehs" // reverse("sherlockfs")
+#define CRYPTFS_MAGIC_SIZE (sizeof(CRYPTFS_MAGIC) - 1) // exclude '\0'
 #define CRYPTFS_LABEL_SIZE 128 // reverse("sherlockfs")
 #define CRYPTFS_VERSION 1
 #define CRYPTFS_BLOCK_SIZE_BYTES 4096
@@ -27,8 +28,8 @@ struct CryptFS_Header
 {
     uint8_t boot[CRYPTFS_BOOT_SECTION_SIZE_BYTES]; // Reserved for boot code
                                                    // (bootloader, etc.)
-    uint8_t magic[sizeof(CRYPTFS_MAGIC)]; // Magic number
-    uint8_t version; // CRYPTFS_VERSION
+    uint8_t magic[CRYPTFS_MAGIC_SIZE]; // Magic number
+    uint16_t version; // CRYPTFS_VERSION
     uint32_t blocksize; // in bytes
     uint8_t label[CRYPTFS_LABEL_SIZE]; // Filesystem label
     uint64_t last_fat_block; // Last FAT block index
@@ -58,7 +59,7 @@ struct CryptFS_KeySlot
     uint8_t occupied; // 1 if the slot is occupied, 0 if free
     uint8_t aes_key_ciphered[RSA_KEY_SIZE_BYTES]; // AES key ciphered with RSA
     uint8_t rsa_n[RSA_KEY_SIZE_BYTES]; // RSA public modulus 'n'
-    uint32_t rsa_e; // RSA public exponent 'e' (big endian)
+    uint32_t rsa_e; // RSA public exponent 'e'
 } __attribute__((packed, aligned(CRYPTFS_BLOCK_SIZE_BYTES)));
 
 // -----------------------------------------------------------------------------

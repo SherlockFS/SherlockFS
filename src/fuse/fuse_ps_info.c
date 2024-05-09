@@ -20,7 +20,7 @@ struct fs_ps_info
     unsigned char decoded_key[AES_KEY_SIZE_BYTES]; // Decoded key (must be
                                                    // zeroed after use)
     block_t current_directory_block; // Current directory block number
-};
+} __attribute__((packed));
 
 static struct fs_ps_info info = {
     .master_key_set = false,

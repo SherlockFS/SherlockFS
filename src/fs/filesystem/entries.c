@@ -12,6 +12,7 @@
 #include "block.h"
 #include "cryptfs.h"
 #include "fat.h"
+#include "print.h"
 #include "xalloc.h"
 
 int __blocks_needed_for_file(size_t size)
@@ -257,27 +258,43 @@ int write_entry_from_id(const unsigned char *aes_key,
     if (goto_entry_in_directory(aes_key, &entry_id))
         return BLOCK_ERROR;
 
-    // Read the directory block
-    struct CryptFS_Directory *dir = xaligned_alloc(
-        CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_Directory));
-
-    if (read_blocks_with_decryption(aes_key, entry_id.directory_block, 1, dir))
+    if (entry_id.directory_block == ROOT_ENTRY_BLOCK)
     {
+        char *entry_block = xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
+                                           CRYPTFS_BLOCK_SIZE_BYTES);
+        memcpy(entry_block, entry, sizeof(struct CryptFS_Entry));
+        if (write_blocks_with_encryption(aes_key, entry_id.directory_block, 1,
+                                         entry_block))
+            return BLOCK_ERROR;
+        free(entry_block);
+    }
+    else
+    {
+        // Read the directory block
+        struct CryptFS_Directory *dir = xaligned_alloc(
+            CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS_Directory));
+
+        if (read_blocks_with_decryption(aes_key, entry_id.directory_block, 1,
+                                        dir))
+        {
+            free(dir);
+            return BLOCK_ERROR;
+        }
+
+        // Write the entry in the directory block
+        dir->entries[entry_id.directory_index] = *entry;
+
+        // Write back the directory block
+        if (write_blocks_with_encryption(aes_key, entry_id.directory_block, 1,
+                                         dir))
+        {
+            free(dir);
+            return BLOCK_ERROR;
+        }
+
         free(dir);
-        return BLOCK_ERROR;
     }
 
-    // Write the entry in the directory block
-    dir->entries[entry_id.directory_index] = *entry;
-
-    // Write back the directory block
-    if (write_blocks_with_encryption(aes_key, entry_id.directory_block, 1, dir))
-    {
-        free(dir);
-        return BLOCK_ERROR;
-    }
-
-    free(dir);
     return 0;
 }
 
@@ -921,7 +938,11 @@ ssize_t entry_read_raw_data(const unsigned char *aes_key,
 
     // Find the real block and index
     if (goto_entry_in_directory(aes_key, &file_entry_id))
+    {
+        print_error("entry_read_raw_data: goto_entry_in_directory(%p,%p)\n",
+                    aes_key, &file_entry_id);
         return BLOCK_ERROR;
+    }
 
     // allocate struct for reading directory_block
     struct CryptFS_Directory *dir = xaligned_alloc(
@@ -929,25 +950,37 @@ ssize_t entry_read_raw_data(const unsigned char *aes_key,
 
     if (read_blocks_with_decryption(aes_key, file_entry_id.directory_block, 1,
                                     dir))
+    {
+        print_error(
+            "entry_read_raw_data: read_blocks_with_decryption(%p,%lu,%p,%p)\n",
+            aes_key, file_entry_id.directory_block, 1, dir);
         goto err_read_entry;
+    }
 
     // Get the correct Entry
     struct CryptFS_Entry entry = dir->entries[file_entry_id.directory_index];
 
     // Check if the offset to read is correct
     if (entry.size < start_from + count)
+    {
+        print_error("entry_read_raw_data: entry.size(%lu) < start_from(%lu) + "
+                    "count(%lu)\n",
+                    entry.size, start_from, count);
         goto err_read_entry;
+    }
 
     sblock_t s_block = entry.start_block;
     while (start_from >= CRYPTFS_BLOCK_SIZE_BYTES)
     {
         s_block = read_fat_offset(aes_key, s_block);
-        if (s_block)
+        if (s_block < 0)
+        {
+            print_error("entry_read_raw_data: read_fat_offset(%p,%lu)\n",
+                        aes_key, s_block);
             goto err_read_entry;
+        }
         start_from -= CRYPTFS_BLOCK_SIZE_BYTES;
     }
-
-    // Loop to read buffer_blocks to buffer
 
     // allocate block_buffer to read block
     char *block_buffer =
@@ -955,7 +988,12 @@ ssize_t entry_read_raw_data(const unsigned char *aes_key,
 
     // If block is empty, return BLOCK_ERROR
     if (read_blocks_with_decryption(aes_key, s_block, 1, block_buffer))
-        goto err_read_entry;
+    {
+        print_error(
+            "entry_read_raw_data: read_blocks_with_decryption(%p,%lu,%p,%p)\n",
+            aes_key, s_block, 1, block_buffer);
+        goto err_read_entry2;
+    }
 
     size_t modulo_index = 0;
     for (size_t i = 0; i < count; i++)
@@ -964,11 +1002,20 @@ ssize_t entry_read_raw_data(const unsigned char *aes_key,
         {
             s_block = read_fat_offset(aes_key, s_block);
             if (s_block == (sblock_t)BLOCK_ERROR)
-                goto err_read_entry;
+            {
+                print_error("entry_read_raw_data: read_fat_offset(%p,%lu)\n",
+                            aes_key, s_block);
+                goto err_read_entry2;
+            }
             start_from = 0;
             modulo_index = 0;
             if (read_blocks_with_decryption(aes_key, s_block, 1, block_buffer))
-                goto err_read_entry;
+            {
+                print_error("entry_read_raw_data: "
+                            "read_blocks_with_decryption(%p,%lu,%p,%p)\n",
+                            aes_key, s_block, 1, block_buffer);
+                goto err_read_entry2;
+            }
         }
         ((char *)buf)[i] = block_buffer[start_from + modulo_index];
         modulo_index++;
@@ -980,15 +1027,21 @@ ssize_t entry_read_raw_data(const unsigned char *aes_key,
     dir->entries[file_entry_id.directory_index] = entry;
     if (write_blocks_with_encryption(aes_key, file_entry_id.directory_block, 1,
                                      dir))
-        goto err_read_entry;
+    {
+        print_error(
+            "entry_read_raw_data: write_blocks_with_encryption(%p,%lu,%p,%p)\n",
+            aes_key, file_entry_id.directory_block, 1, dir);
+        goto err_read_entry2;
+    }
 
     free(dir);
     free(block_buffer);
     return result;
 
+err_read_entry2:
+    free(block_buffer);
 err_read_entry:
     free(dir);
-    free(block_buffer);
     return BLOCK_ERROR;
 }
 

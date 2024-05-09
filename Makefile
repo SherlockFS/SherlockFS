@@ -90,6 +90,12 @@ $(BUILD_DIR)/test_main: $(OBJ) $(BUILD_DIR)/tests/test_main.o
 	@echo "CC/LD\t$@"
 	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_main $^ $(LDFLAGS) $(FSANITIZE)
 
+private_test_main: $(BUILD_DIR)/private_test_main
+	
+$(BUILD_DIR)/private_test_main: $(OBJ) $(BUILD_DIR)/tests/private_test_main.o
+	@echo "CC/LD\t$@"
+	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/private_test_main $^ $(LDFLAGS) $(FSANITIZE)
+
 check: tests_suite
 	@echo $(call bluetext,"Lancement des tests unitaires")
 	@$(BUILD_DIR)/tests_suite
