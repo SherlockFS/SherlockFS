@@ -377,6 +377,7 @@ struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
 
         // Copy test_entry_id to entry_id
         memcpy(entry_id, test_entry_id, sizeof(struct CryptFS_Entry_ID));
+        free(test_entry_id);
         free(entry);
     }
 
