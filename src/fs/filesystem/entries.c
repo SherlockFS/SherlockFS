@@ -340,26 +340,29 @@ struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
         }
 
         // Goto struct CryptFS_Directory
-        entry_id->directory_block = entry->start_block;
-        entry_id->directory_index = 0;
+        // entry_id->directory_block = entry->start_block;
+        // entry_id->directory_index = 0;
 
         // Recherche de l'entrée correspondant au nom du répertoire dans le
         // répertoire actuel
-        struct CryptFS_Entry *found_entry = NULL;
+        bool found_entry = false;
+        struct CryptFS_Entry_ID *test_entry_id = NULL;
         for (uint64_t i = 0; i < entry->size; i++)
         {
-            goto_entry_in_directory(aes_key, entry_id);
+            test_entry_id = goto_used_entry_in_directory(aes_key, *entry_id, i);
+
             struct CryptFS_Entry *test_entry =
-                get_entry_from_id(aes_key, *entry_id);
+                get_entry_from_id(aes_key, *test_entry_id);
 
             if (test_entry && strcmp(test_entry->name, dir_name) == 0)
             {
-                found_entry = test_entry;
+                found_entry = true;
+                free(test_entry);
                 break;
             }
 
-            entry_id->directory_index++;
             free(test_entry);
+            free(test_entry_id);
         }
 
         // Si l'entrée n'a pas été trouvée, renvoie une erreur
@@ -372,8 +375,9 @@ struct CryptFS_Entry_ID *get_entry_by_path(const unsigned char *aes_key,
 
         dir_name = strtok(NULL, "/");
 
+        // Copy test_entry_id to entry_id
+        memcpy(entry_id, test_entry_id, sizeof(struct CryptFS_Entry_ID));
         free(entry);
-        free(found_entry);
     }
 
     return entry_id;
