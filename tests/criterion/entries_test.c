@@ -676,20 +676,16 @@ Test(entry_delete, file_and_directory, .timeout = 10,
     write_blocks_with_encryption(aes_key, ROOT_ENTRY_BLOCK + 2, 1, second_fat);
 
     // ROOT ID
-    struct CryptFS_Entry_ID root_entry_id = {.directory_block = ROOT_ENTRY_BLOCK, .directory_index = 0};
+    struct CryptFS_Entry_ID root_entry_id = { .directory_block =
+                                                  ROOT_ENTRY_BLOCK,
+                                              .directory_index = 0 };
     // Create a file
     entry_create_empty_file(aes_key, root_entry_id, "file_test");
     entry_create_directory(aes_key, root_entry_id, "dir_test");
-    struct CryptFS_Entry_ID file_id =
-    {
-        .directory_block = ROOT_DIR_BLOCK,
-        .directory_index = 0
-    };
-    struct CryptFS_Entry_ID dir_id = 
-    {
-        .directory_block = ROOT_DIR_BLOCK,
-        .directory_index = 1
-    };
+    struct CryptFS_Entry_ID file_id = { .directory_block = ROOT_DIR_BLOCK,
+                                        .directory_index = 0 };
+    struct CryptFS_Entry_ID dir_id = { .directory_block = ROOT_DIR_BLOCK,
+                                       .directory_index = 1 };
 
     // Create file in to fill new dir
     entry_create_empty_file(aes_key, dir_id, "file_in_dir_test");
@@ -705,12 +701,10 @@ Test(entry_delete, file_and_directory, .timeout = 10,
     cr_assert_eq(dir->entries[0].used, 0);
     cr_assert_eq(dir->entries[1].used, 1);
 
-    struct CryptFS_Entry_ID file_in_dir_id = 
-    {
-        .directory_block = dir->entries[1].start_block,
-        .directory_index = 0
-    };
-    
+    struct CryptFS_Entry_ID file_in_dir_id = { .directory_block =
+                                                   dir->entries[1].start_block,
+                                               .directory_index = 0 };
+
     entry_delete(aes_key, file_in_dir_id);
     entry_delete(aes_key, dir_id);
     read_blocks_with_decryption(aes_key, ROOT_DIR_BLOCK, 1, dir);
@@ -718,11 +712,10 @@ Test(entry_delete, file_and_directory, .timeout = 10,
     cr_assert_eq(dir->entries[1].used, 0);
 
     // Check Root Entry size
-    struct CryptFS_Entry *root_entry = xaligned_alloc(
-            CRYPTFS_BLOCK_SIZE_BYTES, 1, CRYPTFS_BLOCK_SIZE_BYTES);
+    struct CryptFS_Entry *root_entry =
+        xaligned_alloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, CRYPTFS_BLOCK_SIZE_BYTES);
     read_blocks_with_decryption(aes_key, ROOT_ENTRY_BLOCK, 1, root_entry);
     cr_assert_eq(root_entry->size, 0);
-
 
     free(root_entry);
     free(dir);
