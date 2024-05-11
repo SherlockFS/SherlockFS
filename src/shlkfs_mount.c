@@ -108,6 +108,17 @@ int main(int argc, char *argv[])
         }
     }
 
+    if (private_key_path == NULL)
+    {
+        if (keypair_in_home_exist())
+            get_rsa_keys_home_paths(NULL, &private_key_path);
+        else
+            error_exit("The private key is required. Please provide it using "
+                       "the '-k' option or by storing it in "
+                       "~/.sherlockfs/private.pem\n",
+                       EXIT_FAILURE);
+    }
+
     // Copy the rest of the arguments
     for (int i = 1; i < argc; i++)
         new_argv[i] = argv[i];
