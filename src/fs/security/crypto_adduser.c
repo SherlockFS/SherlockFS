@@ -37,9 +37,8 @@ ssize_t find_rsa_matching_key(EVP_PKEY *rsa_keypair,
         BIGNUM *key_storage_modulus =
             BN_bin2bn(keys_storage[i].rsa_n, RSA_KEY_SIZE_BYTES, NULL);
 
-        uint32_t exponent_host_endianness = ntohl(keys_storage[i].rsa_e);
         BIGNUM *key_storage_exponent = BN_new();
-        if (!BN_set_word(key_storage_exponent, exponent_host_endianness))
+        if (!BN_set_word(key_storage_exponent, keys_storage[i].rsa_e))
             internal_error_exit("Failed to set the public RSA exponent\n",
                                 EXIT_FAILURE);
 

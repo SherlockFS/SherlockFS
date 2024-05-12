@@ -18,7 +18,8 @@ Test(block, read_write, .init = cr_redirect_stdout, .timeout = 10)
 
     format_fs("build/tests/block_read_write.test.shlkfs",
               "build/tests/block_read_write.test.public.pem",
-              "build/tests/block_read_write.test.private.pem", NULL, NULL);
+              "build/tests/block_read_write.test.private.pem", "label", NULL,
+              NULL);
 
     uint8_t *buffer_before = xcalloc(1, CRYPTFS_BLOCK_SIZE_BYTES);
     uint8_t *buffer_after = xcalloc(1, CRYPTFS_BLOCK_SIZE_BYTES);
@@ -51,7 +52,7 @@ Test(block, read_write_with_encryption_decryption, .init = cr_redirect_stdout,
     format_fs("build/tests/block_read_write_with_encryption.test.shlkfs",
               "build/tests/block_read_write_with_encryption.test.public.pem",
               "build/tests/block_read_write_with_encryption.test.private.pem",
-              NULL, NULL);
+              "label", NULL, NULL);
 
     unsigned char *aes_key = generate_aes_key();
 

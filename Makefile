@@ -36,6 +36,9 @@ MOUNT_OBJ = $(subst $(PROJECT_DIR),$(BUILD_DIR),$(MOUNT_SRC:.c=.o))
 all : shlkfs_formater shlkfs_mount shlkfs_adduser shlkfs_deluser
 	@echo $(call greentext,"Tous les binaires ont été compilés avec succès")
 
+no_debug : CFLAGS := $(filter-out -g,$(CFLAGS))
+no_debug : all
+
 dependencies:
 	@echo $(call bluetext,"Installation des dépendances")
 	bash dependencies.sh
@@ -89,6 +92,12 @@ test_main: $(BUILD_DIR)/test_main
 $(BUILD_DIR)/test_main: $(OBJ) $(BUILD_DIR)/tests/test_main.o
 	@echo "CC/LD\t$@"
 	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_main $^ $(LDFLAGS) $(FSANITIZE)
+
+private_test_main: $(BUILD_DIR)/private_test_main
+	
+$(BUILD_DIR)/private_test_main: $(OBJ) $(BUILD_DIR)/tests/private_test_main.o
+	@echo "CC/LD\t$@"
+	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/private_test_main $^ $(LDFLAGS) $(FSANITIZE)
 
 check: tests_suite
 	@echo $(call bluetext,"Lancement des tests unitaires")

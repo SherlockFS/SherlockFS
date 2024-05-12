@@ -20,13 +20,15 @@ bool is_already_formatted(const char *device_path);
  * filesystem.
  *
  * @param shlkfs The `struct CryptFS` structure to fill.
+ * @param label The label (name) of the filesystem.
  * @param rsa_passphrase The passphrase used to encrypt the RSA private key on
  * disk. Set to NULL if no passphrase is needed.
  * @param existing_rsa_keypair The RSA keypair to use.
  * @param public_key_path The path where the public key will be stored.
  * @param private_key_path The path where the private key will be stored.
  */
-void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
+void format_fill_filesystem_struct(struct CryptFS *shlkfs, const char *label,
+                                   char *rsa_passphrase,
                                    EVP_PKEY *existing_rsa_keypair,
                                    const char *public_key_path,
                                    const char *private_key_path);
@@ -37,12 +39,14 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, char *rsa_passphrase,
  * @param path The path of the device to format.
  * @param public_key_path The path where the public key will be stored.
  * @param private_key_path The path where the private key will be stored.
+ * @param label The label (name) of the filesystem.
  * @param rsa_passphrase The passphrase used to encrypt the RSA private key.
  * Set to NULL if no passphrase is needed.
  * @param existing_rsa_keypair The existing RSA keypair to use.
  */
 void format_fs(const char *path, char *public_key_path, char *private_key_path,
-               char *rsa_passphrase, EVP_PKEY *existing_rsa_keypair);
+               const char *label, char *rsa_passphrase,
+               EVP_PKEY *existing_rsa_keypair);
 
 /**
  * @brief Check if the keys (public and private) are already generated.

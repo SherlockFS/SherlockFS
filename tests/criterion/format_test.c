@@ -32,7 +32,7 @@ Test(is_already_formatted, formated, .init = cr_redirect_stdout, .timeout = 10)
 
     format_fs("build/tests/format.test.shlkfs",
               "build/tests/format.test.pub.pem",
-              "build/tests/format.test.private.pem", NULL, NULL);
+              "build/tests/format.test.private.pem", "label", NULL, NULL);
     cr_assert(is_already_formatted("build/tests/format.test.shlkfs"));
 
     // Detele the file
@@ -57,7 +57,7 @@ Test(is_already_formatted, not_CRYPTFS_BLOCK_SIZE_BYTES_blocksize,
 
     format_fs("build/tests/blocksize.test.shlkfs",
               "build/tests/blocksize.test.pub.pem",
-              "build/tests/blocksize.test.private.pem", NULL, NULL);
+              "build/tests/blocksize.test.private.pem", "label", NULL, NULL);
 
     // Change the blocksize
     shlkfs->header.blocksize = 1024;
@@ -83,7 +83,7 @@ Test(format_fs, integrity, .init = cr_redirect_stdout, .timeout = 10)
     struct CryptFS *shlkfs_after =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS));
 
-    format_fill_filesystem_struct(shlkfs_before, NULL, NULL,
+    format_fill_filesystem_struct(shlkfs_before, "label", NULL, NULL,
                                   "build/tests/integrity.test.pub.pem",
                                   "build/tests/integrity.test.private.pem");
 
@@ -133,8 +133,8 @@ Test(is_already_formatted, formated_check_content, .init = cr_redirect_stdout,
 
     format_fs("build/tests/formated_check_content.test.shlkfs",
               "build/tests/formated_check_content.test.pub.pem",
-              "build/tests/formated_check_content.test.private.pem", NULL,
-              NULL);
+              "build/tests/formated_check_content.test.private.pem", "label",
+              NULL, NULL);
     cr_assert(
         is_already_formatted("build/tests/formated_check_content.test.shlkfs"));
 
@@ -145,7 +145,7 @@ Test(is_already_formatted, formated_check_content, .init = cr_redirect_stdout,
 
     // Check the content of the block
     cr_assert_eq(header->blocksize, CRYPTFS_BLOCK_SIZE_BYTES);
-    cr_assert_eq(header->magic, CRYPTFS_MAGIC);
+    cr_assert_arr_eq((char *)header->magic, CRYPTFS_MAGIC, CRYPTFS_MAGIC_SIZE);
     cr_assert_eq(header->last_fat_block, FIRST_FAT_BLOCK);
     cr_assert_eq(header->version, CRYPTFS_VERSION);
 
@@ -252,5 +252,106 @@ Test(format, too_small, .init = cr_redirect_stdall, .timeout = 10,
 
     format_fs("build/tests/too_small.test.shlkfs",
               "build/tests/too_small.test.pub.pem",
-              "build/tests/too_small.test.private.pem", NULL, NULL);
+              "build/tests/too_small.test.private.pem", "label", NULL, NULL);
+}
+
+Test(format, contain_label, .init = cr_redirect_stdout, .timeout = 10)
+{
+    system("dd if=/dev/zero of=build/tests/contain_label.test.shlkfs bs=4096 "
+           "count=1000 2> /dev/null");
+
+    // Set the device (global variable) to the file (used by read/write_blocks)
+    set_device_path("build/tests/contain_label.test.shlkfs");
+
+    format_fs("build/tests/contain_label.test.shlkfs",
+              "build/tests/contain_label.test.pub.pem",
+              "build/tests/contain_label.test.private.pem", "label", NULL,
+              NULL);
+
+    // Read block HEADER_BLOCK_INDEX
+    struct CryptFS_Header *header =
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, CRYPTFS_BLOCK_SIZE_BYTES);
+    cr_assert(read_blocks(HEADER_BLOCK, 1, header) == 0);
+
+    // Check the content of the block
+    cr_assert_str_eq((char *)header->label, "label");
+
+    free(header);
+
+    // Delete the file
+    if (remove("build/tests/contain_label.test.shlkfs") != 0)
+    {
+        perror("Impossible to delete the file");
+        exit(EXIT_FAILURE);
+    }
+}
+
+Test(format, label_NULL, .init = cr_redirect_stdout, .timeout = 10)
+{
+    system("dd if=/dev/zero of=build/tests/label_NULL.test.shlkfs bs=4096 "
+           "count=1000 2> /dev/null");
+
+    // Set the device (global variable) to the file (used by read/write_blocks)
+    set_device_path("build/tests/label_NULL.test.shlkfs");
+
+    format_fs("build/tests/label_NULL.test.shlkfs",
+              "build/tests/label_NULL.test.pub.pem",
+              "build/tests/label_NULL.test.private.pem", NULL, NULL, NULL);
+
+    // Read block HEADER_BLOCK_INDEX
+    struct CryptFS_Header *header =
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, CRYPTFS_BLOCK_SIZE_BYTES);
+    cr_assert(read_blocks(HEADER_BLOCK, 1, header) == 0);
+
+    // Check the content of the block
+    cr_assert_str_empty((char *)header->label);
+
+    free(header);
+
+    // Delete the file
+    if (remove("build/tests/label_NULL.test.shlkfs") != 0)
+    {
+        perror("Impossible to delete the file");
+        exit(EXIT_FAILURE);
+    }
+}
+
+Test(format, label_higher_CRYPTFS_LABEL_SIZE, .init = cr_redirect_stdout,
+     .timeout = 10)
+{
+    system("dd if=/dev/zero "
+           "of=build/tests/label_higher_CRYPTFS_LABEL_SIZE.test.shlkfs bs=4096 "
+           "count=1000 2> /dev/null");
+
+    // Set the device (global variable) to the file (used by read/write_blocks)
+    set_device_path("build/tests/label_higher_CRYPTFS_LABEL_SIZE.test.shlkfs");
+
+    char label[CRYPTFS_LABEL_SIZE + 10] = { 'A' };
+    label[CRYPTFS_LABEL_SIZE + 9] = '\0';
+
+    format_fs("build/tests/label_higher_CRYPTFS_LABEL_SIZE.test.shlkfs",
+              "build/tests/label_higher_CRYPTFS_LABEL_SIZE.test.pub.pem",
+              "build/tests/label_higher_CRYPTFS_LABEL_SIZE.test.private.pem",
+              label, NULL, NULL);
+
+    // Read block HEADER_BLOCK_INDEX
+    struct CryptFS_Header *header =
+        xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, CRYPTFS_BLOCK_SIZE_BYTES);
+
+    cr_assert(read_blocks(HEADER_BLOCK, 1, header) == 0);
+
+    // Check the content of the block
+    cr_assert_arr_eq((char *)header->label, label, CRYPTFS_LABEL_SIZE);
+
+    // Check if no overflow
+    cr_assert_eq(header->last_fat_block, FIRST_FAT_BLOCK);
+
+    free(header);
+
+    // Delete the file
+    if (remove("build/tests/label_higher_CRYPTFS_LABEL_SIZE.test.shlkfs") != 0)
+    {
+        perror("Impossible to delete the file");
+        exit(EXIT_FAILURE);
+    }
 }

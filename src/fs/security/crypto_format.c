@@ -90,7 +90,7 @@ void store_keys_in_keys_storage(struct CryptFS_KeySlot *keys_storage,
                 != 1)
                 internal_error_exit("Failed to store RSA exponent\n",
                                     EXIT_FAILURE);
-            keys_storage[i].rsa_e = htonl(BN_get_word(exponent_bn));
+            keys_storage[i].rsa_e = BN_get_word(exponent_bn);
 
             // EVP_PKEY_encrypt CTX setup with the RSA keypair
             EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new(rsa_keypair, NULL);

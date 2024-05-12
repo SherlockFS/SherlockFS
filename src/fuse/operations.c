@@ -6,15 +6,13 @@
 #include "entries.h"
 #include "fuse_mount.h"
 #include "fuse_ps_info.h"
+#include "maths.h"
 #include "print.h"
 #include "xalloc.h"
-
-#define MIN(x, y) ((x) > (y) ? (y) : (x))
 
 void *cryptfs_init(struct fuse_conn_info *info)
 {
     print_debug(".init() called\n");
-    print_info("Mounting a SherlockFS filesystem instance...\n");
     print_debug("Using FUSE protocol %d.%d\n", info->proto_major,
                 info->proto_minor);
     print_debug("Max readahead: %d\n", info->max_readahead);

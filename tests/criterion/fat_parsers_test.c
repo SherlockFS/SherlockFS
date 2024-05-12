@@ -21,8 +21,8 @@ Test(find_first_free_block, out_of_band_available, .timeout = 10,
 
     format_fs("build/tests/find_first_free_block.not_found.test.shlkfs",
               "build/tests/find_first_free_block.not_found.public.pem",
-              "build/tests/find_first_free_block.not_found.private.pem", NULL,
-              NULL);
+              "build/tests/find_first_free_block.not_found.private.pem",
+              "label", NULL, NULL);
 
     struct CryptFS_FAT first_fat = { 0 };
     for (unsigned i = 0; i < NB_FAT_ENTRIES_PER_BLOCK; i++)
@@ -58,7 +58,7 @@ Test(find_first_free_block, on_first_fat, .timeout = 10,
     format_fs("build/tests/find_first_free_block.on_first_fat.test.shlkfs",
               "build/tests/find_first_free_block.on_first_fat.public.pem",
               "build/tests/find_first_free_block.on_first_fat.private.pem",
-              NULL, NULL);
+              "label", NULL, NULL);
 
     struct CryptFS *shlkfs =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1, sizeof(struct CryptFS));
@@ -106,7 +106,7 @@ Test(find_first_free_block, on_second_fat, .timeout = 10,
     format_fs("build/tests/find_first_free_block.on_second_fat.test.shlkfs",
               "build/tests/find_first_free_block.on_second_fat.public.pem",
               "build/tests/find_first_free_block.on_second_fat.private.pem",
-              NULL, NULL);
+              "label", NULL, NULL);
 
     struct CryptFS *shlkfs =
         xaligned_calloc(CRYPTFS_BLOCK_SIZE_BYTES, 1,
@@ -163,7 +163,7 @@ Test(find_first_free_block_safe, not_found, .timeout = 10,
     format_fs("build/tests/find_first_free_block_safe.not_found.test.shlkfs",
               "build/tests/find_first_free_block_safe.not_found.public.pem",
               "build/tests/find_first_free_block_safe.not_found.private.pem",
-              NULL, NULL);
+              "label", NULL, NULL);
 
     struct CryptFS_FAT first_fat = { 0 };
     for (unsigned i = 0; i < NB_FAT_ENTRIES_PER_BLOCK; i++)
@@ -204,7 +204,8 @@ Test(create_fat, two_fat_overflow_then_add_one_fat, .init = cr_redirect_stdout,
 
     format_fs("build/tests/create_fat.second_fat.test.shlkfs",
               "build/tests/create_fat.second_fat.public.pem",
-              "build/tests/create_fat.second_fat.private.pem", NULL, NULL);
+              "build/tests/create_fat.second_fat.private.pem", "label", NULL,
+              NULL);
 
     // Reading the structure from the file
     unsigned char *ase_key =
@@ -251,7 +252,8 @@ Test(create_fat, third_fat, .init = cr_redirect_stdout, .timeout = 10)
 
     format_fs("build/tests/create_fat.third_fat.test.shlkfs",
               "build/tests/create_fat.third_fat.public.pem",
-              "build/tests/create_fat.third_fat.private.pem", NULL, NULL);
+              "build/tests/create_fat.third_fat.private.pem", "label", NULL,
+              NULL);
 
     FILE *fp = fopen("build/tests/create_fat.third_fat.test.shlkfs", "r");
     if (fread(shlkfs, sizeof(struct CryptFS), 1, fp) != 1)

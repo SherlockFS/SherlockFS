@@ -73,19 +73,4 @@ const unsigned char *fpi_get_master_key();
  */
 void fpi_clear_decoded_key();
 
-/**
- * @brief Sets the current directory block for the file system into memory.
- *
- * @param block The block number to set.
- */
-void fpi_set_current_directory_block(block_t block);
-
-/**
- @brief Retrieves the current directory block of the file system from memory.
- *
- * @param info The file system's persistent information structure.
- * @return The current directory block number.
- */
-block_t fpi_get_current_directory_block();
-
 #endif /* FUSE_PS_INFO_H */
