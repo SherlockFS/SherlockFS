@@ -1,20 +1,38 @@
 #include "block.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "cryptfs.h"
 #include "crypto.h"
+#include "print.h"
 #include "xalloc.h"
 
 const char *DEVICE_PATH = NULL;
-uint32_t BLOCK_SIZE = 0;
 
 void set_device_path(const char *path)
 {
     assert(path != NULL);
     DEVICE_PATH = path;
+
+    // Create file (if not created)
+    FILE *tmp_file = fopen(path, "r+");
+    if (!tmp_file)
+        error_exit("Impossible to open the device '%s': %s\n", EXIT_FAILURE,
+                   path, strerror(errno));
+
+    // Check file size
+    fseek(tmp_file, 0, SEEK_END);
+    size_t file_size = ftell(tmp_file);
+    if (file_size < sizeof(struct CryptFS))
+        error_exit(
+            "The device '%s' is too small to be a SherlockFS filesystem\n",
+            EXIT_FAILURE, path);
+
+    fseek(tmp_file, 0, SEEK_SET);
+    fclose(tmp_file);
 }
 
 const char *get_device_path()
@@ -23,123 +41,174 @@ const char *get_device_path()
     return DEVICE_PATH;
 }
 
-void set_block_size(const uint32_t size)
-{
-    assert(size >= CRYPTFS_BLOCK_SIZE_BYTES);
-    BLOCK_SIZE = size;
-}
-
-uint32_t get_block_size()
-{
-    assert(BLOCK_SIZE >= CRYPTFS_BLOCK_SIZE_BYTES);
-    return BLOCK_SIZE;
-}
-
 int read_blocks(block_t start_block, size_t nb_blocks, void *buffer)
 {
     assert(DEVICE_PATH != NULL);
-    assert(BLOCK_SIZE != 0);
 
     if (nb_blocks == 0)
         return 0;
     if (!buffer)
-        return -1;
+        return BLOCK_ERROR;
 
     FILE *file = fopen(DEVICE_PATH, "r");
     if (!file)
-        return -1;
+    {
+        error_exit("fopen '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
+                   strerror(errno));
+        return BLOCK_ERROR;
+    }
 
-    if (fseek(file, start_block * BLOCK_SIZE, SEEK_SET) != 0)
-        return -1;
+    if (fseek(file, start_block * CRYPTFS_BLOCK_SIZE_BYTES, SEEK_SET) != 0)
+    {
+        print_error("fseek '%s' failed: %s\n", EXIT_FAILURE, DEVICE_PATH,
+                    strerror(errno));
+        return BLOCK_ERROR;
+    }
 
     size_t read = 0;
     while (read < nb_blocks)
     {
-        size_t n = fread(buffer + read * get_block_size(), get_block_size(),
-                         nb_blocks - read, file);
+        size_t n = fread(buffer + read * CRYPTFS_BLOCK_SIZE_BYTES,
+                         CRYPTFS_BLOCK_SIZE_BYTES, nb_blocks - read, file);
         if (n == 0)
-            return -1;
+        {
+            // Glitch: if you can read at a non existing offset, try to right at
+            // this one, then try again
+            write_blocks(start_block + read, 1,
+                         buffer + read * CRYPTFS_BLOCK_SIZE_BYTES);
+            n = fread(buffer + read * CRYPTFS_BLOCK_SIZE_BYTES,
+                      CRYPTFS_BLOCK_SIZE_BYTES, nb_blocks - read, file);
+
+            // If still cannot, this is a real error
+            if (n == 0)
+            {
+                print_error(
+                    "Fail to read '%lu' blocks, starting at block '%lu' "
+                    "from '%s': %s\n",
+                    start_block, nb_blocks, DEVICE_PATH, strerror(errno));
+                return BLOCK_ERROR;
+            }
+        }
+
         read += n;
     }
 
     if (fclose(file) != 0)
-        return -1;
+        return BLOCK_ERROR;
 
     return 0;
 }
 
-int write_blocks(block_t start_block, size_t nb_blocks, void *buffer)
+int write_blocks(block_t start_block, size_t nb_blocks, const void *buffer)
 {
     assert(DEVICE_PATH != NULL);
-    assert(BLOCK_SIZE != 0);
 
     if (nb_blocks == 0)
         return 0;
     if (buffer == NULL)
-        return -1;
+        return BLOCK_ERROR;
 
     FILE *file = fopen(DEVICE_PATH, "r+");
-    if (file == NULL)
-        return -1;
+    if (!file)
+    {
+        print_error("fopen '%s' failed: %s\n", DEVICE_PATH, strerror(errno));
+        return BLOCK_ERROR;
+    }
 
-    if (fseek(file, start_block * get_block_size(), SEEK_SET) == -1)
-        return -1;
+    if (fseek(file, start_block * CRYPTFS_BLOCK_SIZE_BYTES, SEEK_SET) == -1)
+    {
+        print_error("fseek '%s' failed: %s\n", DEVICE_PATH, strerror(errno));
+        return BLOCK_ERROR;
+    }
 
     size_t written = 0;
     while (written < nb_blocks)
     {
-        size_t n = fwrite(buffer + written * get_block_size(), get_block_size(),
-                          nb_blocks - written, file);
+        size_t n = fwrite(buffer + written * CRYPTFS_BLOCK_SIZE_BYTES,
+                          CRYPTFS_BLOCK_SIZE_BYTES, nb_blocks - written, file);
         if (n == 0)
-            return -1;
+        {
+            print_error("Fail to write '%lu' blocks, starting at block '%lu' "
+                        "to '%s': %s\n",
+                        start_block, nb_blocks, DEVICE_PATH, strerror(errno));
+            return BLOCK_ERROR;
+        }
+
         written += n;
     }
 
     if (fclose(file) == -1)
-        return -1;
+        return BLOCK_ERROR;
 
     return 0;
 }
 
-int read_blocks_with_decryption(unsigned char *aes_key, block_t start_block,
-                                size_t nb_blocks, void *buffer)
+int read_blocks_with_decryption(const unsigned char *aes_key,
+                                block_t start_block, size_t nb_blocks,
+                                void *buffer)
 {
-    unsigned char *encrypted_buffer = xmalloc(nb_blocks, get_block_size());
+    unsigned char *encrypted_buffer =
+        xmalloc(nb_blocks, CRYPTFS_BLOCK_SIZE_BYTES);
     int read_blocks_res = read_blocks(start_block, nb_blocks, encrypted_buffer);
 
-    if (read_blocks_res == -1)
+    if (read_blocks_res < 0)
     {
         free(encrypted_buffer);
-        return -1;
+        return read_blocks_res;
     }
 
-    size_t useless_size = 0;
-    unsigned char *decrypted_buffer = aes_decrypt_data(
-        aes_key, encrypted_buffer, nb_blocks * get_block_size(), &useless_size);
-
-    if (decrypted_buffer == NULL)
+    unsigned char *decrypted_buffer = buffer;
+    for (size_t i = 0; i < nb_blocks; i++)
     {
-        free(encrypted_buffer);
-        free(decrypted_buffer);
-        return -1;
+        size_t useless_size = 0;
+        unsigned char *decrypted_block = aes_decrypt_data(
+            aes_key, encrypted_buffer + i * CRYPTFS_BLOCK_SIZE_BYTES,
+            CRYPTFS_BLOCK_SIZE_BYTES, &useless_size);
+
+        if (decrypted_block == NULL)
+        {
+            free(encrypted_buffer);
+            return -1;
+        }
+
+        memcpy(decrypted_buffer + i * CRYPTFS_BLOCK_SIZE_BYTES, decrypted_block,
+               CRYPTFS_BLOCK_SIZE_BYTES);
+        free(decrypted_block);
     }
 
-    memcpy(buffer, decrypted_buffer, nb_blocks * get_block_size());
     free(encrypted_buffer);
-    free(decrypted_buffer);
     return 0;
 }
 
-int write_blocks_with_encryption(unsigned char *aes_key, size_t start_block,
-                                 size_t nb_blocks, void *buffer)
+int write_blocks_with_encryption(const unsigned char *aes_key,
+                                 block_t start_block, size_t nb_blocks,
+                                 const void *buffer)
 {
-    size_t useless_size = 0;
-    unsigned char *encrypted_buffer = aes_encrypt_data(
-        aes_key, buffer, nb_blocks * get_block_size(), &useless_size);
-    if (encrypted_buffer == NULL)
-        return -1;
+    unsigned char *encrypted_buffer =
+        xmalloc(nb_blocks, CRYPTFS_BLOCK_SIZE_BYTES);
+
+    const unsigned char *unencrypted_buffer = buffer;
+    for (size_t i = 0; i < nb_blocks; i++)
+    {
+        size_t useless_size = 0;
+        unsigned char *encrypted_block = aes_encrypt_data(
+            aes_key, unencrypted_buffer + i * CRYPTFS_BLOCK_SIZE_BYTES,
+            CRYPTFS_BLOCK_SIZE_BYTES, &useless_size);
+
+        if (encrypted_block == NULL)
+        {
+            free(encrypted_buffer);
+            return -1;
+        }
+
+        memcpy(encrypted_buffer + i * CRYPTFS_BLOCK_SIZE_BYTES, encrypted_block,
+               CRYPTFS_BLOCK_SIZE_BYTES);
+        free(encrypted_block);
+    }
+
     int write_blocks_res =
         write_blocks(start_block, nb_blocks, encrypted_buffer);
+
     free(encrypted_buffer);
     return write_blocks_res;
 }

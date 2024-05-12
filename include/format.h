@@ -7,35 +7,45 @@
 #include "cryptfs.h"
 
 /**
- * @brief Check if the given file is a cryptfs file system.
+ * @brief Check if the given file is a valid CryptFS file system.
  *
- * @param file_path Path to the file to check.
- * @return true if the file is a cryptfs file system.
- * @return false if the file is not a cryptfs file system.
+ * @param device_path Path of the file to check.
+ * @return true if the device is a valid CryptFS file system.
+ * @return false if the device is not a valid CryptFS file system.
  */
-bool is_already_formatted(const char *file_path);
+bool is_already_formatted(const char *device_path);
 
 /**
  * @brief File the `struct CryptFS` structure when first formatting the
  * filesystem.
  *
- * @param cfs The `struct CryptFS` structure to fill.
- * @param rsa_passphrase The passphrase used to encrypt the RSA private key.
- * Set to NULL if no passphrase is needed.
+ * @param shlkfs The `struct CryptFS` structure to fill.
+ * @param label The label (name) of the filesystem.
+ * @param rsa_passphrase The passphrase used to encrypt the RSA private key on
+ * disk. Set to NULL if no passphrase is needed.
  * @param existing_rsa_keypair The RSA keypair to use.
+ * @param public_key_path The path where the public key will be stored.
+ * @param private_key_path The path where the private key will be stored.
  */
-void format_fill_filesystem_struct(struct CryptFS *cfs, char *rsa_passphrase,
-                                   EVP_PKEY *existing_rsa_keypair);
+void format_fill_filesystem_struct(struct CryptFS *shlkfs, const char *label,
+                                   char *rsa_passphrase,
+                                   EVP_PKEY *existing_rsa_keypair,
+                                   const char *public_key_path,
+                                   const char *private_key_path);
 
 /**
- * @brief Format the given file to a cryptfs file system.
+ * @brief Format the given device to a cryptfs file system.
  *
- * @param path The path to the file to format.
+ * @param path The path of the device to format.
+ * @param public_key_path The path where the public key will be stored.
+ * @param private_key_path The path where the private key will be stored.
+ * @param label The label (name) of the filesystem.
  * @param rsa_passphrase The passphrase used to encrypt the RSA private key.
  * Set to NULL if no passphrase is needed.
  * @param existing_rsa_keypair The existing RSA keypair to use.
  */
-void format_fs(const char *path, char *rsa_passphrase,
+void format_fs(const char *path, char *public_key_path, char *private_key_path,
+               const char *label, char *rsa_passphrase,
                EVP_PKEY *existing_rsa_keypair);
 
 /**

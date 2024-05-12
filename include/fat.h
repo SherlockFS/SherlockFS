@@ -6,43 +6,59 @@
 /**
  * @brief Find the first free block in the FAT table.
  *
- * @param first_fat The first block of the FAT linked-list.
- * @return int64_t The index of the first free block,
- * or FAT_BLOCK_ERROR first_fat is NULL or if an error occured.
+ * @param aes_key The AES key to use for in place decryption of the FAT tables.
+ *
+ * @return sblock_t The index of the first free block,
+ * or BLOCK_ERROR first_fat is NULL or if an error occured. In case of out
+ * of range, a negative value is returned (the absolute value is the index of
+ * the first out of range [and also available] block).
  */
-int64_t find_first_free_block(struct CryptFS_FAT *first_fat);
+sblock_t find_first_free_block(const unsigned char *aes_key);
+
+/**
+ * @brief Find the first safe free block in the FAT table, the difference with
+ * "find_first_free_block" is that it only return a positive block index as it
+ * initialize another FAT in case of out of range.
+ *
+ * @param aes_key The AES key to use for in place decryption of the FAT tables.
+ *
+ * @return sblock_t The index of the first free block.
+ */
+block_t find_first_free_block_safe(const unsigned char *aes_key);
 
 /**
  * @brief Append a FAT table to the FAT linked-list.
  *
+ * @param aes_key The AES key to use for in place decryption of the FAT tables.
+ *
  * @note The function still works if you pass any FAT table as first_fat
  * (not only the first one).
  *
- * @param first_fat A FAT table (can be any FAT table in the FAT linked-list).
- * @return int64_t The block where the new FAT is stored,
- * or FAT_BLOCK_ERROR if an error occurs.
+ * @return sblock_t The block where the new FAT is stored,
+ * or BLOCK_ERROR if an error occurs.
  */
-int64_t create_fat(struct CryptFS_FAT *any_fat);
+sblock_t create_fat(const unsigned char *aes_key);
 
 /**
  * @brief Write `value` to the FAT table at `offset` index.
  *
- * @param first_fat The first block of the FAT table.
+ * @param aes_key The AES key to use for in place decryption of the FAT tables.
  * @param offset The index of the FAT table to write to.
  * @param value The value to write.
- * @return int 0 on success, FAT_BLOCK_ERROR on error.
+ * @return int 0 on success, BLOCK_ERROR on error. FAT_INDEX_OOB in case of out
+ * of range.
  */
-int write_fat_offset(struct CryptFS_FAT *first_fat, uint64_t offset,
+int write_fat_offset(const unsigned char *aes_key, uint64_t offset,
                      uint64_t value);
 
 /**
  * @brief Read the value at `offset` index in the FAT table.
  *
- * @param first_fat The first block of the FAT table.
+ * @param aes_key The AES key to use for in place decryption of the FAT tables.
  * @param offset The index of the FAT table to read from.
- * @return int64_t The value at `offset` index in the FAT table. FAT_BLOCK_ERROR
- * on error.
+ * @return uint32_t The value at `offset` index in the FAT table. BLOCK_ERROR
+ * on error. FAT_INDEX_OOB in case of out of range.
  */
-int64_t read_fat_offset(struct CryptFS_FAT *first_fat, uint64_t offset);
+uint32_t read_fat_offset(const unsigned char *aes_key, uint64_t offset);
 
 #endif /* FAT_H */

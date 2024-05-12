@@ -70,7 +70,14 @@ dkms.conf
 *.xz
 *.rar
 
+# VS Code configuration files
+.vscode/c_cpp_properties.json
+.vscode/settings.json
+
 # Build files
 build/*
 logs/*
-*.cfs
+*.shlkfs
+
+# Private test file
+private_test_main.c

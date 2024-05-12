@@ -85,8 +85,7 @@ bool rsa_private_is_encrypted(const char *rsa_path)
     FILE *file = fopen(rsa_path, "r");
     if (!file)
         return false;
-    char line[sizeof(
-        "-----BEGIN ENCRYPTED PRIVATE KEY-----")];
+    char line[sizeof("-----BEGIN ENCRYPTED PRIVATE KEY-----")];
     bool is_private = false;
     if (fgets(line, sizeof(line), file))
         is_private = strstr(line, "ENCRYPTED");

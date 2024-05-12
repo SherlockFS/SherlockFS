@@ -1,11 +1,11 @@
 {
     "tasks": [
         {
-            "label": "make formater",
+            "label": "make shlkfs_formater",
             "type": "shell",
             "command": "/usr/bin/make",
             "args": [
-                "formater",
+                "shlkfs_formater",
                 "-j",
             ],
             "options": {
@@ -13,11 +13,23 @@
             }
         },
         {
-            "label": "make mount",
+            "label": "make shlkfs_mount",
             "type": "shell",
             "command": "/usr/bin/make",
             "args": [
-                "mount",
+                "shlkfs_mount",
+                "-j",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "make shlkfs_adduser",
+            "type": "shell",
+            "command": "/usr/bin/make",
+            "args": [
+                "shlkfs_adduser",
                 "-j",
             ],
             "options": {

@@ -1,6 +1,7 @@
 #include "hash.h"
 
 #include <errno.h>
+#include <openssl/core_names.h>
 #include <openssl/evp.h>
 #include <openssl/rsa.h>
 
@@ -8,9 +9,9 @@
 #include "print.h"
 #include "xalloc.h"
 
-unsigned char *sha256_data(void *data, size_t len_data)
+unsigned char *sha256_data(const void *data, size_t len_data)
 {
-    unsigned char *hash = xmalloc(EVP_MAX_MD_SIZE, 1);
+    unsigned char *hash = xmalloc(SHA256_DIGEST_LENGTH, 1);
 
     EVP_MD_CTX *sha256_ctx = EVP_MD_CTX_new();
     if (!sha256_ctx)

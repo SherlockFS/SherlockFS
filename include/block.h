@@ -3,13 +3,15 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <sys/types.h>
 
 typedef size_t block_t;
+typedef ssize_t sblock_t;
 
 /**
  * @brief Set the device path global variable.
  *
- * @param path The path to the device.
+ * @param path The path of the device.
  */
 void set_device_path(const char *path);
 
@@ -18,21 +20,7 @@ void set_device_path(const char *path);
  *
  * @return The device path global variable.
  */
-const char *get_device_path();
-
-/**
- * @brief Set the block size global variable.
- *
- * @param size The block size.
- */
-void set_block_size(const uint32_t size);
-
-/**
- * @brief Get the block size global variable.
- *
- * @return The block size global variable.
- */
-uint32_t get_block_size();
+const char *get_device_path(void);
 
 /**
  * @brief Read blocks from the device.
@@ -40,7 +28,7 @@ uint32_t get_block_size();
  * @param start_block The first block to read.
  * @param nb_blocks The number of blocks to read.
  * @param buffer The buffer to fill with the blocks.
- * (Must be allocated with at least get_block_size() * nb_blocks bytes)
+ * (Must be allocated with at least CRYPTFS_BLOCK_SIZE_BYTES * nb_blocks bytes)
  *
  * @return 0 on success, -1 on error.
  */
@@ -55,7 +43,7 @@ int read_blocks(block_t start_block, size_t nb_blocks, void *buffer);
  *
  * @return 0 on success, -1 on error.
  */
-int write_blocks(block_t start_block, size_t nb_blocks, void *buffer);
+int write_blocks(block_t start_block, size_t nb_blocks, const void *buffer);
 
 /**
  * @brief Read a block from the device and decrypt it.
@@ -66,8 +54,9 @@ int write_blocks(block_t start_block, size_t nb_blocks, void *buffer);
  * @param buffer The buffer to fill with the blocks.
  * @return int 0 on success, -1 on error.
  */
-int read_blocks_with_decryption(unsigned char *aes_key, block_t start_block,
-                                size_t nb_blocks, void *buffer);
+int read_blocks_with_decryption(const unsigned char *aes_key,
+                                block_t start_block, size_t nb_blocks,
+                                void *buffer);
 
 /**
  * @brief Write a block to the device and encrypt it.
@@ -78,7 +67,8 @@ int read_blocks_with_decryption(unsigned char *aes_key, block_t start_block,
  * @param buffer The buffer containing the blocks.
  * @return int 0 on success, -1 on error.
  */
-int write_blocks_with_encryption(unsigned char *aes_key, block_t start_block,
-                                 size_t nb_blocks, void *buffer);
+int write_blocks_with_encryption(const unsigned char *aes_key,
+                                 block_t start_block, size_t nb_blocks,
+                                 const void *buffer);
 
 #endif /* BLOCK_H */

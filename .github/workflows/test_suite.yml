@@ -1,4 +1,4 @@
-name: Test suite
+name: Suite de tests
 
 on:
   push:
@@ -7,28 +7,31 @@ on:
     branches: [main, dev]
 
 jobs:
-  test_suite:
+  check_formatting:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
+    
+      - name: Installation de `clang-format`
+        run: |
+          sudo apt update
+          sudo apt install clang-format -y
+      - name: Vérification du formatage des fichiers sources avec `clang-format`
+        run: |
+          bash ./.github/scripts/check_formatting.sh
 
-      - name: Downloading criterion package
-        run: sudo wget https://github.com/Snaipe/Criterion/releases/download/v2.3.3/criterion-v2.3.3-linux-x86_64.tar.bz2 -O /tmp/criterion.tar.bz2
+  test_suite:
+    runs-on: ubuntu-22.04
+    needs: [check_formatting]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v2
 
-      - name: Initializing tmp directory
-        run: sudo mkdir -p /tmp/criterion
-        
-      - name: Extracting criterion package
-        run: sudo tar -xjf /tmp/criterion.tar.bz2 -C /tmp/criterion
+      - name: Copie de la liste de sources APT Ubuntu 'noble'
+        run: sudo cp .github/apt_sources_list/ubuntu-noble.list /etc/apt/sources.list.d/
 
-      - name: Installing criterion package
-        run: sudo cp -r /tmp/criterion/criterion-v2.3.3/share/* /usr/local/share &&
-          sudo cp -r /tmp/criterion/criterion-v2.3.3/lib/* /usr/local/lib &&
-          sudo cp -r /tmp/criterion/criterion-v2.3.3/lib/* /usr/lib &&
-          sudo cp -r /tmp/criterion/criterion-v2.3.3/include/* /usr/local/include
+      - name: Installation des dépendances de SherlockFS
+        run: sudo bash dependencies.sh --with-tests
 
-      - name: Checking version of openssl
-        run: openssl version
-
-      - name: Running `make check`
-        run: make check
+      - name: Lancement de la suite de tests (`make check`)
+        run: make -j check
