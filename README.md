@@ -12,11 +12,11 @@
 
 ## Introduction
 
-SherlockFS est un système de fichiers chiffré, s'inspirant des principes de FAT et LUKS. Conçu pour plusieurs utilisateurs, il offre une solution sécurisée pour le stockage de fichiers sur un périphérique. La version actuelle (v1) de SherlockFS est une implémentation logicielle basée sur FUSE, bien qu'elle soit encore en cours de développement.
+SherlockFS est un système de fichiers chiffré, s'inspirant des principes de FAT et LUKS. Conçu pour plusieurs utilisateurs, il offre une solution sécurisée pour le stockage de fichiers sur un périphérique. La version actuelle (v1) de SherlockFS est une implémentation logicielle basée sur FUSE.
 
 ## Fonctionnalités
 
-Actuellement, SherlockFS propose deux outils principaux :
+Actuellement, SherlockFS propose quatre outils principaux :
 
 1. `shlkfs_formater` : Utilisé pour initialiser un périphérique avec le système de fichiers SherlockFS.
 2. `shlkfs_mount` : Permet de monter un système de fichiers formaté en SherlockFS.
@@ -32,6 +32,7 @@ Avant de démarrer, il est nécessaire d'installer les dépendances. Exécutez `
 Pour compiler les programmes :
 
 - `make` : Compile tous les programmes.
+- `make no_debug` : Compile tous les programmes, sans les informations de débogage.
 - `make shlkfs_formater` : Compile uniquement le programme `shlkfs_formater`.
 - `make shlkfs_mount` : Compile uniquement le programme `shlkfs_mount`.
 - `make shlkfs_adduser` : Compile uniquement le programme `shlkfs_adduser`.
@@ -54,7 +55,7 @@ SherlockFS v1 - Format a device
         Usage: ./build/shlkfs_formater <device> [label]
 ```
 
-`shlkfs_formater` permet d'initialiser un périphérique avec le système de fichiers SherlockFS. Il prend en paramètre le chemin vers le périphérique à formater, et éventuellement un label (nom du système de fichiers). Le périphérique peut être vide mais doit être non monté. Si le périphérique est déjà formaté avec SherlockFS, il vous sera demandé si vous souhaitez le reformater.
+`shlkfs_formater` permet d'initialiser un périphérique avec le système de fichiers SherlockFS. Il prend en paramètre le chemin vers le périphérique à formater, et éventuellement un label (nom du système de fichiers). Si le périphérique est déjà formaté avec SherlockFS, il vous sera demandé si vous souhaitez le reformater.
 
 Une fois le formatage effectué, les clés publiques et privées utisées lors du formatage seront sauvegardées dans le dossier `~/.sherlockfs` (`public.pem` et `private.pem`). Ces clés sont nécessaires pour monter le périphérique et ajouter de nouveaux utilisateurs au système de fichiers. **Il est donc important de les conserver en lieu sûr et de ne pas les perdre.**
 
@@ -67,9 +68,9 @@ SherlockFS v1 - Mounting a SherlockFS file system
         Usage: ./build/shlkfs_mount [-k|--key <PRIVATE KEY PATH>] [-v|--verbose] <DEVICE> [FUSE OPTIONS] <MOUNTPOINT>
 ```
 
-`shlkfs_mount` permet de monter un système de fichiers formaté en SherlockFS. Il prend plusieurs paramètres :
+`shlkfs_mount` permet de monter un système de fichiers formaté en SherlockFS avec FUSE. Il prend plusieurs paramètres :
 
-- `-k` ou `--key` : Le chemin vers la clé privée à utiliser pour le montage. Cette clé doit correspondre à une clé enregistrée sur le périphérique. Si cette option n'est pas spécifiée, `shlkfs_mount` cherchera à utiliser la clé privée stockée dans `~/.sherlockfs/`.
+- `-k` ou `--key` : Le chemin vers la clé privée à utiliser pour le montage. Cette clé doit correspondre à une clé enregistrée sur le périphérique. Si cette option n'est pas spécifiée, `shlkfs_mount` cherchera à utiliser la clé privée `~/.sherlockfs/private.pem`.
 - `-v` ou `--verbose` : Active le mode verbeux, qui affiche des informations supplémentaires pendant toute la durée de vie du système de fichiers monté.
 - `<DEVICE>` : Le chemin vers le périphérique à monter. Ce périphérique doit être formaté avec SherlockFS.
 - `[FUSE OPTIONS]` : Des options supplémentaires pour FUSE, si nécessaire.
@@ -87,7 +88,7 @@ SherlockFS v1 - Adding user to device keys storage
         Usage: ./build/shlkfs_adduser <device> <other user public key path> [registred user private key path]
 ```
 
-`shlkfs_adduser` permet d'ajouter un nouvel utilisateur au système de fichiers. Il prend en paramètre le chemin vers le périphérique formaté avec SherlockFS, le chemin vers la clé publique de l'utilisateur à ajouter et éventuellement le chemin vers la clé privée d'un utilisateur déjà enregistré sur le périphérique. Si la clé privée n'est pas spécifiée, `shlkfs_adduser` cherchera à utiliser la clé privée de l'utilisateur courant (celui qui exécute le programme), dans le dossier `~/.sherlockfs/`.
+`shlkfs_adduser` permet d'ajouter un nouvel utilisateur au système de fichiers. Il prend en paramètre le chemin vers le périphérique formaté avec SherlockFS, le chemin vers la clé publique de l'utilisateur à ajouter et éventuellement le chemin vers la clé privée d'un utilisateur déjà enregistré sur le périphérique. Si la clé privée n'est pas spécifiée, `shlkfs_adduser` cherchera à utiliser la clé privée de l'utilisateur courant (celui qui exécute le programme): `~/.sherlockfs/private.pem`.
 
 ### `shlkfs_deluser`
 
@@ -96,7 +97,7 @@ SherlockFS v1 - Deleting user from device keys storage
         Usage: ./build/shlkfs_deluser <device> <deleting user public key path> [registred user private key path]
 ```
 
-`shlkfs_deluser` permet de supprimer un utilisateur du système de fichiers. Il prend en paramètre le chemin vers le périphérique formaté avec SherlockFS, le chemin vers la clé publique de l'utilisateur à supprimer et éventuellement le chemin vers la clé privée d'un utilisateur déjà enregistré sur le périphérique. Si la clé privée n'est pas spécifiée, `shlkfs_deluser` cherchera à utiliser la clé privée de l'utilisateur courant (celui qui exécute le programme), dans le dossier `~/.sherlockfs/`.
+`shlkfs_deluser` permet de supprimer un utilisateur du système de fichiers. Il prend en paramètre le chemin vers le périphérique formaté avec SherlockFS, le chemin vers la clé publique de l'utilisateur à supprimer et éventuellement le chemin vers la clé privée d'un utilisateur déjà enregistré sur le périphérique. Si la clé privée n'est pas spécifiée, `shlkfs_deluser` cherchera à utiliser la clé privée de l'utilisateur courant (celui qui exécute le programme): `~/.sherlockfs/private.pem`.
 
 ## Utilisation avec Docker
 
@@ -112,7 +113,7 @@ docker build -t shlkfs .
 
 > Cette image contient toutes les dépendances nécessaires pour compiler et exécuter SherlockFS.
 
-### Démarrage du conteneur Docker
+### Démarrage du conteneur de développement
 
 Pour démarrer un conteneur Docker avec l'image de SherlockFS, vous pouvez exécuter la commande suivante depuis la racine du dépôt du projet :
 
