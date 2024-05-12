@@ -20,7 +20,6 @@ struct fs_ps_info
     unsigned char xor_key[AES_KEY_SIZE_BYTES]; // master key XOR key
     unsigned char decoded_key[AES_KEY_SIZE_BYTES]; // Decoded key (must be
                                                    // zeroed after use)
-    block_t current_directory_block; // Current directory block number
 } __attribute__((packed));
 
 static struct fs_ps_info info = {
@@ -28,7 +27,6 @@ static struct fs_ps_info info = {
     .master_key = { 0 },
     .xor_key = { 0 },
     .decoded_key = { 0 },
-    .current_directory_block = ROOT_ENTRY_BLOCK,
 };
 
 void fpi_register_master_key_from_path(const char *device_path,
@@ -103,14 +101,4 @@ const unsigned char *fpi_get_master_key()
 void fpi_clear_decoded_key()
 {
     memset(info.decoded_key, 0, AES_KEY_SIZE_BYTES);
-}
-
-void fpi_set_current_directory_block(block_t block)
-{
-    info.current_directory_block = block;
-}
-
-block_t fpi_get_current_directory_block()
-{
-    return info.current_directory_block;
 }
