@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
         else
             error_exit("The private key is required. Please provide it using "
                        "the '-k' option or by storing it in "
-                       "~/.sherlockfs/private.pem\n",
+                       "~/.shlkfs/private.pem\n",
                        EXIT_FAILURE);
     }
 

@@ -100,12 +100,12 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, const char *label,
             internal_error_exit("Impossible to get the user directory path\n",
                                 EXIT_FAILURE);
 
-        // Add .sherlockfs to the user directory path
+        // Add .shlkfs to the user directory path
         char *public_key_path = xcalloc(PATH_MAX, sizeof(char));
         char *private_key_path = xcalloc(PATH_MAX, sizeof(char));
 
         strcat(public_key_path, user_dir_path);
-        strcat(public_key_path, "/.sherlockfs");
+        strcat(public_key_path, "/.shlkfs");
 
         // Create the directories
         if (mkdir(public_key_path, 0755) != 0 && errno != EEXIST)
@@ -115,9 +115,9 @@ void format_fill_filesystem_struct(struct CryptFS *shlkfs, const char *label,
         strcat(public_key_path, "/public.pem");
 
         strcat(private_key_path, user_dir_path);
-        strcat(private_key_path, "/.sherlockfs/private.pem");
+        strcat(private_key_path, "/.shlkfs/private.pem");
 
-        // Write the RSA public and private keys in ~/.sherlockfs/
+        // Write the RSA public and private keys in ~/.shlkfs/
         write_rsa_keys_on_disk(rsa_key, public_key_path, private_key_path,
                                rsa_passphrase);
 

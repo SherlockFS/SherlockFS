@@ -1,50 +1,62 @@
 {
     "tasks": [
         {
-            "label": "make shlkfs_formater",
+            "label": "make shlkfs.mkfs",
             "type": "shell",
             "command": "/usr/bin/make",
             "args": [
-                "shlkfs_formater",
+                "shlkfs.mkfs",
                 "-j",
             ],
             "options": {
+                "env": {
+                    "DEBUG": "1"
+                },
                 "cwd": "${workspaceFolder}"
             }
         },
         {
-            "label": "make shlkfs_mount",
+            "label": "make shlkfs.mount",
             "type": "shell",
             "command": "/usr/bin/make",
             "args": [
-                "shlkfs_mount",
+                "shlkfs.mount",
                 "-j",
             ],
             "options": {
+                "env": {
+                    "DEBUG": "1"
+                },
                 "cwd": "${workspaceFolder}"
             }
         },
         {
-            "label": "make shlkfs_adduser",
+            "label": "make shlkfs.useradd",
             "type": "shell",
             "command": "/usr/bin/make",
             "args": [
-                "shlkfs_adduser",
+                "shlkfs.useradd",
                 "-j",
             ],
             "options": {
+                "env": {
+                    "DEBUG": "1"
+                },
                 "cwd": "${workspaceFolder}"
             }
         },
         {
-            "label": "make test_main",
+            "label": "make shlkfs.tests.main",
             "type": "shell",
             "command": "/usr/bin/make",
             "args": [
-                "test_main",
+                "shlkfs.tests.main",
                 "-j",
             ],
             "options": {
+                "env": {
+                    "DEBUG": "1"
+                },
                 "cwd": "${workspaceFolder}"
             }
         },

@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "test_main",
+            "name": "shlkfs.tests.main",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/test_main",
+            "program": "${workspaceFolder}/build/shlkfs.tests.main",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build",
@@ -27,17 +27,17 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "make test_main"
+            "preLaunchTask": "make shlkfs.tests.main"
         },
         {
-            "name": "shlkfs_formater",
+            "name": "shlkfs.mkfs",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/shlkfs_formater",
+            "program": "${workspaceFolder}/build/shlkfs.mkfs",
             "args": [
                 "${input:formatArg}"
             ],
-            "stopAtEntry": false,
+            "stopAtEntry": true,
             "cwd": "${workspaceFolder}/build",
             "environment": [],
             "externalConsole": false,
@@ -49,17 +49,19 @@
                     "ignoreFailures": true
                 },
             ],
-            "preLaunchTask": "make shlkfs_formater"
+            "preLaunchTask": "make shlkfs.mkfs"
         },
         {
-            "name": "shlkfs_mount",
+            "name": "shlkfs.mount",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/shlkfs_mount",
+            "program": "${workspaceFolder}/build/shlkfs.mount",
             "args": [
                 "-v",
                 "${input:mountDevice}",
                 "${input:mountFuseOptions}",
+                "-f",
+                "-s",
                 "${input:mountPoint}"
             ],
             "stopAtEntry": false,
@@ -79,13 +81,13 @@
                     "ignoreFailures": false
                 },
             ],
-            "preLaunchTask": "make shlkfs_mount"
+            "preLaunchTask": "make shlkfs.mount"
         },
         {
-            "name": "shlkfs_adduser",
+            "name": "shlkfs.useradd",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/shlkfs_adduser",
+            "program": "${workspaceFolder}/build/shlkfs.useradd",
             "args": [
                 "${input:mountDevice}",
                 "${input:publicKey}",
@@ -102,13 +104,13 @@
                     "ignoreFailures": true
                 },
             ],
-            "preLaunchTask": "make shlkfs_adduser"
+            "preLaunchTask": "make shlkfs.useradd"
         },
     ],
     "inputs": [
         {
             "id": "formatArg",
-            "description": "Fichier à shlkfs_formater",
+            "description": "Fichier à shlkfs.mkfs",
             "type": "promptString",
             "default": "test.shlkfs"
         },
@@ -128,7 +130,6 @@
             "id": "mountFuseOptions",
             "description": "Options de montage FUSE",
             "type": "promptString",
-            "default": "-f"
         },
         {
             "id": "publicKey",

@@ -95,13 +95,13 @@ void get_rsa_keys_home_paths(char **public_key_path, char **private_key_path)
     {
         *public_key_path = xcalloc(PATH_MAX + 1, sizeof(char));
         snprintf(*public_key_path, PATH_MAX, "%s/%s", home,
-                 ".sherlockfs/public.pem");
+                 ".shlkfs/public.pem");
     }
     if (private_key_path)
     {
         *private_key_path = xcalloc(PATH_MAX + 1, sizeof(char));
         snprintf(*private_key_path, PATH_MAX, "%s/%s", home,
-                 ".sherlockfs/private.pem");
+                 ".shlkfs/private.pem");
     }
 }
 
