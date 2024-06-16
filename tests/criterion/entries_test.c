@@ -1279,18 +1279,19 @@ Test(entry_create_symlink, bad_path_ascii, .timeout = 10,
 
 Test(get_entry_by_path, root, .init = cr_redirect_stdall, .timeout = 10)
 {
-    system("dd if=/dev/zero of=build/get_entry_by_path.root.test.shlkfs "
+    system("dd if=/dev/zero of=build/tests/get_entry_by_path.root.test.shlkfs "
            "bs=4096 count=100");
 
-    set_device_path("build/get_entry_by_path.root.test.shlkfs");
+    set_device_path("build/tests/get_entry_by_path.root.test.shlkfs");
 
-    format_fs("build/get_entry_by_path.root.test.shlkfs",
-              "build/get_entry_by_path.root.public.pem",
-              "build/get_entry_by_path.root.private.pem", "label", NULL, NULL);
+    format_fs("build/tests/get_entry_by_path.root.test.shlkfs",
+              "build/tests/get_entry_by_path.root.public.pem",
+              "build/tests/get_entry_by_path.root.private.pem", "label", NULL,
+              NULL);
 
     fpi_register_master_key_from_path(
-        "build/get_entry_by_path.root.test.shlkfs",
-        "build/get_entry_by_path.root.private.pem");
+        "build/tests/get_entry_by_path.root.test.shlkfs",
+        "build/tests/get_entry_by_path.root.private.pem");
 
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), "/");
@@ -1303,20 +1304,20 @@ Test(get_entry_by_path, root, .init = cr_redirect_stdall, .timeout = 10)
 
 Test(get_entry_by_path, not_existing, .init = cr_redirect_stdall, .timeout = 10)
 {
-    system(
-        "dd if=/dev/zero of=build/get_entry_by_path.not_existing.test.shlkfs "
-        "bs=4096 count=100");
+    system("dd if=/dev/zero "
+           "of=build/tests/get_entry_by_path.not_existing.test.shlkfs "
+           "bs=4096 count=100");
 
-    set_device_path("build/get_entry_by_path.not_existing.test.shlkfs");
+    set_device_path("build/tests/get_entry_by_path.not_existing.test.shlkfs");
 
-    format_fs("build/get_entry_by_path.not_existing.test.shlkfs",
-              "build/get_entry_by_path.not_existing.public.pem",
-              "build/get_entry_by_path.not_existing.private.pem", "label", NULL,
-              NULL);
+    format_fs("build/tests/get_entry_by_path.not_existing.test.shlkfs",
+              "build/tests/get_entry_by_path.not_existing.public.pem",
+              "build/tests/get_entry_by_path.not_existing.private.pem", "label",
+              NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/get_entry_by_path.not_existing.test.shlkfs",
-        "build/get_entry_by_path.not_existing.private.pem");
+        "build/tests/get_entry_by_path.not_existing.test.shlkfs",
+        "build/tests/get_entry_by_path.not_existing.private.pem");
 
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), "/not_existing");
@@ -1328,20 +1329,22 @@ Test(get_entry_by_path, not_existing_ending_slash, .init = cr_redirect_stdall,
      .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/get_entry_by_path.not_existing_ending_slash.test.shlkfs "
+           "of=build/tests/"
+           "get_entry_by_path.not_existing_ending_slash.test.shlkfs "
            "bs=4096 count=100");
 
     set_device_path(
-        "build/get_entry_by_path.not_existing_ending_slash.test.shlkfs");
+        "build/tests/get_entry_by_path.not_existing_ending_slash.test.shlkfs");
 
-    format_fs("build/get_entry_by_path.not_existing_ending_slash.test.shlkfs",
-              "build/get_entry_by_path.not_existing_ending_slash.public.pem",
-              "build/get_entry_by_path.not_existing_ending_slash.private.pem",
-              "label", NULL, NULL);
+    format_fs(
+        "build/tests/get_entry_by_path.not_existing_ending_slash.test.shlkfs",
+        "build/tests/get_entry_by_path.not_existing_ending_slash.public.pem",
+        "build/tests/get_entry_by_path.not_existing_ending_slash.private.pem",
+        "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/get_entry_by_path.not_existing_ending_slash.test.shlkfs",
-        "build/get_entry_by_path.not_existing_ending_slash.private.pem");
+        "build/tests/get_entry_by_path.not_existing_ending_slash.test.shlkfs",
+        "build/tests/get_entry_by_path.not_existing_ending_slash.private.pem");
 
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), "/not_existing/");
@@ -1353,19 +1356,20 @@ Test(get_entry_by_path, create_single_file, .init = cr_redirect_stdall,
      .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/get_entry_by_path.create_single_file.test.shlkfs "
+           "of=build/tests/get_entry_by_path.create_single_file.test.shlkfs "
            "bs=4096 count=100");
 
-    set_device_path("build/get_entry_by_path.create_single_file.test.shlkfs");
+    set_device_path(
+        "build/tests/get_entry_by_path.create_single_file.test.shlkfs");
 
-    format_fs("build/get_entry_by_path.create_single_file.test.shlkfs",
-              "build/get_entry_by_path.create_single_file.public.pem",
-              "build/get_entry_by_path.create_single_file.private.pem", "label",
-              NULL, NULL);
+    format_fs("build/tests/get_entry_by_path.create_single_file.test.shlkfs",
+              "build/tests/get_entry_by_path.create_single_file.public.pem",
+              "build/tests/get_entry_by_path.create_single_file.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/get_entry_by_path.create_single_file.test.shlkfs",
-        "build/get_entry_by_path.create_single_file.private.pem");
+        "build/tests/get_entry_by_path.create_single_file.test.shlkfs",
+        "build/tests/get_entry_by_path.create_single_file.private.pem");
 
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), "/");
@@ -1392,19 +1396,20 @@ Test(get_entry_by_path, create_two_file, .init = cr_redirect_stdall,
      .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/get_entry_by_path.create_two_file.test.shlkfs "
+           "of=build/tests/get_entry_by_path.create_two_file.test.shlkfs "
            "bs=4096 count=100");
 
-    set_device_path("build/get_entry_by_path.create_two_file.test.shlkfs");
+    set_device_path(
+        "build/tests/get_entry_by_path.create_two_file.test.shlkfs");
 
-    format_fs("build/get_entry_by_path.create_two_file.test.shlkfs",
-              "build/get_entry_by_path.create_two_file.public.pem",
-              "build/get_entry_by_path.create_two_file.private.pem", "label",
-              NULL, NULL);
+    format_fs("build/tests/get_entry_by_path.create_two_file.test.shlkfs",
+              "build/tests/get_entry_by_path.create_two_file.public.pem",
+              "build/tests/get_entry_by_path.create_two_file.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/get_entry_by_path.create_two_file.test.shlkfs",
-        "build/get_entry_by_path.create_two_file.private.pem");
+        "build/tests/get_entry_by_path.create_two_file.test.shlkfs",
+        "build/tests/get_entry_by_path.create_two_file.private.pem");
 
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), "/");
@@ -1438,22 +1443,27 @@ Test(get_entry_by_path, create_one_file_one_non_existing,
      .init = cr_redirect_stdall, .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/"
+           "of=build/tests/"
            "get_entry_by_path.create_one_file_one_non_existing.test.shlkfs "
            "bs=4096 count=100");
 
     set_device_path(
-        "build/get_entry_by_path.create_one_file_one_non_existing.test.shlkfs");
+        "build/tests/"
+        "get_entry_by_path.create_one_file_one_non_existing.test.shlkfs");
 
-    format_fs(
-        "build/get_entry_by_path.create_one_file_one_non_existing.test.shlkfs",
-        "build/get_entry_by_path.create_one_file_one_non_existing.public.pem",
-        "build/get_entry_by_path.create_one_file_one_non_existing.private.pem",
-        "label", NULL, NULL);
+    format_fs("build/tests/"
+              "get_entry_by_path.create_one_file_one_non_existing.test.shlkfs",
+              "build/tests/"
+              "get_entry_by_path.create_one_file_one_non_existing.public.pem",
+              "build/tests/"
+              "get_entry_by_path.create_one_file_one_non_existing.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/get_entry_by_path.create_one_file_one_non_existing.test.shlkfs",
-        "build/get_entry_by_path.create_one_file_one_non_existing.private.pem");
+        "build/tests/"
+        "get_entry_by_path.create_one_file_one_non_existing.test.shlkfs",
+        "build/tests/"
+        "get_entry_by_path.create_one_file_one_non_existing.private.pem");
 
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), "/");
@@ -1475,19 +1485,20 @@ Test(get_entry_by_path, create_one_directory, .init = cr_redirect_stdall,
      .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/get_entry_by_path.create_one_directory.test.shlkfs "
+           "of=build/tests/get_entry_by_path.create_one_directory.test.shlkfs "
            "bs=4096 count=100");
 
-    set_device_path("build/get_entry_by_path.create_one_directory.test.shlkfs");
+    set_device_path(
+        "build/tests/get_entry_by_path.create_one_directory.test.shlkfs");
 
-    format_fs("build/get_entry_by_path.create_one_directory.test.shlkfs",
-              "build/get_entry_by_path.create_one_directory.public.pem",
-              "build/get_entry_by_path.create_one_directory.private.pem",
+    format_fs("build/tests/get_entry_by_path.create_one_directory.test.shlkfs",
+              "build/tests/get_entry_by_path.create_one_directory.public.pem",
+              "build/tests/get_entry_by_path.create_one_directory.private.pem",
               "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/get_entry_by_path.create_one_directory.test.shlkfs",
-        "build/get_entry_by_path.create_one_directory.private.pem");
+        "build/tests/get_entry_by_path.create_one_directory.test.shlkfs",
+        "build/tests/get_entry_by_path.create_one_directory.private.pem");
 
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), "/");
@@ -1512,23 +1523,26 @@ Test(get_entry_by_path, create_one_directory_ending_slash,
      .init = cr_redirect_stdall, .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/"
+           "of=build/tests/"
            "get_entry_by_path.create_one_directory_ending_slash.test.shlkfs "
            "bs=4096 count=100");
 
     set_device_path(
-        "build/"
+        "build/tests/"
         "get_entry_by_path.create_one_directory_ending_slash.test.shlkfs");
 
-    format_fs(
-        "build/get_entry_by_path.create_one_directory_ending_slash.test.shlkfs",
-        "build/get_entry_by_path.create_one_directory_ending_slash.public.pem",
-        "build/get_entry_by_path.create_one_directory_ending_slash.private.pem",
-        "label", NULL, NULL);
+    format_fs("build/tests/"
+              "get_entry_by_path.create_one_directory_ending_slash.test.shlkfs",
+              "build/tests/"
+              "get_entry_by_path.create_one_directory_ending_slash.public.pem",
+              "build/tests/"
+              "get_entry_by_path.create_one_directory_ending_slash.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/get_entry_by_path.create_one_directory_ending_slash.test.shlkfs",
-        "build/"
+        "build/tests/"
+        "get_entry_by_path.create_one_directory_ending_slash.test.shlkfs",
+        "build/tests/"
         "get_entry_by_path.create_one_directory_ending_slash.private.pem");
 
     struct CryptFS_Entry_ID *entry_id =
@@ -1554,19 +1568,20 @@ Test(get_entry_by_path, create_two_directory, .init = cr_redirect_stdall,
      .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/get_entry_by_path.create_two_directory.test.shlkfs "
+           "of=build/tests/get_entry_by_path.create_two_directory.test.shlkfs "
            "bs=4096 count=100");
 
-    set_device_path("build/get_entry_by_path.create_two_directory.test.shlkfs");
+    set_device_path(
+        "build/tests/get_entry_by_path.create_two_directory.test.shlkfs");
 
-    format_fs("build/get_entry_by_path.create_two_directory.test.shlkfs",
-              "build/get_entry_by_path.create_two_directory.public.pem",
-              "build/get_entry_by_path.create_two_directory.private.pem",
+    format_fs("build/tests/get_entry_by_path.create_two_directory.test.shlkfs",
+              "build/tests/get_entry_by_path.create_two_directory.public.pem",
+              "build/tests/get_entry_by_path.create_two_directory.private.pem",
               "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/get_entry_by_path.create_two_directory.test.shlkfs",
-        "build/get_entry_by_path.create_two_directory.private.pem");
+        "build/tests/get_entry_by_path.create_two_directory.test.shlkfs",
+        "build/tests/get_entry_by_path.create_two_directory.private.pem");
 
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), "/");
@@ -1600,19 +1615,20 @@ Test(get_entry_by_path, one_file_in_one_dir, .init = cr_redirect_stdall,
      .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/get_entry_by_path.one_file_in_one_dir.test.shlkfs "
+           "of=build/tests/get_entry_by_path.one_file_in_one_dir.test.shlkfs "
            "bs=4096 count=100");
 
-    set_device_path("build/get_entry_by_path.one_file_in_one_dir.test.shlkfs");
+    set_device_path(
+        "build/tests/get_entry_by_path.one_file_in_one_dir.test.shlkfs");
 
-    format_fs("build/get_entry_by_path.one_file_in_one_dir.test.shlkfs",
-              "build/get_entry_by_path.one_file_in_one_dir.public.pem",
-              "build/get_entry_by_path.one_file_in_one_dir.private.pem",
+    format_fs("build/tests/get_entry_by_path.one_file_in_one_dir.test.shlkfs",
+              "build/tests/get_entry_by_path.one_file_in_one_dir.public.pem",
+              "build/tests/get_entry_by_path.one_file_in_one_dir.private.pem",
               "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/get_entry_by_path.one_file_in_one_dir.test.shlkfs",
-        "build/get_entry_by_path.one_file_in_one_dir.private.pem");
+        "build/tests/get_entry_by_path.one_file_in_one_dir.test.shlkfs",
+        "build/tests/get_entry_by_path.one_file_in_one_dir.private.pem");
 
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), "/");
@@ -1655,19 +1671,20 @@ Test(get_entry_by_path, two_file_in_one_dir, .init = cr_redirect_stdall,
      .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/get_entry_by_path.two_file_in_one_dir.test.shlkfs "
+           "of=build/tests/get_entry_by_path.two_file_in_one_dir.test.shlkfs "
            "bs=4096 count=100");
 
-    set_device_path("build/get_entry_by_path.two_file_in_one_dir.test.shlkfs");
+    set_device_path(
+        "build/tests/get_entry_by_path.two_file_in_one_dir.test.shlkfs");
 
-    format_fs("build/get_entry_by_path.two_file_in_one_dir.test.shlkfs",
-              "build/get_entry_by_path.two_file_in_one_dir.public.pem",
-              "build/get_entry_by_path.two_file_in_one_dir.private.pem",
+    format_fs("build/tests/get_entry_by_path.two_file_in_one_dir.test.shlkfs",
+              "build/tests/get_entry_by_path.two_file_in_one_dir.public.pem",
+              "build/tests/get_entry_by_path.two_file_in_one_dir.private.pem",
               "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/get_entry_by_path.two_file_in_one_dir.test.shlkfs",
-        "build/get_entry_by_path.two_file_in_one_dir.private.pem");
+        "build/tests/get_entry_by_path.two_file_in_one_dir.test.shlkfs",
+        "build/tests/get_entry_by_path.two_file_in_one_dir.private.pem");
 
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), "/");
@@ -1710,19 +1727,20 @@ Test(get_entry_by_path, one_dir_in_one_dir, .init = cr_redirect_stdall,
      .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/get_entry_by_path.one_dir_in_one_dir.test.shlkfs "
+           "of=build/tests/get_entry_by_path.one_dir_in_one_dir.test.shlkfs "
            "bs=4096 count=100");
 
-    set_device_path("build/get_entry_by_path.one_dir_in_one_dir.test.shlkfs");
+    set_device_path(
+        "build/tests/get_entry_by_path.one_dir_in_one_dir.test.shlkfs");
 
-    format_fs("build/get_entry_by_path.one_dir_in_one_dir.test.shlkfs",
-              "build/get_entry_by_path.one_dir_in_one_dir.public.pem",
-              "build/get_entry_by_path.one_dir_in_one_dir.private.pem", "label",
-              NULL, NULL);
+    format_fs("build/tests/get_entry_by_path.one_dir_in_one_dir.test.shlkfs",
+              "build/tests/get_entry_by_path.one_dir_in_one_dir.public.pem",
+              "build/tests/get_entry_by_path.one_dir_in_one_dir.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/get_entry_by_path.one_dir_in_one_dir.test.shlkfs",
-        "build/get_entry_by_path.one_dir_in_one_dir.private.pem");
+        "build/tests/get_entry_by_path.one_dir_in_one_dir.test.shlkfs",
+        "build/tests/get_entry_by_path.one_dir_in_one_dir.private.pem");
 
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), "/");
@@ -1761,23 +1779,29 @@ Test(get_entry_by_path, one_dir_in_one_dir, .init = cr_redirect_stdall,
 Test(get_entry_by_path, one_dir_in_one_dir_ending_slash,
      .init = cr_redirect_stdall, .timeout = 10)
 {
-    system("dd if=/dev/zero "
-           "of=build/get_entry_by_path.one_dir_in_one_dir_ending_slash.test."
-           "shlkfs "
-           "bs=4096 count=100");
+    system(
+        "dd if=/dev/zero "
+        "of=build/tests/get_entry_by_path.one_dir_in_one_dir_ending_slash.test."
+        "shlkfs "
+        "bs=4096 count=100");
 
     set_device_path(
-        "build/get_entry_by_path.one_dir_in_one_dir_ending_slash.test.shlkfs");
+        "build/tests/"
+        "get_entry_by_path.one_dir_in_one_dir_ending_slash.test.shlkfs");
 
-    format_fs(
-        "build/get_entry_by_path.one_dir_in_one_dir_ending_slash.test.shlkfs",
-        "build/get_entry_by_path.one_dir_in_one_dir_ending_slash.public.pem",
-        "build/get_entry_by_path.one_dir_in_one_dir_ending_slash.private.pem",
-        "label", NULL, NULL);
+    format_fs("build/tests/"
+              "get_entry_by_path.one_dir_in_one_dir_ending_slash.test.shlkfs",
+              "build/tests/"
+              "get_entry_by_path.one_dir_in_one_dir_ending_slash.public.pem",
+              "build/tests/"
+              "get_entry_by_path.one_dir_in_one_dir_ending_slash.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/get_entry_by_path.one_dir_in_one_dir_ending_slash.test.shlkfs",
-        "build/get_entry_by_path.one_dir_in_one_dir_ending_slash.private.pem");
+        "build/tests/"
+        "get_entry_by_path.one_dir_in_one_dir_ending_slash.test.shlkfs",
+        "build/tests/"
+        "get_entry_by_path.one_dir_in_one_dir_ending_slash.private.pem");
 
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), "/");
@@ -1817,19 +1841,20 @@ Test(get_entry_by_path, two_dir_in_one_dir, .init = cr_redirect_stdall,
      .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/get_entry_by_path.two_dir_in_one_dir.test.shlkfs "
+           "of=build/tests/get_entry_by_path.two_dir_in_one_dir.test.shlkfs "
            "bs=4096 count=100");
 
-    set_device_path("build/get_entry_by_path.two_dir_in_one_dir.test.shlkfs");
+    set_device_path(
+        "build/tests/get_entry_by_path.two_dir_in_one_dir.test.shlkfs");
 
-    format_fs("build/get_entry_by_path.two_dir_in_one_dir.test.shlkfs",
-              "build/get_entry_by_path.two_dir_in_one_dir.public.pem",
-              "build/get_entry_by_path.two_dir_in_one_dir.private.pem", "label",
-              NULL, NULL);
+    format_fs("build/tests/get_entry_by_path.two_dir_in_one_dir.test.shlkfs",
+              "build/tests/get_entry_by_path.two_dir_in_one_dir.public.pem",
+              "build/tests/get_entry_by_path.two_dir_in_one_dir.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/get_entry_by_path.two_dir_in_one_dir.test.shlkfs",
-        "build/get_entry_by_path.two_dir_in_one_dir.private.pem");
+        "build/tests/get_entry_by_path.two_dir_in_one_dir.test.shlkfs",
+        "build/tests/get_entry_by_path.two_dir_in_one_dir.private.pem");
 
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), "/");
@@ -1882,22 +1907,27 @@ Test(get_entry_by_path, one_file_and_one_dir_in_one_dir,
      .init = cr_redirect_stdall, .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/"
+           "of=build/tests/"
            "get_entry_by_path.one_file_and_one_dir_in_one_dir.test.shlkfs "
            "bs=4096 count=100");
 
     set_device_path(
-        "build/get_entry_by_path.one_file_and_one_dir_in_one_dir.test.shlkfs");
+        "build/tests/"
+        "get_entry_by_path.one_file_and_one_dir_in_one_dir.test.shlkfs");
 
-    format_fs(
-        "build/get_entry_by_path.one_file_and_one_dir_in_one_dir.test.shlkfs",
-        "build/get_entry_by_path.one_file_and_one_dir_in_one_dir.public.pem",
-        "build/get_entry_by_path.one_file_and_one_dir_in_one_dir.private.pem",
-        "label", NULL, NULL);
+    format_fs("build/tests/"
+              "get_entry_by_path.one_file_and_one_dir_in_one_dir.test.shlkfs",
+              "build/tests/"
+              "get_entry_by_path.one_file_and_one_dir_in_one_dir.public.pem",
+              "build/tests/"
+              "get_entry_by_path.one_file_and_one_dir_in_one_dir.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/get_entry_by_path.one_file_and_one_dir_in_one_dir.test.shlkfs",
-        "build/get_entry_by_path.one_file_and_one_dir_in_one_dir.private.pem");
+        "build/tests/"
+        "get_entry_by_path.one_file_and_one_dir_in_one_dir.test.shlkfs",
+        "build/tests/"
+        "get_entry_by_path.one_file_and_one_dir_in_one_dir.private.pem");
 
     struct CryptFS_Entry_ID *entry_id =
         get_entry_by_path(fpi_get_master_key(), "/");
@@ -1948,19 +1978,20 @@ Test(get_entry_by_path, one_file_and_one_dir_in_one_dir,
 // create_file_by_path
 Test(create_file_by_path, root, .init = cr_redirect_stdall, .timeout = 10)
 {
-    system("dd if=/dev/zero of=build/create_file_by_path.root.test.shlkfs "
-           "bs=4096 count=100");
+    system(
+        "dd if=/dev/zero of=build/tests/create_file_by_path.root.test.shlkfs "
+        "bs=4096 count=100");
 
-    set_device_path("build/create_file_by_path.root.test.shlkfs");
+    set_device_path("build/tests/create_file_by_path.root.test.shlkfs");
 
-    format_fs("build/create_file_by_path.root.test.shlkfs",
-              "build/create_file_by_path.root.public.pem",
-              "build/create_file_by_path.root.private.pem", "label", NULL,
+    format_fs("build/tests/create_file_by_path.root.test.shlkfs",
+              "build/tests/create_file_by_path.root.public.pem",
+              "build/tests/create_file_by_path.root.private.pem", "label", NULL,
               NULL);
 
     fpi_register_master_key_from_path(
-        "build/create_file_by_path.root.test.shlkfs",
-        "build/create_file_by_path.root.private.pem");
+        "build/tests/create_file_by_path.root.test.shlkfs",
+        "build/tests/create_file_by_path.root.private.pem");
 
     // Create file and remember its entry ID
     struct CryptFS_Entry_ID *entry_id =
@@ -1987,20 +2018,20 @@ Test(create_file_by_path, root_already_exists, .init = cr_redirect_stdall,
      .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/create_file_by_path.root_already_exists.test.shlkfs "
+           "of=build/tests/create_file_by_path.root_already_exists.test.shlkfs "
            "bs=4096 count=100");
 
     set_device_path(
-        "build/create_file_by_path.root_already_exists.test.shlkfs");
+        "build/tests/create_file_by_path.root_already_exists.test.shlkfs");
 
-    format_fs("build/create_file_by_path.root_already_exists.test.shlkfs",
-              "build/create_file_by_path.root_already_exists.public.pem",
-              "build/create_file_by_path.root_already_exists.private.pem",
+    format_fs("build/tests/create_file_by_path.root_already_exists.test.shlkfs",
+              "build/tests/create_file_by_path.root_already_exists.public.pem",
+              "build/tests/create_file_by_path.root_already_exists.private.pem",
               "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/create_file_by_path.root_already_exists.test.shlkfs",
-        "build/create_file_by_path.root_already_exists.private.pem");
+        "build/tests/create_file_by_path.root_already_exists.test.shlkfs",
+        "build/tests/create_file_by_path.root_already_exists.private.pem");
 
     // Create file and remember its entry ID
     struct CryptFS_Entry_ID *entry_id =
@@ -2022,19 +2053,20 @@ Test(create_file_by_path, in_directory_file, .init = cr_redirect_stdall,
      .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/create_file_by_path.in_directory_file.test.shlkfs "
+           "of=build/tests/create_file_by_path.in_directory_file.test.shlkfs "
            "bs=4096 count=100");
 
-    set_device_path("build/create_file_by_path.in_directory_file.test.shlkfs");
+    set_device_path(
+        "build/tests/create_file_by_path.in_directory_file.test.shlkfs");
 
-    format_fs("build/create_file_by_path.in_directory_file.test.shlkfs",
-              "build/create_file_by_path.in_directory_file.public.pem",
-              "build/create_file_by_path.in_directory_file.private.pem",
+    format_fs("build/tests/create_file_by_path.in_directory_file.test.shlkfs",
+              "build/tests/create_file_by_path.in_directory_file.public.pem",
+              "build/tests/create_file_by_path.in_directory_file.private.pem",
               "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/create_file_by_path.in_directory_file.test.shlkfs",
-        "build/create_file_by_path.in_directory_file.private.pem");
+        "build/tests/create_file_by_path.in_directory_file.test.shlkfs",
+        "build/tests/create_file_by_path.in_directory_file.private.pem");
 
     struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
                                                            ROOT_ENTRY_BLOCK,
@@ -2072,19 +2104,19 @@ Test(create_file_by_path, in_directory_file, .init = cr_redirect_stdall,
 Test(create_directory_by_path, root, .init = cr_redirect_stdall, .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/create_directory_by_path.root.test.shlkfs "
+           "of=build/tests/create_directory_by_path.root.test.shlkfs "
            "bs=4096 count=100");
 
-    set_device_path("build/create_directory_by_path.root.test.shlkfs");
+    set_device_path("build/tests/create_directory_by_path.root.test.shlkfs");
 
-    format_fs("build/create_directory_by_path.root.test.shlkfs",
-              "build/create_directory_by_path.root.public.pem",
-              "build/create_directory_by_path.root.private.pem", "label", NULL,
-              NULL);
+    format_fs("build/tests/create_directory_by_path.root.test.shlkfs",
+              "build/tests/create_directory_by_path.root.public.pem",
+              "build/tests/create_directory_by_path.root.private.pem", "label",
+              NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/create_directory_by_path.root.test.shlkfs",
-        "build/create_directory_by_path.root.private.pem");
+        "build/tests/create_directory_by_path.root.test.shlkfs",
+        "build/tests/create_directory_by_path.root.private.pem");
 
     // Create directory and remember its entry ID
     struct CryptFS_Entry_ID *entry_id =
@@ -2111,20 +2143,22 @@ Test(create_directory_by_path, root_already_exists, .init = cr_redirect_stdall,
      .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/create_directory_by_path.root_already_exists.test.shlkfs "
+           "of=build/tests/"
+           "create_directory_by_path.root_already_exists.test.shlkfs "
            "bs=4096 count=100");
 
     set_device_path(
-        "build/create_directory_by_path.root_already_exists.test.shlkfs");
+        "build/tests/create_directory_by_path.root_already_exists.test.shlkfs");
 
-    format_fs("build/create_directory_by_path.root_already_exists.test.shlkfs",
-              "build/create_directory_by_path.root_already_exists.public.pem",
-              "build/create_directory_by_path.root_already_exists.private.pem",
-              "label", NULL, NULL);
+    format_fs(
+        "build/tests/create_directory_by_path.root_already_exists.test.shlkfs",
+        "build/tests/create_directory_by_path.root_already_exists.public.pem",
+        "build/tests/create_directory_by_path.root_already_exists.private.pem",
+        "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/create_directory_by_path.root_already_exists.test.shlkfs",
-        "build/create_directory_by_path.root_already_exists.private.pem");
+        "build/tests/create_directory_by_path.root_already_exists.test.shlkfs",
+        "build/tests/create_directory_by_path.root_already_exists.private.pem");
 
     // Create directory and remember its entry ID
     struct CryptFS_Entry_ID *entry_id =
@@ -2145,23 +2179,28 @@ Test(create_directory_by_path, root_already_exists, .init = cr_redirect_stdall,
 Test(create_directory_by_path, in_directory_directory,
      .init = cr_redirect_stdall, .timeout = 10)
 {
-    system(
-        "dd if=/dev/zero "
-        "of=build/create_directory_by_path.in_directory_directory.test.shlkfs "
-        "bs=4096 count=100");
+    system("dd if=/dev/zero "
+           "of=build/tests/"
+           "create_directory_by_path.in_directory_directory.test.shlkfs "
+           "bs=4096 count=100");
 
     set_device_path(
-        "build/create_directory_by_path.in_directory_directory.test.shlkfs");
+        "build/tests/"
+        "create_directory_by_path.in_directory_directory.test.shlkfs");
 
-    format_fs(
-        "build/create_directory_by_path.in_directory_directory.test.shlkfs",
-        "build/create_directory_by_path.in_directory_directory.public.pem",
-        "build/create_directory_by_path.in_directory_directory.private.pem",
-        "label", NULL, NULL);
+    format_fs("build/tests/"
+              "create_directory_by_path.in_directory_directory.test.shlkfs",
+              "build/tests/"
+              "create_directory_by_path.in_directory_directory.public.pem",
+              "build/tests/"
+              "create_directory_by_path.in_directory_directory.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/create_directory_by_path.in_directory_directory.test.shlkfs",
-        "build/create_directory_by_path.in_directory_directory.private.pem");
+        "build/tests/"
+        "create_directory_by_path.in_directory_directory.test.shlkfs",
+        "build/tests/"
+        "create_directory_by_path.in_directory_directory.private.pem");
 
     struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
                                                            ROOT_ENTRY_BLOCK,
@@ -2199,19 +2238,19 @@ Test(create_directory_by_path, in_directory_directory,
 Test(create_symlink_by_path, root, .init = cr_redirect_stdall, .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/create_symlink_by_path.root.test.shlkfs "
+           "of=build/tests/create_symlink_by_path.root.test.shlkfs "
            "bs=4096 count=100");
 
-    set_device_path("build/create_symlink_by_path.root.test.shlkfs");
+    set_device_path("build/tests/create_symlink_by_path.root.test.shlkfs");
 
-    format_fs("build/create_symlink_by_path.root.test.shlkfs",
-              "build/create_symlink_by_path.root.public.pem",
-              "build/create_symlink_by_path.root.private.pem", "label", NULL,
-              NULL);
+    format_fs("build/tests/create_symlink_by_path.root.test.shlkfs",
+              "build/tests/create_symlink_by_path.root.public.pem",
+              "build/tests/create_symlink_by_path.root.private.pem", "label",
+              NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/create_symlink_by_path.root.test.shlkfs",
-        "build/create_symlink_by_path.root.private.pem");
+        "build/tests/create_symlink_by_path.root.test.shlkfs",
+        "build/tests/create_symlink_by_path.root.private.pem");
 
     // Create symlink and remember its entry ID
     struct CryptFS_Entry_ID *entry_id = create_symlink_by_path(
@@ -2237,21 +2276,23 @@ Test(create_symlink_by_path, root, .init = cr_redirect_stdall, .timeout = 10)
 Test(create_symlink_by_path, root_already_exists, .init = cr_redirect_stdall,
      .timeout = 10)
 {
-    system("dd if=/dev/zero "
-           "of=build/create_symlink_by_path.root_already_exists.test.shlkfs "
-           "bs=4096 count=100");
+    system(
+        "dd if=/dev/zero "
+        "of=build/tests/create_symlink_by_path.root_already_exists.test.shlkfs "
+        "bs=4096 count=100");
 
     set_device_path(
-        "build/create_symlink_by_path.root_already_exists.test.shlkfs");
+        "build/tests/create_symlink_by_path.root_already_exists.test.shlkfs");
 
-    format_fs("build/create_symlink_by_path.root_already_exists.test.shlkfs",
-              "build/create_symlink_by_path.root_already_exists.public.pem",
-              "build/create_symlink_by_path.root_already_exists.private.pem",
-              "label", NULL, NULL);
+    format_fs(
+        "build/tests/create_symlink_by_path.root_already_exists.test.shlkfs",
+        "build/tests/create_symlink_by_path.root_already_exists.public.pem",
+        "build/tests/create_symlink_by_path.root_already_exists.private.pem",
+        "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/create_symlink_by_path.root_already_exists.test.shlkfs",
-        "build/create_symlink_by_path.root_already_exists.private.pem");
+        "build/tests/create_symlink_by_path.root_already_exists.test.shlkfs",
+        "build/tests/create_symlink_by_path.root_already_exists.private.pem");
 
     // Create symlink and remember its entry ID
     struct CryptFS_Entry_ID *entry_id = create_symlink_by_path(
@@ -2273,20 +2314,22 @@ Test(create_symlink_by_path, in_directory_symlink, .init = cr_redirect_stdall,
      .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/create_symlink_by_path.in_directory_symlink.test.shlkfs "
+           "of=build/tests/"
+           "create_symlink_by_path.in_directory_symlink.test.shlkfs "
            "bs=4096 count=100");
 
     set_device_path(
-        "build/create_symlink_by_path.in_directory_symlink.test.shlkfs");
+        "build/tests/create_symlink_by_path.in_directory_symlink.test.shlkfs");
 
-    format_fs("build/create_symlink_by_path.in_directory_symlink.test.shlkfs",
-              "build/create_symlink_by_path.in_directory_symlink.public.pem",
-              "build/create_symlink_by_path.in_directory_symlink.private.pem",
-              "label", NULL, NULL);
+    format_fs(
+        "build/tests/create_symlink_by_path.in_directory_symlink.test.shlkfs",
+        "build/tests/create_symlink_by_path.in_directory_symlink.public.pem",
+        "build/tests/create_symlink_by_path.in_directory_symlink.private.pem",
+        "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/create_symlink_by_path.in_directory_symlink.test.shlkfs",
-        "build/create_symlink_by_path.in_directory_symlink.private.pem");
+        "build/tests/create_symlink_by_path.in_directory_symlink.test.shlkfs",
+        "build/tests/create_symlink_by_path.in_directory_symlink.private.pem");
 
     struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
                                                            ROOT_ENTRY_BLOCK,
@@ -2325,19 +2368,19 @@ Test(create_symlink_by_path, in_directory_symlink, .init = cr_redirect_stdall,
 Test(create_hardlink_by_path, root, .init = cr_redirect_stdall, .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/create_hardlink_by_path.root.test.shlkfs "
+           "of=build/tests/create_hardlink_by_path.root.test.shlkfs "
            "bs=4096 count=100");
 
-    set_device_path("build/create_hardlink_by_path.root.test.shlkfs");
+    set_device_path("build/tests/create_hardlink_by_path.root.test.shlkfs");
 
-    format_fs("build/create_hardlink_by_path.root.test.shlkfs",
-              "build/create_hardlink_by_path.root.public.pem",
-              "build/create_hardlink_by_path.root.private.pem", "label", NULL,
-              NULL);
+    format_fs("build/tests/create_hardlink_by_path.root.test.shlkfs",
+              "build/tests/create_hardlink_by_path.root.public.pem",
+              "build/tests/create_hardlink_by_path.root.private.pem", "label",
+              NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/create_hardlink_by_path.root.test.shlkfs",
-        "build/create_hardlink_by_path.root.private.pem");
+        "build/tests/create_hardlink_by_path.root.test.shlkfs",
+        "build/tests/create_hardlink_by_path.root.private.pem");
 
     struct CryptFS_Entry_ID *entry_id =
         create_file_by_path(fpi_get_master_key(), "/test_hardlink_target");
@@ -2368,20 +2411,22 @@ Test(create_hardlink_by_path, root_already_exists, .init = cr_redirect_stdall,
      .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/create_hardlink_by_path.root_already_exists.test.shlkfs "
+           "of=build/tests/"
+           "create_hardlink_by_path.root_already_exists.test.shlkfs "
            "bs=4096 count=100");
 
     set_device_path(
-        "build/create_hardlink_by_path.root_already_exists.test.shlkfs");
+        "build/tests/create_hardlink_by_path.root_already_exists.test.shlkfs");
 
-    format_fs("build/create_hardlink_by_path.root_already_exists.test.shlkfs",
-              "build/create_hardlink_by_path.root_already_exists.public.pem",
-              "build/create_hardlink_by_path.root_already_exists.private.pem",
-              "label", NULL, NULL);
+    format_fs(
+        "build/tests/create_hardlink_by_path.root_already_exists.test.shlkfs",
+        "build/tests/create_hardlink_by_path.root_already_exists.public.pem",
+        "build/tests/create_hardlink_by_path.root_already_exists.private.pem",
+        "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/create_hardlink_by_path.root_already_exists.test.shlkfs",
-        "build/create_hardlink_by_path.root_already_exists.private.pem");
+        "build/tests/create_hardlink_by_path.root_already_exists.test.shlkfs",
+        "build/tests/create_hardlink_by_path.root_already_exists.private.pem");
 
     struct CryptFS_Entry_ID *entry_id =
         create_file_by_path(fpi_get_master_key(), "/test_hardlink_target");
@@ -2407,20 +2452,24 @@ Test(create_hardlink_by_path, in_directory_hardlink, .init = cr_redirect_stdall,
      .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/create_hardlink_by_path.in_directory_hardlink.test.shlkfs "
+           "of=build/tests/"
+           "create_hardlink_by_path.in_directory_hardlink.test.shlkfs "
            "bs=4096 count=100");
 
     set_device_path(
-        "build/create_hardlink_by_path.in_directory_hardlink.test.shlkfs");
+        "build/tests/"
+        "create_hardlink_by_path.in_directory_hardlink.test.shlkfs");
 
-    format_fs("build/create_hardlink_by_path.in_directory_hardlink.test.shlkfs",
-              "build/create_hardlink_by_path.in_directory_hardlink.public.pem",
-              "build/create_hardlink_by_path.in_directory_hardlink.private.pem",
-              "label", NULL, NULL);
+    format_fs(
+        "build/tests/create_hardlink_by_path.in_directory_hardlink.test.shlkfs",
+        "build/tests/create_hardlink_by_path.in_directory_hardlink.public.pem",
+        "build/tests/create_hardlink_by_path.in_directory_hardlink.private.pem",
+        "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/create_hardlink_by_path.in_directory_hardlink.test.shlkfs",
-        "build/create_hardlink_by_path.in_directory_hardlink.private.pem");
+        "build/tests/create_hardlink_by_path.in_directory_hardlink.test.shlkfs",
+        "build/tests/"
+        "create_hardlink_by_path.in_directory_hardlink.private.pem");
 
     struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
                                                            ROOT_ENTRY_BLOCK,
@@ -2463,19 +2512,19 @@ Test(create_hardlink_by_path, in_directory_hardlink, .init = cr_redirect_stdall,
 Test(delete_entry_by_path, root, .init = cr_redirect_stdall, .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/delete_entry_by_path.root.test.shlkfs "
+           "of=build/tests/delete_entry_by_path.root.test.shlkfs "
            "bs=4096 count=100");
 
-    set_device_path("build/delete_entry_by_path.root.test.shlkfs");
+    set_device_path("build/tests/delete_entry_by_path.root.test.shlkfs");
 
-    format_fs("build/delete_entry_by_path.root.test.shlkfs",
-              "build/delete_entry_by_path.root.public.pem",
-              "build/delete_entry_by_path.root.private.pem", "label", NULL,
-              NULL);
+    format_fs("build/tests/delete_entry_by_path.root.test.shlkfs",
+              "build/tests/delete_entry_by_path.root.public.pem",
+              "build/tests/delete_entry_by_path.root.private.pem", "label",
+              NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/delete_entry_by_path.root.test.shlkfs",
-        "build/delete_entry_by_path.root.private.pem");
+        "build/tests/delete_entry_by_path.root.test.shlkfs",
+        "build/tests/delete_entry_by_path.root.private.pem");
 
     free(create_file_by_path(fpi_get_master_key(), "/test_file"));
 
@@ -2494,19 +2543,20 @@ Test(delete_entry_by_path, root_not_exists, .init = cr_redirect_stdall,
      .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/delete_entry_by_path.root_not_exists.test.shlkfs "
+           "of=build/tests/delete_entry_by_path.root_not_exists.test.shlkfs "
            "bs=4096 count=100");
 
-    set_device_path("build/delete_entry_by_path.root_not_exists.test.shlkfs");
+    set_device_path(
+        "build/tests/delete_entry_by_path.root_not_exists.test.shlkfs");
 
-    format_fs("build/delete_entry_by_path.root_not_exists.test.shlkfs",
-              "build/delete_entry_by_path.root_not_exists.public.pem",
-              "build/delete_entry_by_path.root_not_exists.private.pem", "label",
-              NULL, NULL);
+    format_fs("build/tests/delete_entry_by_path.root_not_exists.test.shlkfs",
+              "build/tests/delete_entry_by_path.root_not_exists.public.pem",
+              "build/tests/delete_entry_by_path.root_not_exists.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/delete_entry_by_path.root_not_exists.test.shlkfs",
-        "build/delete_entry_by_path.root_not_exists.private.pem");
+        "build/tests/delete_entry_by_path.root_not_exists.test.shlkfs",
+        "build/tests/delete_entry_by_path.root_not_exists.private.pem");
 
     // Delete entry
     cr_assert_eq(delete_entry_by_path(fpi_get_master_key(), "/test_file"),
@@ -2524,19 +2574,20 @@ Test(delete_entry_by_path, in_directory_file, .init = cr_redirect_stdall,
      .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/delete_entry_by_path.in_directory_file.test.shlkfs "
+           "of=build/tests/delete_entry_by_path.in_directory_file.test.shlkfs "
            "bs=4096 count=100");
 
-    set_device_path("build/delete_entry_by_path.in_directory_file.test.shlkfs");
+    set_device_path(
+        "build/tests/delete_entry_by_path.in_directory_file.test.shlkfs");
 
-    format_fs("build/delete_entry_by_path.in_directory_file.test.shlkfs",
-              "build/delete_entry_by_path.in_directory_file.public.pem",
-              "build/delete_entry_by_path.in_directory_file.private.pem",
+    format_fs("build/tests/delete_entry_by_path.in_directory_file.test.shlkfs",
+              "build/tests/delete_entry_by_path.in_directory_file.public.pem",
+              "build/tests/delete_entry_by_path.in_directory_file.private.pem",
               "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/delete_entry_by_path.in_directory_file.test.shlkfs",
-        "build/delete_entry_by_path.in_directory_file.private.pem");
+        "build/tests/delete_entry_by_path.in_directory_file.test.shlkfs",
+        "build/tests/delete_entry_by_path.in_directory_file.private.pem");
 
     struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
                                                            ROOT_ENTRY_BLOCK,
@@ -2572,20 +2623,22 @@ Test(goto_used_entry_in_directory, all_used_files, .init = cr_redirect_stdall,
      .timeout = 10)
 {
     system("dd if=/dev/zero "
-           "of=build/goto_used_entry_in_directory.all_used_files.test.shlkfs "
+           "of=build/tests/"
+           "goto_used_entry_in_directory.all_used_files.test.shlkfs "
            "bs=4096 count=100");
 
     set_device_path(
-        "build/goto_used_entry_in_directory.all_used_files.test.shlkfs");
+        "build/tests/goto_used_entry_in_directory.all_used_files.test.shlkfs");
 
-    format_fs("build/goto_used_entry_in_directory.all_used_files.test.shlkfs",
-              "build/goto_used_entry_in_directory.all_used_files.public.pem",
-              "build/goto_used_entry_in_directory.all_used_files.private.pem",
-              "label", NULL, NULL);
+    format_fs(
+        "build/tests/goto_used_entry_in_directory.all_used_files.test.shlkfs",
+        "build/tests/goto_used_entry_in_directory.all_used_files.public.pem",
+        "build/tests/goto_used_entry_in_directory.all_used_files.private.pem",
+        "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/goto_used_entry_in_directory.all_used_files.test.shlkfs",
-        "build/goto_used_entry_in_directory.all_used_files.private.pem");
+        "build/tests/goto_used_entry_in_directory.all_used_files.test.shlkfs",
+        "build/tests/goto_used_entry_in_directory.all_used_files.private.pem");
 
     struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
                                                            ROOT_ENTRY_BLOCK,
@@ -2616,23 +2669,29 @@ Test(goto_used_entry_in_directory, all_used_files, .init = cr_redirect_stdall,
 Test(goto_used_entry_in_directory, first_file_deleted,
      .init = cr_redirect_stdall, .timeout = 10)
 {
-    system("dd if=/dev/zero "
-           "of=build/goto_used_entry_in_directory.first_file_deleted.test."
-           "shlkfs "
-           "bs=4096 count=100");
+    system(
+        "dd if=/dev/zero "
+        "of=build/tests/goto_used_entry_in_directory.first_file_deleted.test."
+        "shlkfs "
+        "bs=4096 count=100");
 
     set_device_path(
-        "build/goto_used_entry_in_directory.first_file_deleted.test.shlkfs");
+        "build/tests/"
+        "goto_used_entry_in_directory.first_file_deleted.test.shlkfs");
 
-    format_fs(
-        "build/goto_used_entry_in_directory.first_file_deleted.test.shlkfs",
-        "build/goto_used_entry_in_directory.first_file_deleted.public.pem",
-        "build/goto_used_entry_in_directory.first_file_deleted.private.pem",
-        "label", NULL, NULL);
+    format_fs("build/tests/"
+              "goto_used_entry_in_directory.first_file_deleted.test.shlkfs",
+              "build/tests/"
+              "goto_used_entry_in_directory.first_file_deleted.public.pem",
+              "build/tests/"
+              "goto_used_entry_in_directory.first_file_deleted.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/goto_used_entry_in_directory.first_file_deleted.test.shlkfs",
-        "build/goto_used_entry_in_directory.first_file_deleted.private.pem");
+        "build/tests/"
+        "goto_used_entry_in_directory.first_file_deleted.test.shlkfs",
+        "build/tests/"
+        "goto_used_entry_in_directory.first_file_deleted.private.pem");
 
     struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
                                                            ROOT_ENTRY_BLOCK,
@@ -2671,23 +2730,29 @@ Test(goto_used_entry_in_directory, first_file_deleted,
 Test(goto_used_entry_in_directory, second_file_deleted,
      .init = cr_redirect_stdall, .timeout = 10)
 {
-    system("dd if=/dev/zero "
-           "of=build/goto_used_entry_in_directory.second_file_deleted.test."
-           "shlkfs "
-           "bs=4096 count=100");
+    system(
+        "dd if=/dev/zero "
+        "of=build/tests/goto_used_entry_in_directory.second_file_deleted.test."
+        "shlkfs "
+        "bs=4096 count=100");
 
     set_device_path(
-        "build/goto_used_entry_in_directory.second_file_deleted.test.shlkfs");
+        "build/tests/"
+        "goto_used_entry_in_directory.second_file_deleted.test.shlkfs");
 
-    format_fs(
-        "build/goto_used_entry_in_directory.second_file_deleted.test.shlkfs",
-        "build/goto_used_entry_in_directory.second_file_deleted.public.pem",
-        "build/goto_used_entry_in_directory.second_file_deleted.private.pem",
-        "label", NULL, NULL);
+    format_fs("build/tests/"
+              "goto_used_entry_in_directory.second_file_deleted.test.shlkfs",
+              "build/tests/"
+              "goto_used_entry_in_directory.second_file_deleted.public.pem",
+              "build/tests/"
+              "goto_used_entry_in_directory.second_file_deleted.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/goto_used_entry_in_directory.second_file_deleted.test.shlkfs",
-        "build/goto_used_entry_in_directory.second_file_deleted.private.pem");
+        "build/tests/"
+        "goto_used_entry_in_directory.second_file_deleted.test.shlkfs",
+        "build/tests/"
+        "goto_used_entry_in_directory.second_file_deleted.private.pem");
 
     struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
                                                            ROOT_ENTRY_BLOCK,
@@ -2726,23 +2791,29 @@ Test(goto_used_entry_in_directory, second_file_deleted,
 Test(goto_used_entry_in_directory, third_file_deleted,
      .init = cr_redirect_stdall, .timeout = 10)
 {
-    system("dd if=/dev/zero "
-           "of=build/goto_used_entry_in_directory.third_file_deleted.test."
-           "shlkfs "
-           "bs=4096 count=100");
+    system(
+        "dd if=/dev/zero "
+        "of=build/tests/goto_used_entry_in_directory.third_file_deleted.test."
+        "shlkfs "
+        "bs=4096 count=100");
 
     set_device_path(
-        "build/goto_used_entry_in_directory.third_file_deleted.test.shlkfs");
+        "build/tests/"
+        "goto_used_entry_in_directory.third_file_deleted.test.shlkfs");
 
-    format_fs(
-        "build/goto_used_entry_in_directory.third_file_deleted.test.shlkfs",
-        "build/goto_used_entry_in_directory.third_file_deleted.public.pem",
-        "build/goto_used_entry_in_directory.third_file_deleted.private.pem",
-        "label", NULL, NULL);
+    format_fs("build/tests/"
+              "goto_used_entry_in_directory.third_file_deleted.test.shlkfs",
+              "build/tests/"
+              "goto_used_entry_in_directory.third_file_deleted.public.pem",
+              "build/tests/"
+              "goto_used_entry_in_directory.third_file_deleted.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/goto_used_entry_in_directory.third_file_deleted.test.shlkfs",
-        "build/goto_used_entry_in_directory.third_file_deleted.private.pem");
+        "build/tests/"
+        "goto_used_entry_in_directory.third_file_deleted.test.shlkfs",
+        "build/tests/"
+        "goto_used_entry_in_directory.third_file_deleted.private.pem");
 
     struct CryptFS_Entry_ID root_dirctory_entry_id = { .directory_block =
                                                            ROOT_ENTRY_BLOCK,
@@ -2783,7 +2854,8 @@ Test(goto_used_entry_in_directory, 30_files_27_29_deleted,
      .init = cr_redirect_stdall, .timeout = 10, .disabled = true)
 {
     system("dd if=/dev/zero "
-           "of=build/goto_used_entry_in_directory.30_files_27_29_deleted.test."
+           "of=build/tests/"
+           "goto_used_entry_in_directory.30_files_27_29_deleted.test."
            "shlkfs "
            "bs=4096 count=100");
 
@@ -2791,14 +2863,17 @@ Test(goto_used_entry_in_directory, 30_files_27_29_deleted,
         "build/"
         "goto_used_entry_in_directory.30_files_27_29_deleted.test.shlkfs");
 
-    format_fs(
-        "build/goto_used_entry_in_directory.30_files_27_29_deleted.test.shlkfs",
-        "build/goto_used_entry_in_directory.30_files_27_29_deleted.public.pem",
-        "build/goto_used_entry_in_directory.30_files_27_29_deleted.private.pem",
-        "label", NULL, NULL);
+    format_fs("build/tests/"
+              "goto_used_entry_in_directory.30_files_27_29_deleted.test.shlkfs",
+              "build/tests/"
+              "goto_used_entry_in_directory.30_files_27_29_deleted.public.pem",
+              "build/tests/"
+              "goto_used_entry_in_directory.30_files_27_29_deleted.private.pem",
+              "label", NULL, NULL);
 
     fpi_register_master_key_from_path(
-        "build/goto_used_entry_in_directory.30_files_27_29_deleted.test.shlkfs",
+        "build/tests/"
+        "goto_used_entry_in_directory.30_files_27_29_deleted.test.shlkfs",
         "build/"
         "goto_used_entry_in_directory.30_files_27_29_deleted.private.pem");
 

@@ -80,4 +80,4 @@ logs/*
 *.shlkfs
 
 # Private test file
-private_test_main.c
+private_shlkfs.tests.main.c

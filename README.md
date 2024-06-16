@@ -18,59 +18,62 @@ SherlockFS est un système de fichiers chiffré, s'inspirant des principes de FA
 
 Actuellement, SherlockFS propose quatre outils principaux :
 
-1. `shlkfs_formater` : Utilisé pour initialiser un périphérique avec le système de fichiers SherlockFS.
-2. `shlkfs_mount` : Permet de monter un système de fichiers formaté en SherlockFS.
-3. `shlkfs_adduser` : Permet d'ajouter un nouvel utilisateur (via sa clé publique) en utilisant les accès d'un utilisateur existant (sa clé privée).
-4. `shlkfs_deluser` : Permet de supprimer un utilisateur du système de fichiers.
+1. `shlkfs.mkfs` : Utilisé pour initialiser un périphérique avec le système de fichiers SherlockFS.
+2. `shlkfs.mount` : Permet de monter un système de fichiers formaté en SherlockFS.
+3. `shlkfs.useradd` : Permet d'ajouter un nouvel utilisateur (via sa clé publique) en utilisant les accès d'un utilisateur existant (sa clé privée).
+4. `shlkfs.userdel` : Permet de supprimer un utilisateur du système de fichiers.
 
 ## Prérequis
 
 Avant de démarrer, il est nécessaire d'installer les dépendances. Exécutez `bash dependencies.sh`. Ce script est compatible uniquement avec les gestionnaires de paquets `apt` ou `pacman`.
+
+> Étant donné que ce script installe des paquets sur le système, il doit être exécuté avec les privilèges super-utilisateur (`root`).
 
 ## Compilation
 
 Pour compiler les programmes :
 
 - `make` : Compile tous les programmes.
-- `make no_debug` : Compile tous les programmes, sans les informations de débogage.
-- `make shlkfs_formater` : Compile uniquement le programme `shlkfs_formater`.
-- `make shlkfs_mount` : Compile uniquement le programme `shlkfs_mount`.
-- `make shlkfs_adduser` : Compile uniquement le programme `shlkfs_adduser`.
-- `make shlkfs_deluser` : Compile uniquement le programme `shlkfs_deluser`.
+- `make shlkfs.mkfs` : Compile uniquement le programme `shlkfs.mkfs`.
+- `make shlkfs.mount` : Compile uniquement le programme `shlkfs.mount`.
+- `make shlkfs.useradd` : Compile uniquement le programme `shlkfs.useradd`.
+- `make shlkfs.userdel` : Compile uniquement le programme `shlkfs.userdel`.
 - `make check`: Compile tous les programmes et exécute les tests unitaires.
 - `make clean` : Supprime les fichiers générés par la compilation.
-- `make clean_all` : Supprime le dossier `build/`.
+- `make clean.all` : Supprime le dossier `build/`.
 
 Les exécutables compilés se trouveront dans le dossier `build/`.
 
+> Si vous souhaitez compiler les programmes avec des options de débogage, vous devez au préalable définir la variable d'environnement `SHLKFS_DEBUG=1`.
+
 ## Utilisation des utilitaires
 
-### `shlkfs_formater`
+### `shlkfs.mkfs`
 
 ```shell
 
-# ./build/shlkfs_formater
+# ./build/shlkfs.mkfs
 
 SherlockFS v1 - Format a device
-        Usage: ./build/shlkfs_formater <device> [label]
+        Usage: ./build/shlkfs.mkfs <device> [label]
 ```
 
-`shlkfs_formater` permet d'initialiser un périphérique avec le système de fichiers SherlockFS. Il prend en paramètre le chemin vers le périphérique à formater, et éventuellement un label (nom du système de fichiers). Si le périphérique est déjà formaté avec SherlockFS, il vous sera demandé si vous souhaitez le reformater.
+`shlkfs.mkfs` permet d'initialiser un périphérique avec le système de fichiers SherlockFS. Il prend en paramètre le chemin vers le périphérique à formater, et éventuellement un label (nom du système de fichiers). Si le périphérique est déjà formaté avec SherlockFS, il vous sera demandé si vous souhaitez le reformater.
 
-Une fois le formatage effectué, les clés publiques et privées utisées lors du formatage seront sauvegardées dans le dossier `~/.sherlockfs` (`public.pem` et `private.pem`). Ces clés sont nécessaires pour monter le périphérique et ajouter de nouveaux utilisateurs au système de fichiers. **Il est donc important de les conserver en lieu sûr et de ne pas les perdre.**
+Une fois le formatage effectué, les clés publiques et privées utisées lors du formatage seront sauvegardées dans le dossier `~/.shlkfs` (`public.pem` et `private.pem`). Ces clés sont nécessaires pour monter le périphérique et ajouter de nouveaux utilisateurs au système de fichiers. **Il est donc important de les conserver en lieu sûr et de ne pas les perdre.**
 
-### `shlkfs_mount`
+### `shlkfs.mount`
 
 ```shell
-# ./build/shlkfs_mount
+# ./build/shlkfs.mount
 
 SherlockFS v1 - Mounting a SherlockFS file system
-        Usage: ./build/shlkfs_mount [-k|--key <PRIVATE KEY PATH>] [-v|--verbose] <DEVICE> [FUSE OPTIONS] <MOUNTPOINT>
+        Usage: ./build/shlkfs.mount [-k|--key <PRIVATE KEY PATH>] [-v|--verbose] <DEVICE> [FUSE OPTIONS] <MOUNTPOINT>
 ```
 
-`shlkfs_mount` permet de monter un système de fichiers formaté en SherlockFS avec FUSE. Il prend plusieurs paramètres :
+`shlkfs.mount` permet de monter un système de fichiers formaté en SherlockFS avec FUSE. Il prend plusieurs paramètres :
 
-- `-k` ou `--key` : Le chemin vers la clé privée à utiliser pour le montage. Cette clé doit correspondre à une clé enregistrée sur le périphérique. Si cette option n'est pas spécifiée, `shlkfs_mount` cherchera à utiliser la clé privée `~/.sherlockfs/private.pem`.
+- `-k` ou `--key` : Le chemin vers la clé privée à utiliser pour le montage. Cette clé doit correspondre à une clé enregistrée sur le périphérique. Si cette option n'est pas spécifiée, `shlkfs.mount` cherchera à utiliser la clé privée `~/.shlkfs/private.pem`.
 - `-v` ou `--verbose` : Active le mode verbeux, qui affiche des informations supplémentaires pendant toute la durée de vie du système de fichiers monté.
 - `<DEVICE>` : Le chemin vers le périphérique à monter. Ce périphérique doit être formaté avec SherlockFS.
 - `[FUSE OPTIONS]` : Des options supplémentaires pour FUSE, si nécessaire.
@@ -78,26 +81,26 @@ SherlockFS v1 - Mounting a SherlockFS file system
 
 Une fois le système de fichiers monté, vous pouvez interagir avec lui comme avec n'importe quel autre système de fichiers sur votre machine. Assurez-vous de disposer de la clé privée correspondante avant de tenter de monter le système de fichiers. Si vous perdez cette clé, vous ne pourrez pas accéder aux données sur le système de fichiers SherlockFS.
 
-### `shlkfs_adduser`
+### `shlkfs.useradd`
 
 ```shell
 
-# ./build/shlkfs_adduser
+# ./build/shlkfs.useradd
 
 SherlockFS v1 - Adding user to device keys storage
-        Usage: ./build/shlkfs_adduser <device> <other user public key path> [registred user private key path]
+        Usage: ./build/shlkfs.useradd <device> <other user public key path> [registred user private key path]
 ```
 
-`shlkfs_adduser` permet d'ajouter un nouvel utilisateur au système de fichiers. Il prend en paramètre le chemin vers le périphérique formaté avec SherlockFS, le chemin vers la clé publique de l'utilisateur à ajouter et éventuellement le chemin vers la clé privée d'un utilisateur déjà enregistré sur le périphérique. Si la clé privée n'est pas spécifiée, `shlkfs_adduser` cherchera à utiliser la clé privée de l'utilisateur courant (celui qui exécute le programme): `~/.sherlockfs/private.pem`.
+`shlkfs.useradd` permet d'ajouter un nouvel utilisateur au système de fichiers. Il prend en paramètre le chemin vers le périphérique formaté avec SherlockFS, le chemin vers la clé publique de l'utilisateur à ajouter et éventuellement le chemin vers la clé privée d'un utilisateur déjà enregistré sur le périphérique. Si la clé privée n'est pas spécifiée, `shlkfs.useradd` cherchera à utiliser la clé privée de l'utilisateur courant (celui qui exécute le programme): `~/.shlkfs/private.pem`.
 
-### `shlkfs_deluser`
+### `shlkfs.userdel`
 
 ```shell
 SherlockFS v1 - Deleting user from device keys storage
-        Usage: ./build/shlkfs_deluser <device> <deleting user public key path> [registred user private key path]
+        Usage: ./build/shlkfs.userdel <device> <deleting user public key path> [registred user private key path]
 ```
 
-`shlkfs_deluser` permet de supprimer un utilisateur du système de fichiers. Il prend en paramètre le chemin vers le périphérique formaté avec SherlockFS, le chemin vers la clé publique de l'utilisateur à supprimer et éventuellement le chemin vers la clé privée d'un utilisateur déjà enregistré sur le périphérique. Si la clé privée n'est pas spécifiée, `shlkfs_deluser` cherchera à utiliser la clé privée de l'utilisateur courant (celui qui exécute le programme): `~/.sherlockfs/private.pem`.
+`shlkfs.userdel` permet de supprimer un utilisateur du système de fichiers. Il prend en paramètre le chemin vers le périphérique formaté avec SherlockFS, le chemin vers la clé publique de l'utilisateur à supprimer et éventuellement le chemin vers la clé privée d'un utilisateur déjà enregistré sur le périphérique. Si la clé privée n'est pas spécifiée, `shlkfs.userdel` cherchera à utiliser la clé privée de l'utilisateur courant (celui qui exécute le programme): `~/.shlkfs/private.pem`.
 
 ## Utilisation avec Docker
 

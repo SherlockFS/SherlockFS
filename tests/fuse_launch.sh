@@ -43,7 +43,7 @@ dd if=/dev/zero of=$DEVICE bs=4096 count=100
 green "Device set successfully"
 
 blue "Trying to format to SherlockFS device..."
-y |../build/shlkfs_formater $DEVICE
+y |../build/shlkfs.mkfs $DEVICE
 
 if [ $? -eq 0 ]; then
     green "Format successfull"
@@ -53,7 +53,7 @@ else
 fi
 
 blue "\nLauch FUSE"
-../build/shlkfs_mount -v $DEVICE -f $MOUNT > "/dev/null" 2>&1 &
+../build/shlkfs.mount -v $DEVICE -f $MOUNT > "/dev/null" 2>&1 &
 
 
 if [ $? -eq 0 ]; then

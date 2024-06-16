@@ -1,7 +1,7 @@
 ---
 name: Bug report
-about: 'Help us fix SherlockFS: Submit a Bug Report'
-title: "[SHLKFS][BUG] "
+about: 'Help us fix SherlockFS: Submit a bug report'
+title: "[BUG] "
 labels: 'triage,bug'
 assignees: ''
 
@@ -15,21 +15,24 @@ assignees: ''
 
 - [ ] SherlockFS toolchain - gcc
 - [ ] SherlockFS toolchain - make
-- [ ] SherlockFS toolchain - libfuse
-- [ ] SherlockFS toolchain - libssl
-- [ ] SherlockFS utils - shlkfs_formater
-- [ ] SherlockFS utils - shlkfs_adduser
-- [ ] SherlockFS utils - shlkfs_deluser
-- [ ] SherlockFS FUSE implementation
+- [ ] SherlockFS library - libssl
+- [ ] SherlockFS library - libfuse
+- [ ] SherlockFS library - libcriterion
+- [ ] SherlockFS utils - shlkfs.mkfs
+- [ ] SherlockFS utils - shlkfs.mount
+- [ ] SherlockFS utils - shlkfs.useradd
+- [ ] SherlockFS utils - shlkfs.userdel
+- [ ] Other (please specify): [component name]
 
 **Pre-Execution Checklist:**
 
 - [ ] Operating system confirmed as Linux-based.
 - [ ] Confirmed execution of `./dependencies.sh` script without errors.
-    - [ ] Verified OpenSSL / libssl correct installation.
-    - [ ] Verified OpenSSL / libssl version >= `3.0.10`.
-    - [ ] Verified FUSE / libfuse correct installation.
-    - [ ] (Verified libcriterion correct installation).
+  - [ ] Verified OpenSSL / libssl correct installation.
+  - [ ] Verified OpenSSL / libssl version >= `3.0.10`.
+  - [ ] Verified FUSE / libfuse correct installation.
+  - [ ] Verified libcriterion correct installation (testing only).
+- [ ] Confirmed that the issue still exists after using the Docker image.
 
 **Reproduction Steps:**
 
@@ -44,10 +47,10 @@ assignees: ''
 
 **Expected vs. Actual Behavior:**
 
-*Expected:* 
+*Expected:*
 *Describe your expectations in detail.*
 
-*Actual:* 
+*Actual:*
 *Detail what actually happened, including exact error messages if applicable.*
 
 **Supporting Information:**
@@ -74,8 +77,7 @@ assignees: ''
 
 **Issue Submission Checklist:**
 
-- [ ] My operating system is Linux-based.
-- [ ] I have run `./dependencies.sh` as part of the setup.
+- [ ] *Pre-Execution Checklist* has been completed.
 - [ ] I have checked the issue tracker for similar issues.
 - [ ] I have provided a detailed account of steps to reproduce the issue.
 - [ ] I have detailed my environment information.

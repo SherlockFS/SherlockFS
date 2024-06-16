@@ -13,65 +13,65 @@ void cr_redirect_stdall(void)
     cr_redirect_stderr();
 }
 
-Test(shlkfs_adduser, not_existing, .exit_code = EXIT_FAILURE, .timeout = 10,
+Test(shlkfs_useradd, not_existing, .exit_code = EXIT_FAILURE, .timeout = 10,
      .init = cr_redirect_stderr)
 {
     // Execute command (not exiting function)
     system("dd if=/dev/zero "
-           "of=build/tests/shlkfs_adduser.not_existing.test.shlkfs bs=4096 "
+           "of=build/tests/shlkfs.useradd.not_existing.test.shlkfs bs=4096 "
            "count=1000 2> /dev/null");
 
-    cryptfs_adduser("build/tests/shlkfs_adduser.not_existing.test.shlkfs",
-                    "build/tests/shlkfs_adduser.not_existing.public.pem",
-                    "build/tests/shlkfs_adduser.not_existing.private.pem");
+    cryptfs_adduser("build/tests/shlkfs.useradd.not_existing.test.shlkfs",
+                    "build/tests/shlkfs.useradd.not_existing.public.pem",
+                    "build/tests/shlkfs.useradd.not_existing.private.pem");
 }
 
-Test(shlkfs_adduser, not_formated, .exit_code = EXIT_FAILURE, .timeout = 10,
+Test(shlkfs_useradd, not_formated, .exit_code = EXIT_FAILURE, .timeout = 10,
      .init = cr_redirect_stdall)
 {
     system("dd if=/dev/zero "
-           "of=build/tests/shlkfs_adduser.not_formated.test.shlkfs bs=4096 "
+           "of=build/tests/shlkfs.useradd.not_formated.test.shlkfs bs=4096 "
            "count=1000 2> /dev/null");
 
     // OpenSSL generate keypair and write it to a file
     EVP_PKEY *my_rsa = generate_rsa_keypair();
     EVP_PKEY *other_rsa = generate_rsa_keypair();
     write_rsa_keys_on_disk(
-        my_rsa, "build/tests/shlkfs_adduser.not_formated.public.pem",
-        "build/tests/shlkfs_adduser.not_formated.private.pem", NULL);
+        my_rsa, "build/tests/shlkfs.useradd.not_formated.public.pem",
+        "build/tests/shlkfs.useradd.not_formated.private.pem", NULL);
     write_rsa_keys_on_disk(
-        other_rsa, "build/tests/shlkfs_adduser.not_formated.other_public.pem",
+        other_rsa, "build/tests/shlkfs.useradd.not_formated.other_public.pem",
         NULL, NULL);
 
-    cryptfs_adduser("build/tests/shlkfs_adduser.not_formated.test.shlkfs",
-                    "build/tests/shlkfs_adduser.not_formated.public.pem",
-                    "build/tests/shlkfs_adduser.not_formated.private.pem");
+    cryptfs_adduser("build/tests/shlkfs.useradd.not_formated.test.shlkfs",
+                    "build/tests/shlkfs.useradd.not_formated.public.pem",
+                    "build/tests/shlkfs.useradd.not_formated.private.pem");
 
     // Free memory
     EVP_PKEY_free(my_rsa);
     EVP_PKEY_free(other_rsa);
 }
 
-Test(shlkfs_adduser, formated, .timeout = 10, .init = cr_redirect_stdout)
+Test(shlkfs_useradd, formated, .timeout = 10, .init = cr_redirect_stdout)
 {
-    system("dd if=/dev/zero of=build/tests/shlkfs_adduser.formated.test.shlkfs "
+    system("dd if=/dev/zero of=build/tests/shlkfs.useradd.formated.test.shlkfs "
            "bs=4096 count=1000 2> /dev/null");
 
     // Set the device (global variable) to the file (used by read/write_blocks)
-    set_device_path("build/tests/shlkfs_adduser.formated.test.shlkfs");
+    set_device_path("build/tests/shlkfs.useradd.formated.test.shlkfs");
 
     EVP_PKEY *my_rsa = generate_rsa_keypair();
 
-    format_fs("build/tests/shlkfs_adduser.formated.test.shlkfs",
-              "build/tests/shlkfs_adduser.formated.test.public.pem",
-              "build/tests/shlkfs_adduser.formated.test.private.pem", "label",
+    format_fs("build/tests/shlkfs.useradd.formated.test.shlkfs",
+              "build/tests/shlkfs.useradd.formated.test.public.pem",
+              "build/tests/shlkfs.useradd.formated.test.private.pem", "label",
               NULL, my_rsa);
     cr_assert(is_already_formatted(
-        "build/tests/shlkfs_adduser.formated.test.shlkfs"));
+        "build/tests/shlkfs.useradd.formated.test.shlkfs"));
 
     // Read CryptFS structure
     struct CryptFS *shlkfs =
-        read_cryptfs_headers("build/tests/shlkfs_adduser.formated.test.shlkfs");
+        read_cryptfs_headers("build/tests/shlkfs.useradd.formated.test.shlkfs");
 
     // Check if second key storage buf is empty
     cr_assert_arr_eq(shlkfs->keys_storage[1].aes_key_ciphered,
@@ -81,20 +81,20 @@ Test(shlkfs_adduser, formated, .timeout = 10, .init = cr_redirect_stdout)
     // OpenSSL generate keypair and write it to a file
     EVP_PKEY *other_rsa = generate_rsa_keypair();
     write_rsa_keys_on_disk(
-        my_rsa, "build/tests/shlkfs_adduser.formated.my_public.pem",
-        "build/tests/shlkfs_adduser.formated.my_private.pem", NULL);
+        my_rsa, "build/tests/shlkfs.useradd.formated.my_public.pem",
+        "build/tests/shlkfs.useradd.formated.my_private.pem", NULL);
     write_rsa_keys_on_disk(
-        other_rsa, "build/tests/shlkfs_adduser.formated.other_public.pem", NULL,
+        other_rsa, "build/tests/shlkfs.useradd.formated.other_public.pem", NULL,
         NULL);
 
-    cryptfs_adduser("build/tests/shlkfs_adduser.formated.test.shlkfs",
-                    "build/tests/shlkfs_adduser.formated.other_public.pem",
-                    "build/tests/shlkfs_adduser.formated.my_private.pem");
+    cryptfs_adduser("build/tests/shlkfs.useradd.formated.test.shlkfs",
+                    "build/tests/shlkfs.useradd.formated.other_public.pem",
+                    "build/tests/shlkfs.useradd.formated.my_private.pem");
 
     // Read CryptFS structure
     free(shlkfs);
     shlkfs =
-        read_cryptfs_headers("build/tests/shlkfs_adduser.formated.test.shlkfs");
+        read_cryptfs_headers("build/tests/shlkfs.useradd.formated.test.shlkfs");
 
     // Check if second key storage buf is not empty
     cr_assert_arr_neq(shlkfs->keys_storage[1].aes_key_ciphered,
@@ -107,29 +107,29 @@ Test(shlkfs_adduser, formated, .timeout = 10, .init = cr_redirect_stdout)
     free(shlkfs);
 }
 
-Test(shlkfs_adduser, already_exists, .timeout = 10, .init = cr_redirect_stdall)
+Test(shlkfs_useradd, already_exists, .timeout = 10, .init = cr_redirect_stdall)
 {
     system("dd if=/dev/zero "
-           "of=build/tests/shlkfs_adduser.already_exists.test.shlkfs bs=4096 "
+           "of=build/tests/shlkfs.useradd.already_exists.test.shlkfs bs=4096 "
            "count=1000 2> /dev/null");
 
     // Set the device (global variable) to the file (used by read/write_blocks)
-    set_device_path("build/tests/shlkfs_adduser.already_exists.test.shlkfs");
+    set_device_path("build/tests/shlkfs.useradd.already_exists.test.shlkfs");
 
     EVP_PKEY *my_rsa = generate_rsa_keypair();
     EVP_PKEY *other_rsa = generate_rsa_keypair();
 
-    format_fs("build/tests/shlkfs_adduser.already_exists.test.shlkfs",
-              "build/tests/shlkfs_adduser.already_exists.test.public.pem",
-              "build/tests/shlkfs_adduser.already_exists.test.private.pem",
+    format_fs("build/tests/shlkfs.useradd.already_exists.test.shlkfs",
+              "build/tests/shlkfs.useradd.already_exists.test.public.pem",
+              "build/tests/shlkfs.useradd.already_exists.test.private.pem",
               "label", NULL, my_rsa);
 
     cr_assert(is_already_formatted(
-        "build/tests/shlkfs_adduser.already_exists.test.shlkfs"));
+        "build/tests/shlkfs.useradd.already_exists.test.shlkfs"));
 
     // Read CryptFS structure
     struct CryptFS *shlkfs = read_cryptfs_headers(
-        "build/tests/shlkfs_adduser.already_exists.test.shlkfs");
+        "build/tests/shlkfs.useradd.already_exists.test.shlkfs");
 
     // Check if second and third keys storages are empty
     cr_assert_arr_eq(shlkfs->keys_storage[1].aes_key_ciphered,
@@ -137,25 +137,25 @@ Test(shlkfs_adduser, already_exists, .timeout = 10, .init = cr_redirect_stdall)
                      AES_KEY_SIZE_BYTES * 2);
 
     write_rsa_keys_on_disk(
-        my_rsa, "build/tests/shlkfs_adduser.already_exists.my_public.pem",
-        "build/tests/shlkfs_adduser.already_exists.my_private.pem", NULL);
+        my_rsa, "build/tests/shlkfs.useradd.already_exists.my_public.pem",
+        "build/tests/shlkfs.useradd.already_exists.my_private.pem", NULL);
     write_rsa_keys_on_disk(
-        other_rsa, "build/tests/shlkfs_adduser.already_exists.other_public.pem",
+        other_rsa, "build/tests/shlkfs.useradd.already_exists.other_public.pem",
         NULL, NULL);
 
     int shlkfs_ret = 0;
     for (u_int8_t i = 0; i < 2; i++) // Add the same user twice
         shlkfs_ret = cryptfs_adduser(
-            "build/tests/shlkfs_adduser.already_exists.test.shlkfs",
-            "build/tests/shlkfs_adduser.already_exists.other_public.pem",
-            "build/tests/shlkfs_adduser.already_exists.my_private.pem");
+            "build/tests/shlkfs.useradd.already_exists.test.shlkfs",
+            "build/tests/shlkfs.useradd.already_exists.other_public.pem",
+            "build/tests/shlkfs.useradd.already_exists.my_private.pem");
 
     cr_assert_eq(shlkfs_ret, -1);
 
     // Read CryptFS structure
     free(shlkfs);
     shlkfs = read_cryptfs_headers(
-        "build/tests/shlkfs_adduser.already_exists.test.shlkfs");
+        "build/tests/shlkfs.useradd.already_exists.test.shlkfs");
 
     // Check if second key storage buf is not empty
     cr_assert_arr_neq(shlkfs->keys_storage[1].aes_key_ciphered,
