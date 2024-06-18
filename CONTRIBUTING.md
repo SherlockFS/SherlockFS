@@ -131,11 +131,17 @@ Here are the practices we use in SherlockFS to write readable code.
     #endif /* EXAMPLE_FEATURE_H */
     ```
 
+Other coding style rules, defined in the [.clang-format](.clang-format) file, are used in SherlockFS. You can use `clang-format -i $(find . -name '*.h' -o -name '*.c')`  to apply them to all the relevant files.
+
+> Note that if these files are not correctly formated compared to [.clang-format](.clang-format), the GitHub CI will not accept your contribution.
+
 ### Code Testing
 
 All code must be unit tested using the [Criterion](https://github.com/Snaipe/Criterion) library.
 
 An untested code will not be accepted to the `dev` branch (and even less to `main`).
+
+> Note that if the test suite does not pass, the GitHub CI will not accept your contribution.
 
 > To install the testing environment, you can run the `dependencies.sh` script (at the root of the project) with the `--with-tests` option.
 
