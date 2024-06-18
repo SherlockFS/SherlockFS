@@ -1,4 +1,4 @@
-name: Suite de tests
+name: Test Suite
 
 on:
   push:
@@ -12,11 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
     
-      - name: Installation de `clang-format`
+      - name: Install `clang-format`
         run: |
           sudo apt update
           sudo apt install clang-format -y
-      - name: Vérification du formatage des fichiers sources avec `clang-format`
+      - name: Check source file formatting with `clang-format`
         run: |
           bash ./.github/scripts/check_formatting.sh
 
@@ -27,11 +27,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Copie de la liste de sources APT Ubuntu 'noble'
+      - name: Copy APT sources list for Ubuntu 'noble'
         run: sudo cp .github/apt_sources_list/ubuntu-noble.list /etc/apt/sources.list.d/
 
-      - name: Installation des dépendances de SherlockFS
+      - name: Install SherlockFS dependencies
         run: sudo bash dependencies.sh --with-tests
 
-      - name: Lancement de la suite de tests (`make check`)
+      - name: Run the test suite (`make check`)
         run: make -j check

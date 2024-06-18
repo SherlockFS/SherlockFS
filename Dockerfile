@@ -1,18 +1,18 @@
-# Utilisation de l'image Ubuntu la plus récente
+# Using the latest Ubuntu image
 FROM ubuntu:latest
 
-# Eviter les problèmes d'interface utilisateur pendant l'installation
+# Avoid UI issues during installation
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Mise à jour des paquets et installation des dépendances nécessaires
+# Update packages and install necessary dependencies
 RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Répertoire de travail
+# Set the working directory
 WORKDIR /workspace
 
-# Cloner le dépôt et installer les dépendances
+# Clone the repository and install dependencies
 RUN git clone https://github.com/SherlockFS/SherlockFS.git && \
     cd SherlockFS && \
     git checkout dev && \
@@ -20,8 +20,8 @@ RUN git clone https://github.com/SherlockFS/SherlockFS.git && \
     apt-get update && \
     bash ./dependencies.sh --with-tests
 
-# Définir le répertoire de travail pour le dépôt SherlockFS
+# Set the working directory for the SherlockFS repository
 WORKDIR /workspace/SherlockFS
 
-# Configurer le conteneur pour lancer un terminal Bash à l'ouverture
+# Configure the container to start a Bash terminal upon launch
 CMD ["bash"]
