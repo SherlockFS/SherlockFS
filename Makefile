@@ -38,26 +38,26 @@ CFLAGS += -g
 LDFLAGS += -g
 
 all_debug: all_debug_msg all all_debug_msg
-	@echo $(call yellowtext,"Compilé avec les options de débogage")
-	@echo $(call yellowtext,"Ne pas utiliser en production")
+	@echo $(call yellowtext,"Compiled with debugging options")
+	@echo $(call yellowtext,"Do not use in production")
 all_debug_msg:
 	@echo $(call yellowtext,"SHLKFS_DEBUG=1")
 endif
 
 all: shlkfs.mkfs shlkfs.mount shlkfs.useradd shlkfs.userdel
-	@echo $(call greentext,"Tous les binaires ont été compilés avec succès")
+	@echo $(call greentext,"All binaries were successfully compiled")
 
 shlkfs.mkfs: $(BUILD_DIR)/shlkfs.mkfs
-	@echo $(call greentext,"Le binaire 'shlkfs.mkfs' a été compilé avec succès")
+	@echo $(call greentext,"The 'shlkfs.mkfs' binary was successfully compiled")
 
 shlkfs.useradd: $(BUILD_DIR)/shlkfs.useradd
-	@echo $(call greentext,"Le binaire 'shlkfs.useradd' a été compilé avec succès")
+	@echo $(call greentext,"The 'shlkfs.useradd' binary was successfully compiled")
 
 shlkfs.userdel: $(BUILD_DIR)/shlkfs.userdel
-	@echo $(call greentext,"Le binaire 'shlkfs.userdel' a été compilé avec succès")
+	@echo $(call greentext,"The 'shlkfs.userdel' binary was successfully compiled")
 
 shlkfs.mount: $(BUILD_DIR)/shlkfs.mount
-	@echo $(call greentext,"Le binaire 'shlkfs.mount' a été compilé avec succès")
+	@echo $(call greentext,"The 'shlkfs.mount' binary was successfully compiled")
 
 $(BUILD_DIR)/shlkfs.mkfs: $(FORMAT_OBJ) $(OBJ)
 	@echo "CC/LD\t$@"
@@ -102,15 +102,15 @@ $(BUILD_DIR)/private_shlkfs.tests.main: $(OBJ) $(BUILD_DIR)/tests/private_shlkfs
 	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/private_shlkfs.tests.main $^ $(LDFLAGS) $(FSANITIZE)
 
 check: shlkfs.tests
-	@echo $(call bluetext,"Lancement des tests unitaires")
+	@echo $(call bluetext,"Running unit tests")
 	@$(BUILD_DIR)/shlkfs.tests
 
 clean.all:
-	@echo $(call bluetext,"Suppression du répertoire de compilation")
+	@echo $(call bluetext,"Removing build directory")
 	@rm -rf $(BUILD_DIR)
 
 clean:
-	@echo $(call bluetext,"Nettoyage des fichiers de compilation")
+	@echo $(call bluetext,"Cleaning up build files")
 	@rm -rf $(BUILD_DIR)/src/
 	@rm -rf $(BUILD_DIR)/tests/
 	@rm -f $(BUILD_DIR)/shlkfs.mkfs
@@ -120,6 +120,5 @@ clean:
 	@rm -f $(BUILD_DIR)/shlkfs.tests
 	@rm -f $(BUILD_DIR)/shlkfs.tests.main
 	@rm -f $(BUILD_DIR)/private_shlkfs.tests.main
-
 
 .PHONY: all all_debug all_debug_msg clean clean_all check
