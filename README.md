@@ -123,3 +123,7 @@ docker run --privileged -it -v $(pwd):/workspace/SherlockFS shlkfs
 ```
 
 > This command mounts the project repository located in the current directory into the Docker container, in the `/workspace/SherlockFS` directory.
+
+## Want to Contribute?
+
+We'd love your help! Check out our [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines and tips on how to get started.
