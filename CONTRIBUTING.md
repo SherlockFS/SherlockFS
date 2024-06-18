@@ -139,7 +139,7 @@ Other coding style rules, defined in the [.clang-format](.clang-format) file, ar
 
 All code must be unit tested using the [Criterion](https://github.com/Snaipe/Criterion) library.
 
-An untested code will not be accepted to the `dev` branch (and even less to `main`).
+An untested code will not be accepted into the `dev` branch (and even less into the `main` branch).
 
 > Note that if the test suite does not pass, the GitHub CI will not accept your contribution.
 
